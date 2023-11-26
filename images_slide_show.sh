@@ -10,7 +10,7 @@ DOWNLOADER_SCRIPT="drive_downloader.py"
 UPDATE_CHECK_SCRIPT="drive_check_update.py"
 
 OFF_TIME="19:30"
-ON_TIME="02:30"
+ON_TIME="07:30"
 
 # Other Constants
 DISPLAYPID=""

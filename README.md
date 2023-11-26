@@ -37,10 +37,12 @@ To address the display power issue, refer to [this link](https://github.com/rasp
 To configure auto-start:
 
 - Open the rc.local file: `sudo nano /etc/rc.local`
-- Add 'sudo reset' to an empty command line
+- Add `sudo reset` to an empty command line
 - Go to the crontabs: `crontab -e`
-- Add 'chmod' to set the script as always executable
-- Add path to the script to crontab: `crontab -e`
+- Add 'chmod' to set the script as always executable and add the path to the script:
+````bash
+@reboot sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+````
 
 ## System Update and Package Installation
 
