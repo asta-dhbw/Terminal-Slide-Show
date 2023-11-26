@@ -10,7 +10,7 @@ DOWNLOADER_SCRIPT="drive_downloader.py"
 UPDATE_CHECK_SCRIPT="drive_check_update.py"
 
 OFF_TIME="19:30"
-ON_TIME="07:30"
+ON_TIME="02:30"
 
 # Other Constants
 DISPLAYPID=""
@@ -24,7 +24,7 @@ turn_off_cursor() {
 
 # Function to kill display processes
 killer() {
-    sudo pkill -x "fbi" >/dev/null 2>/dev/null
+    sudo pkill -9 -x "fbi" >/dev/null 2>/dev/null
     sudo pkill -x "mpv" >/dev/null 2>/dev/null
     sleep 2
 }
@@ -32,6 +32,7 @@ killer() {
 # Function to download new content from G-Drive
 download() {
     sudo fbi -a -r 5 -t 5 -T 1 --noverbose "/home/pi/Slide_Show/LOGO.png" &
+    disown
     #cat "/home/pi/Slide_Show/LOGO.txt" &
     python "$SCRIPT_PATH$DOWNLOADER_SCRIPT" >/dev/null 2>/dev/null
     clear
@@ -54,16 +55,19 @@ display() {
     if [[ -n "$image_files" && -n "$video_files" ]]; then
         while true; do
             sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 $image_files >/dev/null 2>/dev/null &
-            sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))                #-8 for smooth image to video
-            (sleep 1 && sudo pkill -x "fbi") >/dev/null 2>/dev/null & #sleep 5 seconds
+            disown
+            sleep $((IMAGE_FILES_COUNT * DISPLAYTIME)) #-8 for smooth image to video
+            pkill -9 -x "fbi" >/dev/null 2>/dev/null & #sleep 5 seconds
             mpv --fs --cache-secs=30 --fs-screen=1 --no-input-cursor "$video_files" >/dev/null 2>/dev/null
         done
     elif [ -n "$image_files" ]; then
         clear
-        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose $image_files >/dev/null 2>/dev/null
+        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose $image_files >/dev/null 2>/dev/null &
+        disown
     elif [ -n "$video_files" ]; then
         clear
-        mpv --fs --cache-secs=30 --loop=inf --fs-screen=1 --no-input-cursor "$video_files" >/dev/null 2>/dev/null
+        mpv --fs --cache-secs=30 --loop=inf --fs-screen=1 --no-input-cursor "$video_files" >/dev/null 2>/dev/null &
+        disown
     fi
 }
 
