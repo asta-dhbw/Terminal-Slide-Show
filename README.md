@@ -8,7 +8,6 @@
 4. [Fixing Display Power Issue](#fixing-display-power-issue)
 5. [Auto-start Configuration](#auto-start-configuration)
 6. [System Update and Package Installation](#system-update-and-package-installation)
-7. [Restart System](#restart-system)
 
 ## Introduction
 
@@ -58,8 +57,6 @@ sudo apt upgrade
 # Install required packages: fbi and mpv
 sudo apt install fbi mpv
 ```
-
-## Restart System
 ```bash
 sudo reboot now
 ```

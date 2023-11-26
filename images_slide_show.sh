@@ -31,9 +31,9 @@ killer() {
 
 # Function to download new content from G-Drive
 download() {
-    sudo fbi -a -r 5 -t 5 -T 1 --noverbose "/home/pi/Slide_Show/LOGO.png" &
+    sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" &
     disown
-    #cat "/home/pi/Slide_Show/LOGO.txt" &
+    #cat "$SCRIPT_PATH/LOGO.txt" &
     python "$SCRIPT_PATH$DOWNLOADER_SCRIPT" >/dev/null 2>/dev/null
     clear
     sleep 2
@@ -119,8 +119,8 @@ main_loop() {
             else
                 killer >/dev/null 2>/dev/null
                 clear
-                #cat "/home/pi/Slide_Show/LOGO.txt"
-                sudo fbi -a -r 5 -t 5 -T 1 --noverbose "/home/pi/Slide_Show/LOGO.png" >/dev/null 2>/dev/null
+                #cat "$SCRIPT_PATH/LOGO.txt"
+                sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" >/dev/null 2>/dev/null
             fi
         fi
         sleep 10
