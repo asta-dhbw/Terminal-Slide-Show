@@ -29,8 +29,8 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 4. Use the email to grant permission to the target folder.
 
 ## Fixing Display Power Issue
-
-To address the display power issue, refer to [this link](https://github.com/raspberrypi/firmware/issues/1224#issuecomment-).
+*!!!*
+To address the display power issue, refer to [this link](https://github.com/raspberrypi/firmware/issues/1224#issuecomment-1470791044).
 
 ## Auto-start Configuration
 

@@ -9,7 +9,7 @@ from googleapiclient.http import MediaIoBaseDownload
 
 # Specify the path to your service account JSON file and the target Google Drive folder ID.
 GOOGLE_API_ACCESS = "/home/pi/Slide_Show/raspi.json"
-DRIVE_DIR_ID = "xxx"
+DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
 TARGET_DIR = "/home/pi/Slide_Show/content/"
 
 

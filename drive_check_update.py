@@ -6,7 +6,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 GOOGLE_API_ACCES = "/home/pi/Slide_Show/raspi.json"  # json_file
-DRIVE_DIR_ID = "xxx"
+DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
 TARGET_DIR = "/home/pi/Slide_Show/content/"
 
 STATE_FILE_PATH = "/home/pi/Slide_Show/state.json"
