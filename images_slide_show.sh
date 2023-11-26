@@ -87,10 +87,10 @@ main_loop() {
 
             # Calculate seconds until 07:20 AM of the next day
             local target_time=""
-            if [[ "$current_time" < "07:30" ]]; then
-                target_time="07:20"
+            if [[ "$current_time" < "$ON_TIME" ]]; then
+                target_time=$ON_TIME
             else
-                target_time="07:20 tomorrow"
+                target_time="$ON_TIME tomorrow"
             fi
 
             local target_timestamp=$(date -d "$target_time" +"%s")
