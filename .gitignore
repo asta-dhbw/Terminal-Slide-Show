@@ -3,3 +3,4 @@ content/
 wpa_supplicant/
 saves/
 install.txt
+state.json

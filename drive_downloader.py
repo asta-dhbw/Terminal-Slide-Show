@@ -13,24 +13,54 @@ DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
 TARGET_DIR = "./content"
 
 
-def extract_date_from_filename(file_name):
+def is_supported_dateformat(date_text):
     """
-    Extract and return a datetime object from the given filename in various date formats.
-    Returns None if the format is incorrect.
+    This will check if the file name is in the correct format
     """
-    supported_formats = ["%Y_%m_%d", "%Y.%m.%d", "%Y-%m-%d"]
+    supported_formats = [
+        "%d_%m_%Y",
+        "%d.%m.%Y",
+        "%d-%m-%Y",
+        "%d_%m_%y",
+        "%d.%m.%y",
+        "%d-%m-%y",
+    ]
 
-    # Iterate through all parts of the filename (split by '.'), excluding the last part (file extension)
-    file_parts = file_name.split(".")[:-1]
+    date = None
 
     for date_format in supported_formats:
         try:
-            # Join the file parts to get the potential date string
-            date_str = ".".join(file_parts)
-            date_obj = datetime.strptime(date_str, date_format)
-            return date_obj
+            date = datetime.strptime(date_text, date_format)
+            break
         except ValueError:
-            pass  # Try the next format if the current one fails
+            pass
+
+    if date is None:
+        raise ValueError("Date format not supported")
+    else:
+        return date
+
+
+def is_current_event(file_name):
+    """
+    Checks if file is currently supposed to be displayed
+    """
+    # Iterate through all parts of the filename (split by '.'), excluding the last part (file extension)
+    file_parts = ".".join(file_name.split(".")[:-1])
+    date_parts = file_parts.split("@")
+    start = None
+    end = None
+
+    if len(date_parts) == 2:
+        start = is_supported_dateformat(date_parts[0])
+        end = is_supported_dateformat(date_parts[1])
+    elif len(date_parts) == 1:
+        end = is_supported_dateformat(date_parts[0])
+
+    if end < datetime.now():
+        return False
+    if ((len(date_parts) == 2) and (start <= datetime.now())) or len(date_parts) == 1:
+        return True
 
     # Return None if none of the formats match
     return None
@@ -80,15 +110,15 @@ def download_files_from_google_drive(
                     file_id = item["id"]
                     file_path = os.path.join(target_directory, file_name)
 
-                    date_from_filename = extract_date_from_filename(file_name)
+                    is_date_fine = is_current_event(file_name)
 
                     # Check if the file has the correct format
-                    if date_from_filename is None:
+                    if is_date_fine is None:
                         print(f"Ignoring file {file_name} with incorrect format.")
                         continue
 
                     # Remove files older than one day based on the name
-                    if date_from_filename < (datetime.now() - timedelta(days=1)):
+                    if not is_date_fine:
                         try:
                             os.remove(file_path)
                             print(f"Deleted local file: {file_name}")
@@ -107,7 +137,7 @@ def download_files_from_google_drive(
                             continue
 
                     # Download the file if it does not exist in the target directory.
-                    if not os.path.exists(file_path):
+                    if (not os.path.exists(file_path)) and (is_date_fine):
                         try:
                             request = service.files().get_media(fileId=file_id)
                             fh = io.BytesIO()

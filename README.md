@@ -9,6 +9,7 @@
 5. [Auto-start Configuration](#auto-start-configuration)
 6. [System Update and Package Installation](#system-update-and-package-installation)
 7. [Allowed File Formats](#allowed-file-formats)
+8. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
 
 ## Introduction
 
@@ -61,6 +62,11 @@ sudo apt install fbi vlc
 
 ## Allowed File Formats
 
-The script supports the following image formats: `.jpg, .jpeg, .png, .gif(first frame)`.
+The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``.gif(first frame)``.
 
-The script supports the following video formats: `.mp4, .mkv, .avi, .ogg`.
+The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``.
+
+## Allowed Date Formats for Google Drive
+
+The script supports the following date formats for filenames: ``day.month.year``, ``5.5.23``, ``05.05.2023``, ``15-06-2023``, ``20_07_2023``.
+You can also set a time range using `@`: `5.5.23@08-12-23`

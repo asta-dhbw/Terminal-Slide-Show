@@ -132,4 +132,4 @@ main_loop() {
 clear
 turn_off_cursor
 sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" & # >/dev/null 2>/dev/null &
-main_loop                                                        #>/dev/null 2>/dev/null
+main_loop                                                        # >/dev/null 2>/dev/null
