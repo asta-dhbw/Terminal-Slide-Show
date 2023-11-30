@@ -69,4 +69,5 @@ The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, `
 ## Allowed Date Formats for Google Drive
 
 The script supports the following date formats for filenames: ``day.month.year``, ``5.5.23``, ``05.05.2023``, ``15-06-2023``, ``20_07_2023``.
+
 You can also set a time range using `@`: `5.5.23@08-12-23`
