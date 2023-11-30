@@ -111,11 +111,11 @@ main_loop() {
         elif [[ "$FIRST_RUN" = true || "$changes_detected" = 1 ]]; then
             vcgencmd display_power 1
             FIRST_RUN=false
-            sudo kill "$DISPLAYPID"
-            sleep 1
             download # >/dev/null 2>/dev/null &
             wait
             if [ -d "$MEDIA_FOLDER" ] && [ "$(ls -A "$MEDIA_FOLDER")" ]; then
+                sudo kill "$DISPLAYPID" # >/dev/null 2>/dev/null
+                killer                  # >/dev/null 2>/dev/null
                 handle_display &
                 DISPLAYPID=$!
             else
