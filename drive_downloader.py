@@ -8,9 +8,9 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 
 # Specify the path to your service account JSON file and the target Google Drive folder ID.
-GOOGLE_API_ACCESS = "/home/pi/Slide_Show/raspi.json"
+GOOGLE_API_ACCESS = "./credentials/raspi.json"
 DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
-TARGET_DIR = "/home/pi/Slide_Show/content/"
+TARGET_DIR = "./content"
 
 
 def extract_date_from_filename(file_name):
@@ -80,7 +80,6 @@ def download_files_from_google_drive(
                     file_id = item["id"]
                     file_path = os.path.join(target_directory, file_name)
 
-                    # Extract date from the filename
                     date_from_filename = extract_date_from_filename(file_name)
 
                     # Check if the file has the correct format
@@ -90,13 +89,19 @@ def download_files_from_google_drive(
 
                     # Remove files older than one day based on the name
                     if date_from_filename < (datetime.now() - timedelta(days=1)):
-                        # Delete local and ignore
                         try:
                             os.remove(file_path)
                             print(f"Deleted local file: {file_name}")
                         except OSError as error:
                             print(
                                 f"An error occurred while deleting file locally: {error}"
+                            )
+                        try:
+                            service.files().delete(fileId=file_id).execute()
+                            print(f"Deleted file in Google Drive: {file_name}")
+                        except HttpError as error:
+                            print(
+                                f"An error occurred while deleting file in Google Drive: {error}"
                             )
                         finally:
                             continue

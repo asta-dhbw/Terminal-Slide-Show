@@ -8,10 +8,11 @@
 4. [Fixing Display Power Issue](#fixing-display-power-issue)
 5. [Auto-start Configuration](#auto-start-configuration)
 6. [System Update and Package Installation](#system-update-and-package-installation)
+7. [Allowed File Formats](#allowed-file-formats)
 
 ## Introduction
 
-This README provides instructions for setting up a project using Python 3.9.2, installing necessary requirements, configuring a Google Cloud project, fixing display power issues, and setting up auto-start functionality.
+This README provides instructions for setting up a project using Python, installing necessary requirements, configuring a Google Cloud project, fixing display power issues, and setting up auto-start functionality.
 
 ## Prerequisites
 
@@ -39,9 +40,9 @@ To configure auto-start:
 - Add `sudo reset` to an empty command line
 - Go to the crontabs: `crontab -e`
 - Add 'chmod' to set the script as always executable and add the path to the script:
-````bash
+```bash
 @reboot sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
-````
+```
 
 ## System Update and Package Installation
 
@@ -54,9 +55,12 @@ sudo apt update
 # Upgrade installed packages
 sudo apt upgrade
 
-# Install required packages: fbi and mpv
-sudo apt install fbi mpv
+# Install required packages:
+sudo apt install fbi vlc
 ```
-```bash
-sudo reboot now
-```
+
+## Allowed File Formats
+
+The script supports the following image formats: `.jpg, .jpeg, .png, .gif(first frame)`.
+
+The script supports the following video formats: `.mp4, .mkv, .avi, .ogg`.

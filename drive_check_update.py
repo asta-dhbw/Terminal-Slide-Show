@@ -5,11 +5,11 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-GOOGLE_API_ACCES = "/home/pi/Slide_Show/raspi.json"  # json_file
+GOOGLE_API_ACCES = "./credentials/raspi.json"  # json_file
 DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
-TARGET_DIR = "/home/pi/Slide_Show/content/"
+TARGET_DIR = "./content"
 
-STATE_FILE_PATH = "/home/pi/Slide_Show/state.json"
+STATE_FILE_PATH = "./state.json"
 
 
 def load_state():

@@ -1,5 +1,5 @@
-raspi.json
+credentials/
+content/
 wpa_supplicant/
 saves/
-LOGO.txt
 install.txt
