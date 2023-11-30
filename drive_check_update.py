@@ -1,14 +1,10 @@
 import json
-import os
 import sys
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 GOOGLE_API_ACCES = "./credentials/raspi.json"  # json_file
 DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
-TARGET_DIR = "./content"
-
 STATE_FILE_PATH = "./state.json"
 
 
@@ -37,14 +33,13 @@ def save_state(state):
         json.dump(state, f)
 
 
-def check_files_state(service_account_file_path, folder_id, target_directory):
+def check_files_state(service_account_file_path, folder_id):
     """
     Check if the state of files in the Google Drive folder has changed since the last scan.
 
     Parameters:
     - service_account_file_path (str): The path to the service account JSON file.
     - folder_id (str): The ID of the Google Drive folder.
-    - target_directory (str): The local directory where files are stored.
 
     Returns:
     - bool: True if there are changes (new files or modified files in the Drive), False otherwise.
@@ -55,8 +50,6 @@ def check_files_state(service_account_file_path, folder_id, target_directory):
             service_account_file_path
         )
         service = build("drive", "v3", credentials=credentials)
-
-        # Load the previous state
         previous_state = load_state()
 
         # Retrieve the current state from the Google Drive folder.
@@ -79,17 +72,14 @@ def check_files_state(service_account_file_path, folder_id, target_directory):
                 file_name not in previous_state
                 or previous_state[file_name] != drive_modified_time
             ):
-                # There is a new file or a modified file in the Drive
                 save_state(current_state)
                 return True
 
         # Check for deleted files in the Drive
         for file_name in previous_state:
             if file_name not in current_state:
-                # A file that was present in the previous state is not in the current state (deleted)
                 save_state(current_state)
                 return True
-        # If no changes found
         return False
 
     except Exception as error:
@@ -98,16 +88,10 @@ def check_files_state(service_account_file_path, folder_id, target_directory):
 
 
 if __name__ == "__main__":
-    # Create Download-folder if it doesn't exist
-    if not os.path.exists(TARGET_DIR):
-        os.makedirs(TARGET_DIR)
-
     # Check if there are changes in the files
-    changes_detected = check_files_state(GOOGLE_API_ACCES, DRIVE_DIR_ID, TARGET_DIR)
+    changes_detected = check_files_state(GOOGLE_API_ACCES, DRIVE_DIR_ID)
 
     if changes_detected:
-        # print("Changes detected. Do something.")
         sys.exit(1)
     else:
-        # print("No changes detected.")
         sys.exit(0)

@@ -30,8 +30,15 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 4. Use the email to grant permission to the target folder.
 
 ## Fixing Display Power Issue
-*!!!*
-To address the display power issue, refer to [this link](https://github.com/raspberrypi/firmware/issues/1224#issuecomment-1470791044).
+
+[Original Thread](https://github.com/raspberrypi/firmware/issues/1224#issuecomment-1470791044)
+
+`sudo nano /boot/config.txt` or any other editor
+
+Change ``dtoverlay=vc4-kms-v3d`` to ``dtoverlay=vc4-fkms-v3d``
+
+roboot: ``sudo reboot now``
+
 
 ## Auto-start Configuration
 
@@ -58,7 +65,11 @@ sudo apt upgrade
 
 # Install required packages:
 sudo apt install fbi vlc
+
+# Install recommended packages:
+sudo apt install dos2unix
 ```
+
 
 ## Allowed File Formats
 
