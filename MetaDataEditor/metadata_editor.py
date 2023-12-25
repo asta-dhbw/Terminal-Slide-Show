@@ -30,15 +30,16 @@ def read_metadata(image_path):
 
 def write_metadata(image_path, out_path="./", metadata={}):
     image = Image.open(image_path)
+    format = image.format.lower()
 
     # Check image format and apply metadata accordingly
-    if image.format.lower() == "jpeg":
-        image.save("NewPath.jpg", exif=metadata)
-    elif image.format.lower() == "png":
+    if format in ("jpeg", "jpg"):
+        image.save(f"{out_path}.{format}", exif=metadata)
+    elif format == "png":
         png_info = PngInfo()
         for key, value in metadata.items():
             png_info.add_text(key, str(value))
-        image.save(out_path, pnginfo=png_info)
+        image.save(f"{out_path}.{format}", pnginfo=png_info)
 
     # Add support for other formats as needed
     # IN PROGRESS

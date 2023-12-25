@@ -8,8 +8,9 @@
 4. [Fixing Display Power Issue](#fixing-display-power-issue)
 5. [Auto-start Configuration](#auto-start-configuration)
 6. [System Update and Package Installation](#system-update-and-package-installation)
-7. [Allowed File Formats](#allowed-file-formats)
-8. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
+7. [Meta-Data-Editor](#metadataeditor)
+8. [Allowed File Formats](#allowed-file-formats)
+9. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
 
 ## Introduction
 
@@ -70,14 +71,25 @@ sudo apt install fbi vlc
 sudo apt install dos2unix
 ```
 
+## MetaDataEditor
+[App](MetaDataEditor/app.py)
+
+- Allows to add custom Tags to the file using a GUI
+- `STARTDATE` -> Date when it will beginn displaying
+- `ENDDATE` -> Date when it will stop displaying
+
 
 ## Allowed File Formats
+
+!!! Currently under work for metadata -> currently: ``jpg, jpeg, png`` !!!
 
 The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``.gif(first frame)``.
 
 The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``.
 
-## Allowed Date Formats for Google Drive
+## Allowed Formats for Google Drive
+
+!!! Will be changed. In future extra name required !!!
 
 The script supports the following date formats for filenames: ``day.month.year``, ``5.5.23``, ``05.05.2023``, ``15-06-2023``, ``20_07_2023``.
 

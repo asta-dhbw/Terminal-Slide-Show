@@ -13,10 +13,27 @@ QPushButton {
     margin: 5px;
 }
 
+QPushButton:hover {
+    background-color: #2980b9;
+    border: 1px solid #2980b9;
+}
+
+QPushButton#removeButton {
+    background-color: #e00000;
+    color: #FFFFFF;
+}
+QPushButton#removeButton:hover {
+    background-color: #7e0000;
+}
+
 QTextEdit {
     background-color: #555555;
     color: #FFFFFF;
     border: 1px solid #777777;
     padding: 5px;
     margin: 5px;
+}
+
+QTextEdit:hover {
+    background-color: #363636;
 }

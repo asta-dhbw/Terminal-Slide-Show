@@ -4,6 +4,7 @@ content/
 wpa_supplicant/
 saves/
 state.json
+METADATATEST.png
 
 
 # Byte-compiled / optimized / DLL files

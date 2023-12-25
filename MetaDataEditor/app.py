@@ -28,6 +28,12 @@ TEXT_FIELD_HEIGHT = 50
 IMAGE_FORMATS = "Images (*.png *.jpg *.bmp)"
 
 
+def load_styles(self):
+    with open(STANDARD_STYLE_SHEET, "r") as file:
+        style = file.read()
+        self.setStyleSheet(style)
+
+
 class TagTextEdit(QTextEdit):
     """
     Custom QTextEdit that allows tabbing between widgets
@@ -79,7 +85,9 @@ class TagWidget(QWidget):
         self.tag_value_edit.setFixedHeight(TEXT_FIELD_HEIGHT)
 
         self.remove_button = QPushButton("Remove", self)
-        self.remove_button.setStyleSheet("background-color: #FF0000; color: #FFFFFF;")
+        self.remove_button.setObjectName("removeButton")
+
+        # self.remove_button.setStyleSheet("background-color: #FF0000; color: #FFFFFF;")
 
         tag_layout = QHBoxLayout()
         tag_layout.addWidget(self.tag_name_edit)
@@ -157,6 +165,13 @@ class ImageEditorGUI(QWidget):
 
         self.setLayout(layout)
 
+    def update_window_title(self):
+        if self.image_path is not None:
+            filename = os.path.basename(self.image_path)
+            self.setWindowTitle(f"MetaData Editor ({filename})")
+        else:
+            self.setWindowTitle("MetaData Editor")
+
     def add_tag(self):
         tag_widget = TagWidget()
         self.tag_widgets.append(tag_widget)
@@ -198,6 +213,8 @@ class ImageEditorGUI(QWidget):
                 for tag_widget in self.tag_widgets:
                     tag_widget.remove_self()
 
+                self.update_window_title()
+
         meta_datas = read_metadata(self.image_path)
         for key, value in meta_datas.items():
             tag_widget = TagWidget()
@@ -222,7 +239,6 @@ class ImageEditorGUI(QWidget):
                         metadata_dict[tag_name] = tag_value
                     except:
                         pass
-                print(metadata_dict)
                 write_metadata(self.image_path, file_dialog[0], metadata_dict)
 
     def display_image(self, image_path):
@@ -237,8 +253,7 @@ if __name__ == "__main__":
     app_icon = QIcon(ICON_PATH)
     app.setWindowIcon(app_icon)
 
-    with open(STANDARD_STYLE_SHEET, "r", encoding="UTF-8") as fh:
-        app.setStyleSheet(fh.read())
+    load_styles(app)
 
     editor = ImageEditorGUI()
     editor.setWindowTitle("MetaData Editor")
