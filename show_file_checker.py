@@ -41,17 +41,18 @@ def check_for_event(file):
 
     file_name = Path(file).stem
     #  Check if the filename contains a date
-    match = re.search(r"\b(\d{1,2}[-._]\d{1,2}[-._]\d{2,4})\b", file_name)
+    match = re.search(r"(\d{1,2}[-._]\d{1,2}[-._]\d{2,4})", file_name)
     if match:
         # Check if event using the filename
         logging.debug("Matched. Checking by filename")
         date_parts = file_name.split("@")
         if len(date_parts) == 2:
-            start = convert_to_datetime(date_parts[0])
-            end = convert_to_datetime(date_parts[1])
+            start = convert_to_datetime(match.group(1))
+            end = convert_to_datetime(match.group(2))
         elif len(date_parts) == 1:
-            end = convert_to_datetime(date_parts[0])
-        if start is None and end is not None:
+            end = convert_to_datetime(match.group(1))
+        if start is None and end is None:
+            logging.debug("Nothing useful in filename")
             match = False
     if not match:
         # Check by using the metadata
@@ -85,5 +86,5 @@ def check_for_event(file):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    TEST = check_for_event("./content/METADATATEST.png")
+    TEST = check_for_event("./content/OLAdasdF230.12.23eqwe.png")
     print(f"{TEST}")
