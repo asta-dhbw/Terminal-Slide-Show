@@ -15,8 +15,7 @@ MEDIA_FOLDER="$SCRIPT_PATH/content/"
 DISPLAYTIME=10 # in seconds
 BLENDTIME=900  # in milliseconds
 LOGO_PATH="$SCRIPT_PATH/LOGO.png"
-DOWNLOADER_SCRIPT="drive_downloader.py"
-UPDATE_CHECK_SCRIPT="drive_check_update.py"
+UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/drive_local_file_manager.py"
 
 OFF_TIME="23:00" #19:30
 ON_TIME="07:30"
@@ -35,12 +34,6 @@ turn_off_cursor() {
 killer() {
     sudo pkill -x "fbi"  # >/dev/null 2>/dev/null
     sudo pkill -x "cvlc" # >/dev/null 2>/dev/null
-}
-
-# Function to download new content from G-Drive
-download() {
-    python "$SCRIPT_PATH$DOWNLOADER_SCRIPT" # >/dev/null 2>/dev/null
-    clear
 }
 
 # Function to check if drive folder has been updated
@@ -85,8 +78,9 @@ handle_display() {
 main_loop() {
     while true; do
         local current_time=$(date +"%H:%M")
-        check_for_updates
-        local changes_detected=$?
+        local changes_detected=0
+
+        changes_detected=$(check_for_updates)
 
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
             vcgencmd display_power 0
@@ -111,7 +105,6 @@ main_loop() {
         elif [[ "$FIRST_RUN" = true || "$changes_detected" = 1 ]]; then
             vcgencmd display_power 1
             FIRST_RUN=false
-            download # >/dev/null 2>/dev/null &
             wait
             if [ -d "$MEDIA_FOLDER" ] && [ "$(ls -A "$MEDIA_FOLDER")" ]; then
                 sudo kill "$DISPLAYPID" # >/dev/null 2>/dev/null

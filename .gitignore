@@ -5,6 +5,7 @@ wpa_supplicant/
 saves/
 state.json
 METADATATEST.png
+*.old*
 
 
 # Byte-compiled / optimized / DLL files

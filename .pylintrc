@@ -1,0 +1,2 @@
+[MASTER]
+ignore="./saves/*,./.git/*,./.vscode/*,./.idea/*,./.gitignore,./.gitmodules,./.gitattributes"

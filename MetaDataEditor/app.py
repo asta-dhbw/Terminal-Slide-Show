@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QPixmap, QIcon, QKeyEvent
 
-from metadata_editor import read_metadata, write_metadata
+from MetaDataEditor.image_metadata_handler import read_metadata, write_metadata
 
 
 # Constants
