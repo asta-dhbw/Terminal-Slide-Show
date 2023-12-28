@@ -1,6 +1,7 @@
 """ Main GUI for editing images MetaData """
 import os
 import sys
+import logging
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QApplication,
@@ -15,7 +16,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QFileDialog,
 )
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QPixmap, QIcon, QKeyEvent
+from PyQt5.QtGui import QMovie, QPixmap, QIcon, QKeyEvent
 
 from image_metadata_handler import read_metadata, write_metadata
 
@@ -28,7 +29,8 @@ STANDARD_STYLE_SHEET = f"{SCRIPT_DIR_PATH}/styles.qss"
 
 TEXT_FIELD_HEIGHT = 50
 
-IMAGE_FORMATS = "Images (*.png *.jpg *.bmp)"
+IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
+VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
 
 
 def load_styles(self):
@@ -227,36 +229,43 @@ class ImageEditorGUI(QWidget):
 
     def load_image(self):
         """Opens a file dialog to select an image and adds it with metadata to the ScrollArea"""
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        file_dialog = QFileDialog()
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter(IMAGE_FORMATS)
-        if file_dialog.exec_():
-            selected_files = file_dialog.selectedFiles()
-            if selected_files:
-                self.image_path = selected_files[0]
-                self.display_image(self.image_path)
+        try:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            file_dialog = QFileDialog()
+            file_dialog.setFileMode(QFileDialog.ExistingFile)
+            file_dialog.setNameFilter(f"{IMAGE_FORMATS};;{VIDEO_FORMATS}")
+            if file_dialog.exec_():
+                selected_files = file_dialog.selectedFiles()
+                if selected_files:
+                    self.image_path = selected_files[0]
+                    self.display_image(self.image_path)
 
-                for tag_widget in self.tag_widgets:
-                    tag_widget.remove_self()
+                    for tag_widget in self.tag_widgets:
+                        tag_widget.remove_self()
 
-                self.update_window_title()
+                    self.update_window_title()
 
-        meta_datas = read_metadata(self.image_path)
-        for key, value in meta_datas.items():
-            tag_widget = TagWidget()
-            tag_widget.set_values(key, value)
-            self.tag_widgets.append(tag_widget)
+            meta_datas = read_metadata(self.image_path)
+            for key, value in meta_datas.items():
+                tag_widget = TagWidget()
+                tag_widget.set_values(key, value)
+                self.tag_widgets.append(tag_widget)
 
-            self.scroll_layout.addWidget(tag_widget)
+                self.scroll_layout.addWidget(tag_widget)
+        except:
+            pass
 
     def save_image(self):
         """Opens a file dialog to select a location to save the image with metadata"""
         if self.image_path is not None:
             options = QFileDialog.Options()
             file_dialog = QFileDialog.getSaveFileName(
-                self, "Save Image", "", IMAGE_FORMATS, options=options
+                self,
+                "Save Image",
+                "",
+                f"{IMAGE_FORMATS};;{VIDEO_FORMATS}",
+                options=options,
             )
             if file_dialog[0]:
                 metadata_dict = {}
@@ -270,12 +279,18 @@ class ImageEditorGUI(QWidget):
 
     def display_image(self, image_path):
         """Displays the image in the image_label"""
-        pixmap = QPixmap(image_path)
-        pixmap = pixmap.scaledToWidth(self.image_label.width())
-        self.image_label.setPixmap(pixmap)
+        if image_path.lower().endswith(".gif"):
+            movie = QMovie(image_path)
+            self.image_label.setMovie(movie)
+            movie.start()
+        else:
+            pixmap = QPixmap(image_path)
+            pixmap = pixmap.scaledToWidth(self.image_label.width())
+            self.image_label.setPixmap(pixmap)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     app = QApplication(sys.argv + ["-platform", "windows:darkmode=1"])
     # app.setStyle("Fusion")
     app_icon = QIcon(ICON_PATH)

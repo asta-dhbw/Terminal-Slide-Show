@@ -83,7 +83,7 @@ main_loop() {
         changes_detected=$(check_for_updates)
 
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
-            vcgencmd display_power 0
+            #vcgencmd display_power 0
             echo "Exiting script as no one is here"
 
             # Calculate seconds until ON_TIME of the next day
@@ -113,7 +113,7 @@ main_loop() {
                 DISPLAYPID=$!
             else
                 killer # >/dev/null 2>/dev/null
-                vcgencmd display_power 0
+                #vcgencmd display_power 0
                 clear
             fi
         fi
