@@ -66,6 +66,7 @@ sudo apt upgrade
 
 # Install required packages:
 sudo apt install fbi vlc
+sudo apt-get install jq
 
 # Install recommended packages:
 sudo apt install dos2unix

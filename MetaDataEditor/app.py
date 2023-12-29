@@ -160,7 +160,7 @@ class ImageEditorGUI(QWidget):
         self.save_button = QPushButton("Save Image", self)
 
         # Add Buttons to the bottom of the layout
-        button_layout = QVBoxLayout()
+        button_layout = QHBoxLayout()
         button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.add_standard_button)
         button_layout.addWidget(self.load_button)
@@ -179,10 +179,10 @@ class ImageEditorGUI(QWidget):
         # Create a layout for the ScrollArea widget
         self.scroll_layout = QVBoxLayout(self.scroll_widget)
         self.scroll_layout.addWidget(self.image_label)
-        self.scroll_layout.addLayout(button_layout)
 
         # Add all to Mainlayout
         layout = QVBoxLayout()
+        layout.addLayout(button_layout)
         layout.addWidget(self.scroll_area)
 
         # Connect Buttons to functions

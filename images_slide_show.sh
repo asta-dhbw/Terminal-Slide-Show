@@ -2,7 +2,7 @@
 
 # Function to be executed when the script is terminated
 cleanup() {
-    killer
+    kill_display_processes
     echo "Slideshow terminated."
 }
 
@@ -16,13 +16,14 @@ DISPLAYTIME=10 # in seconds
 BLENDTIME=900  # in milliseconds
 LOGO_PATH="$SCRIPT_PATH/LOGO.png"
 UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/drive_local_file_manager.py"
+FILES_TO_DISPLAY_FILE="$SCRIPT_PATH/current_files.json"
 
 OFF_TIME="23:00" #19:30
 ON_TIME="07:30"
 
 # Other Constants
 DISPLAYPID=""
-FIRST_RUN=true
+is_first_run=true
 
 # Function to turn off the cursor
 turn_off_cursor() {
@@ -31,7 +32,7 @@ turn_off_cursor() {
 }
 
 # Function to kill display processes
-killer() {
+kill_display_processes() {
     sudo pkill -x "fbi"  # >/dev/null 2>/dev/null
     sudo pkill -x "cvlc" # >/dev/null 2>/dev/null
 }
@@ -47,9 +48,10 @@ display() {
     local image_files="$1"
     local video_files="$2"
     IMAGE_FILES_COUNT=$(echo "$image_files" | wc -w)
-    killer # >/dev/null 2>/dev/null
+    kill_display_processes # >/dev/null 2>/dev/null
 
     if [[ -n "$image_files" && -n "$video_files" ]]; then
+        echo "IMAGES AND VIDEOS"
         while true; do
             sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 $image_files # >/dev/null 2>/dev/null &
             sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))
@@ -57,21 +59,33 @@ display() {
             cvlc "$video_files" # >/dev/null 2>/dev/null
         done
     elif [ -n "$image_files" ]; then
-        clear
+        #clear
+        echo "IMAGES ONLY"
         sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose $image_files # >/dev/null 2>/dev/null &
     elif [ -n "$video_files" ]; then
-        clear
+        #clear
+        echo "VIDEOS ONLY"
         cvlc --loop "$video_files" # >/dev/null 2>/dev/null &
     fi
 }
 
-# Function to handle the main display logic
-handle_display() {
-    shopt -s nocaseglob
-    local image_files=$(find "$MEDIA_FOLDER" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" \))
-    local video_files=$(find "$MEDIA_FOLDER" -type f \( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.avi" -o -iname "*.ogg" \))
-    shopt -u nocaseglob
-    display "$image_files" "$video_files"
+# Function to calculate and sleep until target time
+calculate_and_sleep_until_target_time() {
+    local current_time="$1"
+    local target_time=""
+    if [[ "$current_time" < "$ON_TIME" ]]; then
+        target_time=$ON_TIME
+    else
+        target_time="$ON_TIME tomorrow"
+    fi
+
+    local target_timestamp=$(date -d "$target_time" +"%s")
+    local current_timestamp=$(date -d "$current_time" +"%s")
+    local seconds_until_target=$((target_timestamp - current_timestamp))
+
+    kill_display_processes
+    #clear
+    sleep $seconds_until_target
 }
 
 # Function to handle the main loop
@@ -80,41 +94,38 @@ main_loop() {
         local current_time=$(date +"%H:%M")
         local changes_detected=0
 
-        changes_detected=$(check_for_updates)
+        # Run Python file and get return value to check if drive folder has been updated (1 = yes, 0 = no)
+        check_for_updates
+        changes_detected=$?
+        echo -e "Changes detected: $changes_detected \n"
 
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
             #vcgencmd display_power 0
             echo "Exiting script as no one is here"
+            calculate_and_sleep_until_target_time "$current_time"
 
-            # Calculate seconds until ON_TIME of the next day
-            local target_time=""
-            if [[ "$current_time" < "$ON_TIME" ]]; then
-                target_time=$ON_TIME
-            else
-                target_time="$ON_TIME tomorrow"
-            fi
-
-            local target_timestamp=$(date -d "$target_time" +"%s")
-            local current_timestamp=$(date -d "$current_time" +"%s")
-            local seconds_until_target=$((target_timestamp - current_timestamp))
-
-            killer # >/dev/null 2>/dev/null
-            clear
-            sleep $seconds_until_target
-
-        elif [[ "$FIRST_RUN" = true || "$changes_detected" = 1 ]]; then
+        elif [[ "$is_first_run" = true || "$changes_detected" = 1 ]]; then
             vcgencmd display_power 1
-            FIRST_RUN=false
+            is_first_run=false
+
+            # get from file the current images and videos to display
+            mapfile -t current_images < <(jq -r '.IMAGES[]' "$FILES_TO_DISPLAY_FILE")
+            mapfile -t current_videos < <(jq -r '.VIDEOS[]' "$FILES_TO_DISPLAY_FILE")
             wait
-            if [ -d "$MEDIA_FOLDER" ] && [ "$(ls -A "$MEDIA_FOLDER")" ]; then
+            echo "Images to display: ${current_images[*]}"
+            echo "Videos to display: ${current_videos[*]}"
+
+            # display images and videos if any or changed
+            if [[ ${#current_images[@]} -gt 0 || ${#current_videos[@]} -gt 0 ]]; then
+                echo "ENTERED SLIDESHOWWWWWWWW!!!!!!!!!"
                 sudo kill "$DISPLAYPID" # >/dev/null 2>/dev/null
-                killer                  # >/dev/null 2>/dev/null
-                handle_display &
+                kill_display_processes  # >/dev/null 2>/dev/null
+                display "${current_images[*]}" "${current_videos[*]}" &
                 DISPLAYPID=$!
             else
-                killer # >/dev/null 2>/dev/null
+                kill_display_processes # >/dev/null 2>/dev/null
                 #vcgencmd display_power 0
-                clear
+                #clear
             fi
         fi
         sleep 10
@@ -122,7 +133,7 @@ main_loop() {
 }
 
 # Main scripts
-clear
+#clear
 turn_off_cursor
 sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" & # >/dev/null 2>/dev/null &
 main_loop                                                        # >/dev/null 2>/dev/null

@@ -1,6 +1,7 @@
 """ This script is used to manage the files that are displayed on the screen."""
 import os
 import sys
+import json
 import shutil
 import logging
 import argparse
@@ -18,12 +19,16 @@ parser.add_argument(
     "--use_google_drive",
     type=bool,
     default=True,
-    help="A boolean that says if we use google drive or not",
+    help="A boolean that says if we use google drive or not (default: True)",
 )
 args = parser.parse_args()
 
 # Specify the path to your service account JSON file and the target Google Drive folder ID.
 TARGET_DIR = "./content"
+CURRENT_FILES = "./current_files.json"
+
+IMAGE_FORMATS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"]
+VIDEO_FORMATS = [".mp4", ".avi", ".mov", ".flv", ".wmv", ".mkv", "ogg"]
 
 # If using Google Drive, download new files and delete deleted files.
 if args.use_google_drive:
@@ -49,17 +54,29 @@ if args.use_google_drive:
                 shutil.rmtree(file_path)
 
 # Get all files that are currently supposed to be displayed
-current_files = []
+current_files = {"IMAGES": [], "VIDEOS": []}
 for root, dirs, files in os.walk(TARGET_DIR):
     for file in files:
         file_path = os.path.join(root, file)
-        if check_for_event(file_path):
-            current_files.append(file_path)
+        absolute_file_path = os.path.abspath(file_path)
+        file_extension = os.path.splitext(file)[1].lower()
+        if check_for_event(absolute_file_path):
+            # Append to the appropriate list based on the file extension
+            if file_extension in IMAGE_FORMATS:
+                current_files["IMAGES"].append(absolute_file_path)
+            elif file_extension in VIDEO_FORMATS:
+                current_files["VIDEOS"].append(absolute_file_path)
+logging.info("Current files: %s", current_files)
+
+with open(CURRENT_FILES, "w", encoding="utf-8") as f:
+    json.dump(current_files, f)
+
 
 # If there are changes, return signal to restart the slideshow
-if args.use_google_drive and new_items is not None and deleted_items is not None:
+if args.use_google_drive and (len(new_items) > 0 or len(deleted_items) > 0):
     logging.info("New items: %s", new_items)
     logging.info("Deleted items: %s", deleted_items)
     sys.exit(1)
 else:
+    logging.info("No changes")
     sys.exit(0)

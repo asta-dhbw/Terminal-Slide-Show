@@ -51,11 +51,14 @@ def get_changes(service, drive_dir_id, state_file="./state.json"):
         logging.error(
             "HTTP error at GDrive change detection:\n%s\n------------------", http_error
         )
+        return [], []
     except Exception as error:
         logging.error(
             "An unexpected error occurre at GDrive change detection:\n%s\n------------------",
             error,
         )
+        return [], []
+
     current_state = results.get("files", [])
 
     if len(old_state) == 0:

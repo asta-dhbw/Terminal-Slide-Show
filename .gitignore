@@ -6,6 +6,7 @@ saves/
 state.json
 METADATATEST.png
 *.old*
+current_files.json
 
 
 # Byte-compiled / optimized / DLL files
