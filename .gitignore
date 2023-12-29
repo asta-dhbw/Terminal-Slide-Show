@@ -1,6 +1,196 @@
-credentials/
-content/
-wpa_supplicant/
+app_data/
 saves/
-install.txt
-state.json
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile
+Pipfile.lock
+
+# virtualenv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytest
+__pycache__/
+.pytest_cache/
+
+# Salt build
+docs/build/
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# VS Code
+.vscode/
+.history
+
+# Spyder
+.spyderworkspace
+
+# Jupyter Lab
+.jupyter/
+
+# IPython
+.ipython/
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+Pipfile.snapshot
+
+# Poetry
+poetry.lock
+
+# PBR
+.eggs/
+
+# pycache
+__pycache__/
+
+# PyInstaller
+dist/
+build/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+Testing/
+
+# Sphinx documentation
+doc/_build/
+
+# PyBuilder
+target/
+
+# pycache
+__pycache__/
+
+# pipenv
+Pipfile.lock
+Pipfile.resolved
+
+# mypy
+.mypy_cache/
+
+# bandit
+.bandit
+
+# vulture
+.vulture/
+
+# IDE
+.idea/
+
+# .sconsign.dblite
+.sconsign.dblite
+
+# mypy
+.mypy_cache/
+
+# mypy
+.mypy_cache/
+
+# mypy
+.mypy_cache/

@@ -1,0 +1,3 @@
+[MASTER]
+ignore="./saves/*,./.git/*,./.vscode/*,./.idea/*,./.gitignore,./.gitmodules,./.gitattributes"
+extension-pkg-whitelist=PyQt5
