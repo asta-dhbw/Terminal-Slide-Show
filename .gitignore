@@ -1,12 +1,5 @@
-credentials/
-favicon_io/
-content/
-wpa_supplicant/
+app_data/
 saves/
-state.json
-METADATATEST.png
-*.old*
-current_files.json
 
 
 # Byte-compiled / optimized / DLL files

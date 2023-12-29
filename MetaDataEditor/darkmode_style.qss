@@ -1,4 +1,4 @@
-/* styles.qss */
+/* darmode_style.qss */
 
 QWidget {
     background-color: #333333;

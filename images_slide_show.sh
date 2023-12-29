@@ -11,15 +11,15 @@ trap cleanup EXIT
 
 # Configuration Variables
 SCRIPT_PATH="./"
-MEDIA_FOLDER="$SCRIPT_PATH/content/"
-DISPLAYTIME=10 # in seconds
-BLENDTIME=900  # in milliseconds
 LOGO_PATH="$SCRIPT_PATH/LOGO.png"
 UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/drive_local_file_manager.py"
-FILES_TO_DISPLAY_FILE="$SCRIPT_PATH/current_files.json"
+CURRENT_FILES_FILE="$SCRIPT_PATH/current_files.json"
 
 OFF_TIME="23:00" #19:30
 ON_TIME="07:30"
+
+DISPLAYTIME=10 # in seconds
+BLENDTIME=900  # in milliseconds
 
 # Other Constants
 DISPLAYPID=""
@@ -51,7 +51,6 @@ display() {
     kill_display_processes # >/dev/null 2>/dev/null
 
     if [[ -n "$image_files" && -n "$video_files" ]]; then
-        echo "IMAGES AND VIDEOS"
         while true; do
             sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 $image_files # >/dev/null 2>/dev/null &
             sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))
@@ -60,11 +59,9 @@ display() {
         done
     elif [ -n "$image_files" ]; then
         #clear
-        echo "IMAGES ONLY"
         sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose $image_files # >/dev/null 2>/dev/null &
     elif [ -n "$video_files" ]; then
         #clear
-        echo "VIDEOS ONLY"
         cvlc --loop "$video_files" # >/dev/null 2>/dev/null &
     fi
 }
@@ -97,7 +94,6 @@ main_loop() {
         # Run Python file and get return value to check if drive folder has been updated (1 = yes, 0 = no)
         check_for_updates
         changes_detected=$?
-        echo -e "Changes detected: $changes_detected \n"
 
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
             #vcgencmd display_power 0
@@ -109,15 +105,14 @@ main_loop() {
             is_first_run=false
 
             # get from file the current images and videos to display
-            mapfile -t current_images < <(jq -r '.IMAGES[]' "$FILES_TO_DISPLAY_FILE")
-            mapfile -t current_videos < <(jq -r '.VIDEOS[]' "$FILES_TO_DISPLAY_FILE")
+            mapfile -t current_images < <(jq -r '.IMAGES[]' "$CURRENT_FILES_FILE")
+            mapfile -t current_videos < <(jq -r '.VIDEOS[]' "$CURRENT_FILES_FILE")
             wait
             echo "Images to display: ${current_images[*]}"
             echo "Videos to display: ${current_videos[*]}"
 
             # display images and videos if any or changed
             if [[ ${#current_images[@]} -gt 0 || ${#current_videos[@]} -gt 0 ]]; then
-                echo "ENTERED SLIDESHOWWWWWWWW!!!!!!!!!"
                 sudo kill "$DISPLAYPID" # >/dev/null 2>/dev/null
                 kill_display_processes  # >/dev/null 2>/dev/null
                 display "${current_images[*]}" "${current_videos[*]}" &

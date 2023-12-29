@@ -1,4 +1,4 @@
-""" Main GUI for editing images MetaData """
+""" Main GUI that helps editing images MetaData """
 import os
 import sys
 import logging
@@ -25,7 +25,8 @@ from image_metadata_handler import read_metadata, write_metadata
 SCRIPT_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 CURRENT_DATE = datetime.now().date()
 ICON_PATH = f"{SCRIPT_DIR_PATH}/favicon.ico"
-STANDARD_STYLE_SHEET = f"{SCRIPT_DIR_PATH}/styles.qss"
+DARKMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/darkmode_style.qss"
+LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
 
 TEXT_FIELD_HEIGHT = 50
 
@@ -33,9 +34,9 @@ IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
 
 
-def load_styles(self):
-    """Loads the styles from the styles.qss file"""
-    with open(STANDARD_STYLE_SHEET, "r", encoding="utf-8") as file:
+def load_styles(self, file):
+    """Loads the styles from stylefiles to the application"""
+    with open(file, "r", encoding="utf-8") as file:
         style = file.read()
         self.setStyleSheet(style)
 
@@ -96,8 +97,6 @@ class TagWidget(QWidget):
         self.remove_button = QPushButton("Remove", self)
         self.remove_button.setObjectName("removeButton")
 
-        # self.remove_button.setStyleSheet("background-color: #FF0000; color: #FFFFFF;")
-
         tag_layout = QHBoxLayout()
         tag_layout.addWidget(self.tag_name_edit)
         tag_layout.addWidget(self.tag_value_edit)
@@ -136,7 +135,7 @@ class TagWidget(QWidget):
 
 class ImageEditorGUI(QWidget):
     """
-    Main GUI for editing images MetaData
+    Main GUI Window for editing images MetaData
     """
 
     def __init__(self):
@@ -147,13 +146,16 @@ class ImageEditorGUI(QWidget):
         self.image_path = None
         self.tag_widgets = []
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
-        """Initialize the UI"""
+    def init_ui(self):
+        """Setup the UI"""
+        # Create a label for the image
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignCenter)
 
+        # Create Buttons
+        self.mode_switch = QPushButton("Switch Mode", self)
         self.add_button = QPushButton("Add Tag", self)
         self.add_standard_button = QPushButton("Add Standard", self)
         self.load_button = QPushButton("Load Image", self)
@@ -161,11 +163,19 @@ class ImageEditorGUI(QWidget):
 
         # Add Buttons to the bottom of the layout
         button_layout = QHBoxLayout()
+        button_layout.addWidget(self.mode_switch)
         button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.add_standard_button)
         button_layout.addWidget(self.load_button)
         button_layout.addWidget(self.save_button)
         button_layout.setSpacing(15)
+
+        # Connect Buttons to functions
+        self.mode_switch.clicked.connect(self.switch_mode)
+        self.add_button.clicked.connect(self.add_tag)
+        self.add_standard_button.clicked.connect(self.add_standard_tag)
+        self.load_button.clicked.connect(self.load_image)
+        self.save_button.clicked.connect(self.save_image)
 
         # Create a ScrollArea
         self.scroll_area = QScrollArea(self)
@@ -185,21 +195,25 @@ class ImageEditorGUI(QWidget):
         layout.addLayout(button_layout)
         layout.addWidget(self.scroll_area)
 
-        # Connect Buttons to functions
-        self.add_button.clicked.connect(self.add_tag)
-        self.add_standard_button.clicked.connect(self.add_standard_tag)
-        self.load_button.clicked.connect(self.load_image)
-        self.save_button.clicked.connect(self.save_image)
-
+        # Start GUI
         self.setLayout(layout)
 
     def update_window_title(self):
-        """Updates the window title to include the image name"""
+        """Updates the window-title-bar to include the image name"""
         if self.image_path is not None:
             filename = os.path.basename(self.image_path)
             self.setWindowTitle(f"MetaData Editor ({filename})")
         else:
             self.setWindowTitle("MetaData Editor")
+
+    def switch_mode(self):
+        """Switches between light and dark mode"""
+        if self.mode_switch.text() == "Switch to Light Mode":
+            load_styles(self, DARKMODE_SYTLE_SHEET)
+            self.mode_switch.setText("Switch to Dark Mode")
+        else:
+            load_styles(self, LIGHTMODE_SYTLE_SHEET)
+            self.mode_switch.setText("Switch to Light Mode")
 
     def add_tag(self):
         """Adds a new TagWidget to the ScrollArea"""
@@ -210,6 +224,7 @@ class ImageEditorGUI(QWidget):
 
     def add_standard_tag(self):
         """Adds a new TagWidget with standard values to the ScrollArea"""
+
         # Create a TagWidget with standard values
         tag_widget = TagWidget(
             tag_name="STARTDATE", tag_value=CURRENT_DATE.strftime("%d.%m.%Y")
@@ -246,10 +261,10 @@ class ImageEditorGUI(QWidget):
 
                     self.update_window_title()
 
+            # adding tags
             meta_datas = read_metadata(self.image_path)
             for key, value in meta_datas.items():
-                tag_widget = TagWidget()
-                tag_widget.set_values(key, value)
+                tag_widget = TagWidget(tag_name=key, tag_value=value)
                 self.tag_widgets.append(tag_widget)
 
                 self.scroll_layout.addWidget(tag_widget)
@@ -267,6 +282,8 @@ class ImageEditorGUI(QWidget):
                 f"{IMAGE_FORMATS};;{VIDEO_FORMATS}",
                 options=options,
             )
+
+            # Get and save Metadata
             if file_dialog[0]:
                 metadata_dict = {}
                 for tag_widget in self.tag_widgets:
@@ -296,7 +313,7 @@ if __name__ == "__main__":
     app_icon = QIcon(ICON_PATH)
     app.setWindowIcon(app_icon)
 
-    load_styles(app)
+    load_styles(app, DARKMODE_SYTLE_SHEET)
 
     editor = ImageEditorGUI()
     editor.setWindowTitle("MetaData Editor")

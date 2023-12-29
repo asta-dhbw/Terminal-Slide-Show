@@ -4,7 +4,6 @@ import sys
 import json
 import shutil
 import logging
-import argparse
 
 from drive_connector import connect_to_drive
 from drive_change_detector import get_changes
@@ -13,31 +12,27 @@ from show_file_checker import check_for_event
 
 logging.basicConfig(level=logging.INFO)
 
-# Parse arguments
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--use_google_drive",
-    type=bool,
-    default=True,
-    help="A boolean that says if we use google drive or not (default: True)",
-)
-args = parser.parse_args()
+# Load the configuration from the config.json file
+with open("./app_config.json", encoding="utf-8") as config_file:
+    config = json.load(config_file)
 
-# Specify the path to your service account JSON file and the target Google Drive folder ID.
-TARGET_DIR = "./content"
-CURRENT_FILES = "./current_files.json"
+# Constants
+TARGET_DIR = config["TARGET_DIR"]
+CURRENT_FILES_FILE = "./app_data/current_files.json"
+CHANGES_STATE_FILE = "./app_data/changes_state.json"
+USE_GDRIVE = config["USE_GDRIVE"]
+GOOGLE_API_ACCESS = config["GOOGLE_API_ACCESS"]
+DRIVE_DIR_ID = config["DRIVE_DIR_ID"]
 
 IMAGE_FORMATS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"]
 VIDEO_FORMATS = [".mp4", ".avi", ".mov", ".flv", ".wmv", ".mkv", "ogg"]
 
 # If using Google Drive, download new files and delete deleted files.
-if args.use_google_drive:
-    GOOGLE_API_ACCESS = "./credentials/raspi.json"
-    DRIVE_DIR_ID = "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf"
+if USE_GDRIVE:
     DRIVE = connect_to_drive(GOOGLE_API_ACCESS)
 
     # Retrieve files from the Google Drive folder.
-    new_items, deleted_items = get_changes(DRIVE, DRIVE_DIR_ID)
+    new_items, deleted_items = get_changes(DRIVE, DRIVE_DIR_ID, CHANGES_STATE_FILE)
 
     # Download new_items to the local folder.
     for file in new_items:
@@ -53,7 +48,7 @@ if args.use_google_drive:
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
 
-# Get all files that are currently supposed to be displayed
+# Get all files that are currently supposed to be displayed and save in file
 current_files = {"IMAGES": [], "VIDEOS": []}
 for root, dirs, files in os.walk(TARGET_DIR):
     for file in files:
@@ -61,19 +56,19 @@ for root, dirs, files in os.walk(TARGET_DIR):
         absolute_file_path = os.path.abspath(file_path)
         file_extension = os.path.splitext(file)[1].lower()
         if check_for_event(absolute_file_path):
-            # Append to the appropriate list based on the file extension
+            # Append to the appropriate list based on the file type
             if file_extension in IMAGE_FORMATS:
                 current_files["IMAGES"].append(absolute_file_path)
             elif file_extension in VIDEO_FORMATS:
                 current_files["VIDEOS"].append(absolute_file_path)
 logging.info("Current files: %s", current_files)
 
-with open(CURRENT_FILES, "w", encoding="utf-8") as f:
+with open(CURRENT_FILES_FILE, "w", encoding="utf-8") as f:
     json.dump(current_files, f)
 
 
-# If there are changes, return signal to restart the slideshow
-if args.use_google_drive and (len(new_items) > 0 or len(deleted_items) > 0):
+# If there are changes, return a signal to restart the slideshow
+if USE_GDRIVE and (len(new_items) > 0 or len(deleted_items) > 0):
     logging.info("New items: %s", new_items)
     logging.info("Deleted items: %s", deleted_items)
     sys.exit(1)

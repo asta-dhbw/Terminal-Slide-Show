@@ -43,7 +43,7 @@ def check_for_event(file):
     #  Check if the filename contains a date
     match = re.search(r"(\d{1,2}[-._]\d{1,2}[-._]\d{2,4})", file_name)
     if match:
-        # Check if event using the filename
+        # Check if event by using the filename
         logging.debug("Matched. Checking by filename")
         date_parts = file_name.split("@")
         if len(date_parts) == 2:

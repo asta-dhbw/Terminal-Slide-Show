@@ -25,7 +25,8 @@ def save_state(new_state, file_path):
     Save the state to the state file.
 
     Parameters:
-    - state (dict): The state to be saved.
+    - new_state (dict): The state to be saved.
+    - file_path (str): The path to the state file.
     """
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(new_state, f)
@@ -61,12 +62,15 @@ def get_changes(service, drive_dir_id, state_file="./state.json"):
 
     current_state = results.get("files", [])
 
+    # check for changes or errors
     if len(old_state) == 0:
         new_files = current_state
         deleted_files = {}
-    else:
+    elif len(current_state) > 0:
         new_files = [file for file in current_state if file not in old_state]
         deleted_files = [file for file in old_state if file not in current_state]
+    else:
+        logging.warning("No files found in %s or error occurred.", drive_dir_id)
 
     if not new_files and not deleted_files:
         logging.info("No changes in the folder with ID %s.", drive_dir_id)

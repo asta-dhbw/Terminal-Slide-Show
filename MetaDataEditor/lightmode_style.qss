@@ -1,0 +1,39 @@
+/* lightmode_style.qss */
+
+QWidget {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+QPushButton {
+    background-color: #DDDDDD;
+    color: #000000;
+    border: 1px solid #AAAAAA;
+    padding: 5px;
+    margin: 5px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+    border: 1px solid #2980b9;
+}
+
+QPushButton#removeButton {
+    background-color: #FF0000;
+    color: #000000;
+}
+QPushButton#removeButton:hover {
+    background-color: #B20000;
+}
+
+QTextEdit {
+    background-color: #DDDDDD;
+    color: #000000;
+    border: 1px solid #AAAAAA;
+    padding: 5px;
+    margin: 5px;
+}
+
+QTextEdit:hover {
+    background-color: #BBBBBB;
+}

@@ -9,11 +9,9 @@ from googleapiclient.errors import HttpError
 
 # pylint: disable=broad-except
 
-TEMP_FOLDER = "./temp"
 
-
-def download_file(service, file_item, target_directory=TEMP_FOLDER):
-    """Download a file from Google Drive."""
+def download_file(service, file_item, target_directory="./temp"):
+    """Download an item from Google Drive. (file or entire folder)"""
     file_name = file_item["name"]
     file_id = file_item["id"]
     file_type = file_item["mimeType"]
@@ -24,7 +22,7 @@ def download_file(service, file_item, target_directory=TEMP_FOLDER):
         os.makedirs(target_directory)
 
     if file_type == "application/vnd.google-apps.folder":
-        # It's a folder, list all files in the folder and download them one by one
+        # It's a folder, download each item one by one
         children = service.files().list(q=f"'{file_id}' in parents").execute()
         for child in children["files"]:
             download_file(service, child, file_path)
