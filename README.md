@@ -54,10 +54,16 @@ sudo apt install dos2unix
 ## Project-Setup
 To start you have to set some variables inside the [config-file](app_config.json)
 
+#### Python Variables:
 - ``TARGETDIR`` -> folder where the content will be saved
 - ``USE_GDRIVE`` -> If you want to get the content from Google-Drive set it ``true``
 - ``GOOGLE_API_ACCESS`` -> Specifies the path to you service_account json file
 - ``DRIVE_DIR_ID`` -> The ID of the Google-Drive folder with your content
+
+#### Bash Variables:
+- ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display
+- ``DISPLAYTIME`` -> Time for Duration of each image (in seconds)
+- ``BLENDTIME`` -> Time for blending animation (in milliseconds)
 
 ## MetaDataEditor
 [App](MetaDataEditor/app.py)

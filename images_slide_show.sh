@@ -11,15 +11,16 @@ trap cleanup EXIT
 
 # Configuration Variables
 SCRIPT_PATH="./"
+CONFIG_FILE="$SCRIPT_PATH/app_config.json"
 LOGO_PATH="$SCRIPT_PATH/LOGO.png"
 UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/drive_local_file_manager.py"
-CURRENT_FILES_FILE="$SCRIPT_PATH/current_files.json"
+CURRENT_FILES_FILE="$SCRIPT_PATH/app_data/current_files.json"
 
-OFF_TIME="23:00" #19:30
-ON_TIME="07:30"
+OFF_TIME=$(jq -r '.OFF_TIME' $CONFIG_FILE)
+ON_TIME=$(jq -r '.ON_TIME' $CONFIG_FILE)
 
-DISPLAYTIME=10 # in seconds
-BLENDTIME=900  # in milliseconds
+DISPLAYTIME=$(jq -r '.DISPLAYTIME' $CONFIG_FILE) # in seconds
+BLENDTIME=$(jq -r '.BLENDTIME' $CONFIG_FILE)     # in milliseconds
 
 # Other Constants
 DISPLAYPID=""
@@ -97,7 +98,7 @@ main_loop() {
 
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
             #vcgencmd display_power 0
-            echo "Exiting script as no one is here"
+            echo "Going to sleep as no one is here"
             calculate_and_sleep_until_target_time "$current_time"
 
         elif [[ "$is_first_run" = true || "$changes_detected" = 1 ]]; then
