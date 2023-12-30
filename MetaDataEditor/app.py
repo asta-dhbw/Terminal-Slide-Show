@@ -126,8 +126,8 @@ class ImageEditorGUI(QWidget):
         """Adds a new TagWidget to the ScrollArea"""
         tag_widget = TagWidget()
         # Insert at the beginning of the list
-        self.tag_widgets.insert(0, tag_widget)
-        self.scroll_layout.insertWidget(0, tag_widget)
+        self.tag_widgets.append(tag_widget)
+        self.scroll_layout.insertWidget(1, tag_widget)
 
     def add_standard_tag(self):
         """Adds a new TagWidget with standard values to the ScrollArea"""
@@ -141,18 +141,12 @@ class ImageEditorGUI(QWidget):
             tag_name="ENDDATE",
             tag_value=(CURRENT_DATE + timedelta(days=7)).strftime("%d.%m.%Y"),
         )
-        self.tag_widgets.insert(0, tag_widget)  # Insert at the beginning of the list
-        self.tag_widgets.insert(
-            1, tag_widget2
-        )  # Insert at the second position of the list
+        self.tag_widgets.append(tag_widget)
+        self.tag_widgets.append(tag_widget2)
 
-        # Insert the new TagWidget before the first item
-        self.scroll_layout.insertWidget(
-            0, tag_widget
-        )  # Insert at the top of the layout
-        self.scroll_layout.insertWidget(
-            1, tag_widget2
-        )  # Insert at the second position of the layout
+        # Insert the new TagWidget before the first items
+        self.scroll_layout.insertWidget(1, tag_widget)
+        self.scroll_layout.insertWidget(2, tag_widget2)
 
     def load_image(self):
         """Opens a file dialog to select an image and adds it with metadata to the ScrollArea"""
