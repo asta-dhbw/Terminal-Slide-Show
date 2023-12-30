@@ -49,21 +49,21 @@ class TagWidget(QWidget):
     def __init__(self, tag_name="", tag_value="", text_field_height=50, parent=None):
         super(TagWidget, self).__init__(parent)
 
-        self.TEXT_FIELD_HEIGHT = text_field_height
+        self.text_field_height = text_field_height
 
         self.tag_name_edit = TagTextEdit(self)
         if tag_name.strip() != "":
             self.tag_name_edit.setPlainText(tag_name)
         else:
             self.tag_name_edit.setPlaceholderText("Tag Name")
-        self.tag_name_edit.setFixedHeight(self.TEXT_FIELD_HEIGHT)
+        self.tag_name_edit.setFixedHeight(self.text_field_height)
 
         self.tag_value_edit = TagTextEdit(self)
         if tag_value.strip() != "":
             self.tag_value_edit.setPlainText(tag_value)
         else:
             self.tag_value_edit.setPlaceholderText("Tag Value")
-        self.tag_value_edit.setFixedHeight(self.TEXT_FIELD_HEIGHT)
+        self.tag_value_edit.setFixedHeight(self.text_field_height)
 
         self.remove_button = QPushButton("Remove", self)
         self.remove_button.setObjectName("removeButton")

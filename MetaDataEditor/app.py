@@ -59,7 +59,7 @@ class ImageEditorGUI(QWidget):
         """Setup the UI"""
         # Create a label for the image
         self.image_label = QLabel(self)
-        self.image_label.setAlignment(Qt.AlignCenter)
+        self.image_label.setAlignment(Qt.AlignTop)
 
         # Create Buttons
         self.mode_switch = QPushButton("Switch Mode", self)
@@ -213,6 +213,19 @@ class ImageEditorGUI(QWidget):
                 self.image_label.width(), self.height(), Qt.KeepAspectRatio
             )
             self.image_label.setPixmap(pixmap)
+            self.image_path = image_path
+
+    def resizeEvent(self, event):
+        """Resizes the image when the window is resized"""
+        if (
+            hasattr(self, "image_path") and self.image_path
+        ):  # Check if an image has been loaded
+            pixmap = QPixmap(self.image_path)
+            pixmap = pixmap.scaled(
+                self.scroll_area.width(), self.scroll_area.height(), Qt.KeepAspectRatio
+            )
+            self.image_label.setPixmap(pixmap)
+        super().resizeEvent(event)  # Call the parent class's resizeEvent method
 
 
 if __name__ == "__main__":
