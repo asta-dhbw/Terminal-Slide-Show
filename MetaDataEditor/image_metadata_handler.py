@@ -1,4 +1,5 @@
 """Module for reading and writing metadata to image files"""
+import json
 import logging
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
@@ -29,6 +30,14 @@ def read_metadata(image_path):
         if hasattr(image, "info"):
             for key, value in image.info.items():
                 metadata_dict[key] = value
+    elif file_format == "gif":
+        metadata_str = image.info.get("comment")
+        print(metadata_str)
+        if metadata_str:
+            try:
+                metadata_dict = json.loads(metadata_str)
+            except json.JSONDecodeError:
+                logging.warning("Could not decode metadata")
     else:
         logging.warning("Format not supported")
 
@@ -53,6 +62,11 @@ def write_metadata(image_path, out_path="./", metadata=None):
         for key, value in metadata.items():
             png_info.add_text(key, str(value))
         image.save(f"{out_path}.{file_format}", pnginfo=png_info)
+    elif file_format.lower() == "gif":
+        metadata_str = str(metadata)
+        image.save(
+            out_path, "GIF", save_all=True, append_images=[image], comment=metadata_str
+        )
     else:
         logging.warning("Format not supported")
 
@@ -64,3 +78,4 @@ def write_metadata(image_path, out_path="./", metadata=None):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
+    read_metadata("giphy.gif")

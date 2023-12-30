@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QSizePolicy,
     QFileDialog,
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
 from custom_widgets import TagWidget
@@ -31,6 +31,9 @@ LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
 
 IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
+
+COMPANY = "Muddyblack"
+APP_NAME = "MetaDataEditor"
 
 
 def load_styles(self, file):
@@ -148,6 +151,16 @@ class ImageEditorGUI(QWidget):
         self.scroll_layout.insertWidget(1, tag_widget)
         self.scroll_layout.insertWidget(2, tag_widget2)
 
+    def get_last_dir(self):
+        """Get the last used directory from QSettings"""
+        settings = QSettings(COMPANY, APP_NAME)
+        return settings.value("last_dir", "")
+
+    def set_last_dir(self, path):
+        """Set the last used directory in QSettings"""
+        settings = QSettings(COMPANY, APP_NAME)
+        settings.setValue("last_dir", os.path.dirname(path))
+
     def load_image(self):
         """Opens a file dialog to select an image and adds it with metadata to the ScrollArea"""
         try:
@@ -156,11 +169,19 @@ class ImageEditorGUI(QWidget):
             file_dialog = QFileDialog()
             file_dialog.setFileMode(QFileDialog.ExistingFile)
             file_dialog.setNameFilter(f"{IMAGE_FORMATS};;{VIDEO_FORMATS}")
+
+            # Load the last directory from QSettings
+            last_dir = self.get_last_dir()
+            file_dialog.setDirectory(last_dir)
+
             if file_dialog.exec_():
                 selected_files = file_dialog.selectedFiles()
                 if selected_files:
                     self.image_path = selected_files[0]
                     self.display_image(self.image_path)
+
+                    # Save the directory to QSettings
+                    self.set_last_dir(self.image_path)
 
                     for tag_widget in self.tag_widgets:
                         tag_widget.remove_self()
