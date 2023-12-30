@@ -46,11 +46,13 @@ def check_for_event(file):
         # Check if event by using the filename
         logging.debug("Matched. Checking by filename")
         date_parts = file_name.split("@")
+        logging.debug("Date parts: %s", date_parts)
+
         if len(date_parts) == 2:
-            start = convert_to_datetime(match.group(1))
-            end = convert_to_datetime(match.group(2))
+            start = convert_to_datetime(date_parts[0])
+            end = convert_to_datetime(date_parts[1])
         elif len(date_parts) == 1:
-            end = convert_to_datetime(match.group(1))
+            end = convert_to_datetime(date_parts[0])
         if start is None and end is None:
             logging.debug("Nothing useful in filename")
             match = False
@@ -79,6 +81,9 @@ def check_for_event(file):
     ):
         logging.debug("Event is currently happening")
         return True
+    if (start is not None and end is not None) and (start > datetime.now()):
+        logging.debug("Start date is in the future: %s", start)
+        return False
 
     logging.warning("File %s does not match anything!", file)
     return False
@@ -86,5 +91,5 @@ def check_for_event(file):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    TEST = check_for_event("./content/OLAdasdF230.12.23eqwe.png")
+    TEST = check_for_event("./app_data/content/01.01.24@02.03.25.png")
     print(f"{TEST}")
