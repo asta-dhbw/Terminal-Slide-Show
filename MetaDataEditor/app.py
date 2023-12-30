@@ -11,16 +11,16 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
-    QTextEdit,
     QScrollArea,
     QSizePolicy,
     QFileDialog,
 )
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QMovie, QPixmap, QIcon, QKeyEvent
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QMovie, QPixmap, QIcon
+
+from custom_widgets import TagWidget
 
 from image_metadata_handler import read_metadata, write_metadata
-
 
 # Constants
 SCRIPT_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -28,8 +28,6 @@ CURRENT_DATE = datetime.now().date()
 ICON_PATH = f"{SCRIPT_DIR_PATH}/favicon.ico"
 DARKMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/darkmode_style.qss"
 LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
-
-TEXT_FIELD_HEIGHT = 50
 
 IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
@@ -40,98 +38,6 @@ def load_styles(self, file):
     with open(file, "r", encoding="utf-8") as file:
         style = file.read()
         self.setStyleSheet(style)
-
-
-class TagTextEdit(QTextEdit):
-    """
-    Custom QTextEdit that allows tabbing between widgets
-    """
-
-    def keyPressEvent(self, event):
-        """Overwrite the keyPressEvent to allow tabbing between widgets"""
-        if event.key() == Qt.Key_Tab and not event.modifiers():
-            self.focusNextPrevChild(True)
-        else:
-            super().keyPressEvent(event)
-
-    def event(self, event):
-        """Overwrite the event to allow tabbing between widgets"""
-        if (
-            event.type() == QEvent.KeyPress
-            and event.key() == Qt.Key_Tab
-            and not event.modifiers()
-        ):
-            QApplication.instance().sendEvent(
-                self.parent(), QKeyEvent(QEvent.KeyPress, Qt.Key_Tab, Qt.NoModifier)
-            )
-            return True
-        return super().event(event)
-
-    def focusInEvent(self, event):
-        """Overwrite the focusInEvent to select all text"""
-        super().focusInEvent(event)
-        self.selectAll()
-
-
-class TagWidget(QWidget):
-    """
-    Custom widget for editing a single tag
-    """
-
-    def __init__(self, tag_name="", tag_value="", parent=None):
-        super(TagWidget, self).__init__(parent)
-
-        self.tag_name_edit = TagTextEdit(self)
-        if tag_name.strip() != "":
-            self.tag_name_edit.setPlainText(tag_name)
-        else:
-            self.tag_name_edit.setPlaceholderText("Tag Name")
-        self.tag_name_edit.setFixedHeight(TEXT_FIELD_HEIGHT)
-
-        self.tag_value_edit = TagTextEdit(self)
-        if tag_value.strip() != "":
-            self.tag_value_edit.setPlainText(tag_value)
-        else:
-            self.tag_value_edit.setPlaceholderText("Tag Value")
-        self.tag_value_edit.setFixedHeight(TEXT_FIELD_HEIGHT)
-
-        self.remove_button = QPushButton("Remove", self)
-        self.remove_button.setObjectName("removeButton")
-
-        tag_layout = QHBoxLayout()
-        tag_layout.addWidget(self.tag_name_edit)
-        tag_layout.addWidget(self.tag_value_edit)
-        tag_layout.addWidget(self.remove_button)
-        tag_layout.setSpacing(10)
-
-        self.setLayout(tag_layout)
-
-        self.remove_button.clicked.connect(self.remove_self)
-        self.setTabOrder(self.tag_name_edit, self.tag_value_edit)
-
-    def set_values(self, tag_name, tag_value):
-        """Sets the values of the tag_name_edit and tag_value_edit"""
-        self.tag_name_edit.setPlainText(tag_name)
-        self.tag_value_edit.setPlainText(tag_value)
-
-    def clear_fields(self):
-        """Clears the tag_name_edit and tag_value_edit"""
-        try:
-            self.tag_name_edit.clear()
-            self.tag_value_edit.clear()
-        except:
-            pass
-
-    def remove_self(self):
-        """Removes itself from the parent layout"""
-        try:
-            self.deleteLater()
-        except:
-            pass
-
-    def get_values(self):
-        """Returns the values of the tag_name_edit and tag_value_edit"""
-        return self.tag_name_edit.toPlainText(), self.tag_value_edit.toPlainText()
 
 
 class ImageEditorGUI(QWidget):
