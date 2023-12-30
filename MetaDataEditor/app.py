@@ -210,7 +210,7 @@ class ImageEditorGUI(QWidget):
         else:
             pixmap = QPixmap(image_path)
             pixmap = pixmap.scaled(
-                self.image_label.width(), self.image_label.height(), Qt.KeepAspectRatio
+                self.image_label.width(), self.height(), Qt.KeepAspectRatio
             )
             self.image_label.setPixmap(pixmap)
 
