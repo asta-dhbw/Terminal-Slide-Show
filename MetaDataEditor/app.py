@@ -1,6 +1,7 @@
 """ Main GUI that helps editing images MetaData """
 import os
 import sys
+import platform
 import logging
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
@@ -308,7 +309,10 @@ class ImageEditorGUI(QWidget):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app = QApplication(sys.argv + ["-platform", "windows:darkmode=1"])
+    if platform.system() == "Windows":
+        app = QApplication(sys.argv + ["-platform", "windows:darkmode=1"])
+    else:
+        app = QApplication(sys.argv)
     # app.setStyle("Fusion")
     app_icon = QIcon(ICON_PATH)
     app.setWindowIcon(app_icon)
