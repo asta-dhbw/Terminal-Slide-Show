@@ -37,3 +37,51 @@ QTextEdit {
 QTextEdit:hover {
     background-color: #BBBBBB;
 }
+
+QScrollBar:vertical {
+    width: 12px;
+    margin: 15px 0 15px 0;
+    border: 1px solid #2A2929;
+    border-radius: 0px;
+    background-color: #2A2929;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #605F5F;
+    min-height: 5px;
+    border-radius: 7px;
+}
+
+QScrollBar::add-line:vertical {
+    border: none;
+    background: none;
+}
+
+QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+QScrollBar:horizontal {
+    height: 12px;
+    margin: 0 15px 0 15px;
+    border: 1px solid #2A2929;
+    border-radius: 0px;
+    background-color: #2A2929;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #605F5F;
+    min-width: 5px;
+    border-radius: 7px;
+}
+
+QScrollBar::add-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+}
