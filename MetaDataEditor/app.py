@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QSizePolicy,
     QFileDialog,
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
 from custom_widgets import TagWidget
@@ -31,6 +31,9 @@ LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
 
 IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
+
+COMPANY = "Muddyblack"
+APP_NAME = "MetaDataEditor"
 
 
 def load_styles(self, file):
@@ -62,7 +65,7 @@ class ImageEditorGUI(QWidget):
         self.image_label.setAlignment(Qt.AlignTop)
 
         # Create Buttons
-        self.mode_switch = QPushButton("Switch Mode", self)
+        self.mode_switch = QPushButton("Switch to Light Mode", self)
         self.add_button = QPushButton("Add Tag", self)
         self.add_standard_button = QPushButton("Add Standard", self)
         self.load_button = QPushButton("Load Image", self)
@@ -115,19 +118,19 @@ class ImageEditorGUI(QWidget):
 
     def switch_mode(self):
         """Switches between light and dark mode"""
-        if self.mode_switch.text() == "Switch to Light Mode":
+        if self.mode_switch.text() == "Switch to Dark Mode":
             load_styles(self, DARKMODE_SYTLE_SHEET)
-            self.mode_switch.setText("Switch to Dark Mode")
+            self.mode_switch.setText("Switch to Light Mode")
         else:
             load_styles(self, LIGHTMODE_SYTLE_SHEET)
-            self.mode_switch.setText("Switch to Light Mode")
+            self.mode_switch.setText("Switch to Dark Mode")
 
     def add_tag(self):
         """Adds a new TagWidget to the ScrollArea"""
         tag_widget = TagWidget()
+        # Insert at the beginning of the list
         self.tag_widgets.append(tag_widget)
-
-        self.scroll_layout.addWidget(tag_widget)
+        self.scroll_layout.insertWidget(1, tag_widget)
 
     def add_standard_tag(self):
         """Adds a new TagWidget with standard values to the ScrollArea"""
@@ -141,13 +144,28 @@ class ImageEditorGUI(QWidget):
             tag_name="ENDDATE",
             tag_value=(CURRENT_DATE + timedelta(days=7)).strftime("%d.%m.%Y"),
         )
-
+        tag_widget3 = TagWidget(
+            tag_name="DisplayTime",
+            tag_value="10",
+        )
         self.tag_widgets.append(tag_widget)
         self.tag_widgets.append(tag_widget2)
+        self.tag_widgets.append(tag_widget3)
 
-        # Insert the new TagWidget before the last item (save_button)
-        self.scroll_layout.addWidget(tag_widget)
-        self.scroll_layout.addWidget(tag_widget2)
+        # Insert the new TagWidget before the first items
+        self.scroll_layout.insertWidget(1, tag_widget)
+        self.scroll_layout.insertWidget(2, tag_widget2)
+        self.scroll_layout.insertWidget(3, tag_widget3)
+
+    def get_last_dir(self):
+        """Get the last used directory from QSettings"""
+        settings = QSettings(COMPANY, APP_NAME)
+        return settings.value("last_dir", "")
+
+    def set_last_dir(self, path):
+        """Set the last used directory in QSettings"""
+        settings = QSettings(COMPANY, APP_NAME)
+        settings.setValue("last_dir", os.path.dirname(path))
 
     def load_image(self):
         """Opens a file dialog to select an image and adds it with metadata to the ScrollArea"""
@@ -157,11 +175,19 @@ class ImageEditorGUI(QWidget):
             file_dialog = QFileDialog()
             file_dialog.setFileMode(QFileDialog.ExistingFile)
             file_dialog.setNameFilter(f"{IMAGE_FORMATS};;{VIDEO_FORMATS}")
+
+            # Load the last directory from QSettings
+            last_dir = self.get_last_dir()
+            file_dialog.setDirectory(last_dir)
+
             if file_dialog.exec_():
                 selected_files = file_dialog.selectedFiles()
                 if selected_files:
                     self.image_path = selected_files[0]
                     self.display_image(self.image_path)
+
+                    # Save the directory to QSettings
+                    self.set_last_dir(self.image_path)
 
                     for tag_widget in self.tag_widgets:
                         tag_widget.remove_self()

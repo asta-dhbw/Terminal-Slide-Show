@@ -11,7 +11,6 @@
 7. [Allowed File Formats](#allowed-file-formats)
 8. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
 9. [Auto-start Configuration](#auto-start-configuration)
-10. [Fixing Display Power Issue](#fixing-display-power-issue)
 
 ## Introduction
 
@@ -19,7 +18,7 @@ This README provides instructions for setting up a project using Python, install
 
 ## Prerequisites
 
-- Python 3.9.2
+- Python >= ``3.9.2``
 - Install requirements using: `pip install -r requirements.txt`
 
 ## Setting up Google Cloud Project
@@ -100,15 +99,5 @@ To configure auto-start:
 - Go to the crontabs: `crontab -e`
 - Add 'chmod' to set the script as always executable and add the path to the script:
 ```bash
-@reboot sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+@reboot sudo sleep 8 && cd /path/to/project && chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
 ```
-
-## Fixing Display Power Issue
-
-[Original Thread](https://github.com/raspberrypi/firmware/issues/1224#issuecomment-1470791044)
-
-`sudo nano /boot/config.txt` or any other editor
-
-Change ``dtoverlay=vc4-kms-v3d`` to ``dtoverlay=vc4-fkms-v3d``
-
-roboot: ``sudo reboot now``

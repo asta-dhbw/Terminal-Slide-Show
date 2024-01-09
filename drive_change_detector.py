@@ -61,18 +61,20 @@ def get_changes(service, drive_dir_id, state_file="./state.json"):
         return [], []
 
     current_state = results.get("files", [])
+    new_files = []
+    deleted_files = []
 
     # check for changes or errors
     if len(old_state) == 0:
         new_files = current_state
         deleted_files = {}
-    elif len(current_state) > 0:
+    elif len(current_state) >= 0:
         new_files = [file for file in current_state if file not in old_state]
         deleted_files = [file for file in old_state if file not in current_state]
     else:
-        logging.warning("No files found in %s or error occurred.", drive_dir_id)
+        logging.warning("Error occurred in %s.", drive_dir_id)
 
-    if not new_files and not deleted_files:
+    if len(new_files) == 0 and len(deleted_files) == 0:
         logging.info("No changes in the folder with ID %s.", drive_dir_id)
         return [], []
 
