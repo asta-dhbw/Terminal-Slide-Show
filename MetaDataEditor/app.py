@@ -65,7 +65,7 @@ class ImageEditorGUI(QWidget):
         self.image_label.setAlignment(Qt.AlignTop)
 
         # Create Buttons
-        self.mode_switch = QPushButton("Switch Mode", self)
+        self.mode_switch = QPushButton("Switch to Light Mode", self)
         self.add_button = QPushButton("Add Tag", self)
         self.add_standard_button = QPushButton("Add Standard", self)
         self.load_button = QPushButton("Load Image", self)
@@ -118,12 +118,12 @@ class ImageEditorGUI(QWidget):
 
     def switch_mode(self):
         """Switches between light and dark mode"""
-        if self.mode_switch.text() == "Switch to Light Mode":
+        if self.mode_switch.text() == "Switch to Dark Mode":
             load_styles(self, DARKMODE_SYTLE_SHEET)
-            self.mode_switch.setText("Switch to Dark Mode")
+            self.mode_switch.setText("Switch to Light Mode")
         else:
             load_styles(self, LIGHTMODE_SYTLE_SHEET)
-            self.mode_switch.setText("Switch to Light Mode")
+            self.mode_switch.setText("Switch to Dark Mode")
 
     def add_tag(self):
         """Adds a new TagWidget to the ScrollArea"""

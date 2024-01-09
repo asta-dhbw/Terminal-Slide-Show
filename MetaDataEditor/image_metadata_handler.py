@@ -57,12 +57,12 @@ def write_metadata(image_path, out_path="./", metadata=None):
     # Check image format and apply metadata accordingly
     if file_format.lower() in ("jpeg", "jpg"):
         image.save(f"{out_path}.{file_format}", exif=metadata)
-    elif file_format.lower() == "png":
+    elif file_format == "png":
         png_info = PngInfo()
         for key, value in metadata.items():
             png_info.add_text(key, str(value))
         image.save(f"{out_path}.{file_format}", pnginfo=png_info)
-    elif file_format.lower() == "gif":
+    elif file_format == "gif":
         metadata_str = str(metadata)
         image.save(
             out_path, "GIF", save_all=True, append_images=[image], comment=metadata_str
