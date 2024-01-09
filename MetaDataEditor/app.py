@@ -144,12 +144,18 @@ class ImageEditorGUI(QWidget):
             tag_name="ENDDATE",
             tag_value=(CURRENT_DATE + timedelta(days=7)).strftime("%d.%m.%Y"),
         )
+        tag_widget3 = TagWidget(
+            tag_name="DisplayTime",
+            tag_value="10",
+        )
         self.tag_widgets.append(tag_widget)
         self.tag_widgets.append(tag_widget2)
+        self.tag_widgets.append(tag_widget3)
 
         # Insert the new TagWidget before the first items
         self.scroll_layout.insertWidget(1, tag_widget)
         self.scroll_layout.insertWidget(2, tag_widget2)
+        self.scroll_layout.insertWidget(3, tag_widget3)
 
     def get_last_dir(self):
         """Get the last used directory from QSettings"""

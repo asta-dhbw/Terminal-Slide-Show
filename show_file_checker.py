@@ -41,19 +41,21 @@ def check_for_event(file):
 
     file_name = Path(file).stem
     #  Check if the filename contains a date
-    match = re.search(r"(\d{1,2}[-._]\d{1,2}[-._]\d{2,4})", file_name)
+    match = re.findall(
+        r"(\d{1,2}[-._ ]\d{1,2}[-._ ]\d{2,4})@?(\d{1,2}[-._ ]\d{1,2}[-._ ]\d{2,4})?",
+        file_name,
+    )
     if match:
         # Check if event by using the filename
         logging.debug("Matched. Checking by filename")
-        date_parts = file_name.split("@")
-        logging.debug("Date parts: %s", date_parts)
+        logging.debug("Date parts: %s", match)
 
-        if len(date_parts) == 2:
-            start = convert_to_datetime(date_parts[0])
-            end = convert_to_datetime(date_parts[1])
-        elif len(date_parts) == 1:
-            end = convert_to_datetime(date_parts[0])
-        if start is None and end is None:
+        if match[0][0] and match[0][1]:
+            start = convert_to_datetime(match[0][0])
+            end = convert_to_datetime(match[0][1])
+        elif match[0][0]:
+            end = convert_to_datetime(match[0][0])
+        elif not match[0][0] and not match[0][1]:
             logging.debug("Nothing useful in filename")
             match = False
     if not match:
@@ -91,5 +93,5 @@ def check_for_event(file):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    TEST = check_for_event("./app_data/content/01.01.24@02.03.25.png")
+    TEST = check_for_event("./app_data/content/xx01.01.24@02.03.25.png")
     print(f"{TEST}")

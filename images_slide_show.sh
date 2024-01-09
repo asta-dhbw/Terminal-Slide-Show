@@ -41,27 +41,27 @@ kill_display_processes() {
 
 # Function to check if drive folder has been updated
 check_for_updates() {
-    python "$SCRIPT_PATH/$UPDATE_CHECK_SCRIPT"
+    python "$UPDATE_CHECK_SCRIPT"
     return $?
 }
 
 # Function to display images and videos in terminal
 display() {
-    local image_files="$1"
-    local video_files="$2"
-    IMAGE_FILES_COUNT=$(echo "$image_files" | wc -w)
+    local -n image_files=$1
+    local -n video_files=$2
+    IMAGE_FILES_COUNT=${#image_files[@]}
+
     kill_display_processes
 
-    if [[ -n "$image_files" && -n "$video_files" ]]; then
+    if [[ ${#image_files[@]} -gt 0 && ${#video_files[@]} -gt 0 ]]; then
         while true; do
-            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 $image_files
+            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 "${image_files[@]}"
             sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))
             sudo pkill -x "fbi"
             cvlc "$video_files"
         done
     elif [ -n "$image_files" ]; then
-        #clear
-        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose $image_files
+        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose "${image_files[@]}"
     elif [ -n "$video_files" ]; then
         #clear
         cvlc --loop "$video_files"
@@ -71,7 +71,7 @@ display() {
 # Function to display black screen
 display_black_screen() {
     kill_display_processes
-    sudo fbi -a -T 1 --noverbose "$BLACK_IMAGE_FILE" &
+    sudo fbi -a -r 5 -T 1 --noverbose "$BLACK_IMAGE_FILE" &
 }
 
 # Function to calculate and sleep until target time
@@ -94,6 +94,7 @@ calculate_and_sleep_until_target_time() {
 
 # Function to handle the main loop
 main_loop() {
+    display_off=false
     while true; do
         local current_time=$(date +"%H:%M")
         local changes_detected=0
@@ -105,10 +106,10 @@ main_loop() {
         if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
             echo "Going to sleep as no one is here"
             display_black_screen
+            display_off=true
             calculate_and_sleep_until_target_time "$current_time"
 
         elif [[ "$is_first_run" = true || "$changes_detected" = 1 ]]; then
-            kill_display_processes
             is_first_run=false
 
             # get from file the current images and videos to display
@@ -122,11 +123,13 @@ main_loop() {
             if [[ ${#current_images[@]} -gt 0 || ${#current_videos[@]} -gt 0 ]]; then
                 sudo kill "$DISPLAYPID"
                 kill_display_processes
-                display "${current_images[*]}" "${current_videos[*]}" &
+                display_off=false
+                display "current_images" "current_videos" &
                 DISPLAYPID=$!
-            else
+            elif [[ "$display_off" = false ]]; then
                 kill_display_processes
                 display_black_screen
+                display_off=true
             fi
         fi
         sleep 10
@@ -136,4 +139,4 @@ main_loop() {
 # Main scripts
 clear
 sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" &
-main_loop # >/dev/null 2>/dev/null
+main_loop #>/dev/null 2>/dev/null

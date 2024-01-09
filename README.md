@@ -99,5 +99,5 @@ To configure auto-start:
 - Go to the crontabs: `crontab -e`
 - Add 'chmod' to set the script as always executable and add the path to the script:
 ```bash
-@reboot sudo sleep 8 && chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+@reboot sudo sleep 8 && cd /path/to/project && chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
 ```
