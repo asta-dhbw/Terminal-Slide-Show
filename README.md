@@ -3,22 +3,18 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Prerequisites](#prerequisites)
-3. [Setting up Google Cloud Project](#setting-up-google-cloud-project)
-4. [System Update and Package Installation](#system-update-and-package-installation)
-5. [Project Setup](#project-setup)
-6. [Meta-Data-Editor](#metadataeditor)
-7. [Allowed File Formats](#allowed-file-formats)
-8. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
-9. [Auto-start Configuration](#auto-start-configuration)
+2. [Setting up Google Cloud Project](#setting-up-google-cloud-project)
+3. [Prerequisites and Packages Installation](#prerequisites-and-packages-installation)
+4. [Project Setup](#project-setup)
+5. [Meta-Data-Editor](#metadataeditor)
+6. [Allowed File Formats](#allowed-file-formats)
+7. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
+8. [Auto-start Configuration](#auto-start-configuration)
 
 ## Introduction
 
-This README provides instructions for setting up a project using Python, installing necessary requirements, configuring a Google Cloud project, fixing display power issues, and setting up auto-start functionality.
-
-## Prerequisites
-
-- Python >= ``3.9.2``
+Welcome to the TerminalSlideShow repository. This project is a lightweight, non-GUI slideshow that fetches new files from Google Drive, allowing you to update the slideshow remotely. 
+This README provides instructions for setting up the project using Python, installing necessary requirements, configuring a Google Cloud project, and setting up auto-start functionality.
 
 
 ## Setting up Google Cloud Project
@@ -31,7 +27,8 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 4. Use the email to grant permission to the target folder.
 
 
-## System Update and Package Installation
+## Prerequisites and Packages Installation
+Ensure you have Python version ``3.9.2`` or higher installed.
 
 #### Easy-Way
 - Execute: the ``initialize.sh`` inside th projectfolder
