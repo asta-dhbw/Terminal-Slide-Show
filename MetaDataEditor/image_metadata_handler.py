@@ -1,81 +1,75 @@
-"""Module for reading and writing metadata to image files"""
-import json
+"""Module for reading and writing metadata to files"""
+import os
+import subprocess
+import pickle
+import base64
 import logging
-from PIL import Image
-from PIL.PngImagePlugin import PngInfo
-from PIL.ExifTags import TAGS
+
+# Detect the operating system and set the exifToolPath accordingly
+if os.name == "nt":  # For Windows
+    exifToolPath = "exifTool.exe"
+else:  # For Mac and Linux
+    exifToolPath = "exiftool"
 
 
 def read_metadata(image_path):
     """Reads the metadata from an image file and returns it as a dictionary"""
-    image = Image.open(image_path)
-    file_format = image.format.lower()
+    process = subprocess.Popen(
+        [exifToolPath, image_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
 
-    metadata_dict = {}
+    """ get the tags in dict """
+    infoDict = {}
+    for tag in process.stdout:
+        line = tag.strip().split(":")
+        tag_name = line[0].strip()
+        if tag_name == "Comment":
+            infoDict[tag_name] = line[-1].strip()
 
-    if file_format in ("jpeg", "jpg", "png"):
-        # Check if the image has Exif data (common for JPEG)
-        exif_data = image.getexif()
-        if exif_data is not None:
-            for tag, value in exif_data.items():
-                tag_name = TAGS.get(tag, tag)
-                metadata_dict[tag_name] = value
+    metadata = {}
+    for k, v in infoDict.items():
+        metadata[k] = v
 
-        # Check if the image has PNG text data
-        if hasattr(image, "text"):
-            for key, value in image.text.items():
-                metadata_dict[key] = value
-
-        # Check if the image has BMP info data
-        if hasattr(image, "info"):
-            for key, value in image.info.items():
-                metadata_dict[key] = value
-    elif file_format == "gif":
-        metadata_str = image.info.get("comment")
-        print(metadata_str)
-        if metadata_str:
-            try:
-                metadata_dict = json.loads(metadata_str)
-            except json.JSONDecodeError:
-                logging.warning("Could not decode metadata")
-    else:
-        logging.warning("Format not supported")
-
-    # Add support for other formats as needed
-    # IN PROGRESS
-
-    image.close()
-
-    return metadata_dict
+    com = pickle.loads(base64.b64decode(metadata["Comment"]))
+    return com
 
 
-def write_metadata(image_path, out_path="./", metadata=None):
-    """Writes the metadata to an image file"""
-    image = Image.open(image_path)
-    file_format = image.format.lower()
+def write_metadata(image_path, out_path, metadata=None):
+    """Writes the metadata to an image file using exiftool"""
 
-    # Check image format and apply metadata accordingly
-    if file_format.lower() in ("jpeg", "jpg"):
-        image.save(f"{out_path}.{file_format}", exif=metadata)
-    elif file_format == "png":
-        png_info = PngInfo()
-        for key, value in metadata.items():
-            png_info.add_text(key, str(value))
-        image.save(f"{out_path}.{file_format}", pnginfo=png_info)
-    elif file_format == "gif":
-        metadata_str = str(metadata)
-        image.save(
-            out_path, "GIF", save_all=True, append_images=[image], comment=metadata_str
-        )
-    else:
-        logging.warning("Format not supported")
+    # Convert the metadata dictionary to a pickled bytes object
+    meta_pickle = pickle.dumps(metadata)
 
-    # Add support for other formats as needed
-    # IN PROGRESS
+    # Encode the pickled bytes object as a base64 string
+    meta_base64 = base64.b64encode(meta_pickle).decode("utf-8")
 
-    image.close()
+    if os.path.exists(out_path):
+        os.remove(out_path)
+    # Use exiftool to write the metadata to the Comment tag and overwrite the original file
+    subprocess.run(
+        [
+            "exiftool",
+            "-Comment=" + f"{meta_base64}",
+            "-o",
+            out_path,
+            image_path,
+        ],
+        check=True,
+    )
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    read_metadata("giphy.gif")
+    FILE = "C:/Users/Muddyblack/Downloads/ISD-00_7bbb.mp4"
+    write_metadata(
+        "C:/Users/Muddyblack/Downloads/ISD-00_7.mp4",
+        FILE,
+        metadata={"Copyright": "Test", "Author": "Test2"},
+    )
+
+    com = read_metadata(FILE)
+    # com = pickle.loads(base64.b64decode(return_dict["Comment"]))
+    print(com)

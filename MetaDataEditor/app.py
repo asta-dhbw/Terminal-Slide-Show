@@ -14,8 +14,11 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QScrollArea,
     QSizePolicy,
     QFileDialog,
+    QMessageBox,
 )
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import Qt, QSettings, QUrl
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
 from custom_widgets import TagWidget
@@ -29,7 +32,7 @@ ICON_PATH = f"{SCRIPT_DIR_PATH}/favicon.ico"
 DARKMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/darkmode_style.qss"
 LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
 
-IMAGE_FORMATS = "Images (*.png *.jpg *.bmp *.jpeg *.gif)"
+IMAGE_FORMATS = "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
 
 COMPANY = "Muddyblack"
@@ -68,8 +71,8 @@ class ImageEditorGUI(QWidget):
         self.mode_switch = QPushButton("Switch to Light Mode", self)
         self.add_button = QPushButton("Add Tag", self)
         self.add_standard_button = QPushButton("Add Standard", self)
-        self.load_button = QPushButton("Load Image", self)
-        self.save_button = QPushButton("Save Image", self)
+        self.load_button = QPushButton("Load File", self)
+        self.save_button = QPushButton("Save File", self)
 
         # Add Buttons to the bottom of the layout
         button_layout = QHBoxLayout()
@@ -206,18 +209,23 @@ class ImageEditorGUI(QWidget):
 
     def save_image(self):
         """Opens a file dialog to select a location to save the image with metadata"""
-        if self.image_path is not None:
-            options = QFileDialog.Options()
-            file_dialog = QFileDialog.getSaveFileName(
-                self,
-                "Save Image",
-                "",
-                f"{IMAGE_FORMATS};;{VIDEO_FORMATS}",
-                options=options,
-            )
+        while True:
+            try:
+                if self.image_path is None:
+                    break
 
-            # Get and save Metadata
-            if file_dialog[0]:
+                options = QFileDialog.Options()
+                file_dialog = QFileDialog.getSaveFileName(
+                    self,
+                    "Save Image",
+                    f"{self.image_path}",
+                    f"{IMAGE_FORMATS};;{VIDEO_FORMATS}",
+                    options=options,
+                )
+
+                if not file_dialog[0]:
+                    break
+
                 metadata_dict = {}
                 for tag_widget in self.tag_widgets:
                     try:
@@ -226,13 +234,28 @@ class ImageEditorGUI(QWidget):
                     except:
                         pass
                 write_metadata(self.image_path, file_dialog[0], metadata_dict)
+                break
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Error")
+                msg.setInformativeText(
+                    f"An error occurred: {str(e)}. Do you want to retry?"
+                )
+                msg.setWindowTitle("Error")
+                msg.setStandardButtons(QMessageBox.Retry | QMessageBox.Cancel)
+                retval = msg.exec_()
+                if retval == QMessageBox.Cancel:
+                    break
 
     def display_image(self, image_path):
         """Displays the image in the image_label"""
         if image_path.lower().endswith(".gif"):
-            movie = QMovie(image_path)
-            self.image_label.setMovie(movie)
-            movie.start()
+            self.movie = QMovie(
+                image_path
+            )  # Store the QMovie object as an instance variable
+            self.image_label.setMovie(self.movie)
+            self.movie.start()
         else:
             pixmap = QPixmap(image_path)
             pixmap = pixmap.scaled(
@@ -246,11 +269,18 @@ class ImageEditorGUI(QWidget):
         if (
             hasattr(self, "image_path") and self.image_path
         ):  # Check if an image has been loaded
-            pixmap = QPixmap(self.image_path)
-            pixmap = pixmap.scaled(
-                self.scroll_area.width(), self.scroll_area.height(), Qt.KeepAspectRatio
-            )
-            self.image_label.setPixmap(pixmap)
+            if self.image_path.lower().endswith(".gif"):
+                self.movie.setScaledSize(
+                    self.scroll_area.size()
+                )  # Resize the QMovie object
+            else:
+                pixmap = QPixmap(self.image_path)
+                pixmap = pixmap.scaled(
+                    self.scroll_area.width(),
+                    self.scroll_area.height(),
+                    Qt.KeepAspectRatio,
+                )
+                self.image_label.setPixmap(pixmap)
         super().resizeEvent(event)  # Call the parent class's resizeEvent method
 
 
