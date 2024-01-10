@@ -1,5 +1,5 @@
-# pylint: disable=C
-# pylint: disable=unused-import
+# pylint: disable=all
+
 import setup
 import os
 import unittest

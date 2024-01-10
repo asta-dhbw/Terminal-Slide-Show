@@ -15,6 +15,7 @@ class TagTextEdit(QTextEdit):
     Custom QTextEdit that allows tabbing between widgets
     """
 
+    # pylint: disable=invalid-name
     def keyPressEvent(self, event):
         """Overwrite the keyPressEvent to allow tabbing between widgets"""
         if event.key() == Qt.Key_Tab and not event.modifiers():
@@ -22,6 +23,7 @@ class TagTextEdit(QTextEdit):
         else:
             super().keyPressEvent(event)
 
+    # pylint: enable=invalid-name
     def event(self, event):
         """Overwrite the event to allow tabbing between widgets"""
         if (
@@ -35,10 +37,13 @@ class TagTextEdit(QTextEdit):
             return True
         return super().event(event)
 
+    # pylint: disable=invalid-name
     def focusInEvent(self, event):
         """Overwrite the focusInEvent to select all text"""
         super().focusInEvent(event)
         self.selectAll()
+
+    # pylint: enable=invalid-name
 
 
 class TagWidget(QWidget):
@@ -89,15 +94,17 @@ class TagWidget(QWidget):
         try:
             self.tag_name_edit.clear()
             self.tag_value_edit.clear()
-        except:
+        except AttributeError:
             pass
 
     def remove_self(self):
         """Removes itself from the parent layout"""
         try:
             self.deleteLater()
-        except:
-            pass
+        except RuntimeError as e:
+            print(f"RuntimeError: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def get_values(self):
         """Returns the values of the tag_name_edit and tag_value_edit"""
