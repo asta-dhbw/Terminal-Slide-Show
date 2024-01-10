@@ -19,7 +19,7 @@ This README provides instructions for setting up a project using Python, install
 ## Prerequisites
 
 - Python >= ``3.9.2``
-- Install requirements using: `pip install -r requirements.txt`
+
 
 ## Setting up Google Cloud Project
 
@@ -33,7 +33,15 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 
 ## System Update and Package Installation
 
+#### Easy-Way
+- Execute: the ``initialize.sh`` inside th projectfolder
+
+#### Manual-Way:
 Execute the following commands:
+- install venv for python: ``sudo apt-get install python3-venv``
+- create a venv: ``python -m venv venv``
+- always use the venv: ``source path/to/venv/bin/activate``
+- Install requirements using: `pip install -r requirements.txt`
 
 ```bash
 # Update package information
@@ -43,12 +51,13 @@ sudo apt update
 sudo apt upgrade
 
 # Install required packages:
-sudo apt install fbi vlc
-sudo apt-get install jq
-sudo sudo apt-get install libimage-exiftool-perl
+sudo apt install fbi vlc jq
+sudo apt install libimage-exiftool-perl
+sudo apt-get install python3-pyqt5
 
 #for MetaDataEdtor on MAC:
 brew install exiftool
+# Download the executable for windows: https://exiftool.org/
 
 # Install recommended packages:
 sudo apt install dos2unix
@@ -67,6 +76,7 @@ To start you have to set some variables inside the [config-file](app_config.json
 - ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display
 - ``DISPLAYTIME`` -> Time for Duration of each image (in seconds)
 - ``BLENDTIME`` -> Time for blending animation (in milliseconds)
+- ``PYENV`` -> Path to the venv if you are using one
 
 ## MetaDataEditor
 [App](MetaDataEditor/app.py)

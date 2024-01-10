@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
+
 from custom_widgets import TagWidget
 
 from image_metadata_handler import read_metadata, write_metadata
@@ -85,8 +86,8 @@ class ImageEditorGUI(QWidget):
         self.mode_switch.clicked.connect(self.switch_mode)
         self.add_button.clicked.connect(self.add_tag)
         self.add_standard_button.clicked.connect(self.add_standard_tag)
-        self.load_button.clicked.connect(self.load_image)
-        self.save_button.clicked.connect(self.save_image)
+        self.load_button.clicked.connect(self.load_file)
+        self.save_button.clicked.connect(self.save_file)
 
         # Create a ScrollArea
         self.scroll_area = QScrollArea(self)
@@ -168,7 +169,7 @@ class ImageEditorGUI(QWidget):
         settings = QSettings(COMPANY, APP_NAME)
         settings.setValue("last_dir", os.path.dirname(path))
 
-    def load_image(self):
+    def load_file(self):
         """Opens a file dialog to select an image and adds it with metadata to the ScrollArea"""
         try:
             options = QFileDialog.Options()
@@ -183,9 +184,10 @@ class ImageEditorGUI(QWidget):
 
             if file_dialog.exec_():
                 selected_files = file_dialog.selectedFiles()
+                logging.debug("Selected files: %s", selected_files)
                 if selected_files:
                     self.image_path = selected_files[0]
-                    self.display_image(self.image_path)
+                    self.display_file(self.image_path)
 
                     # Save the directory to QSettings
                     self.set_last_dir(self.image_path)
@@ -205,7 +207,7 @@ class ImageEditorGUI(QWidget):
         except:
             pass
 
-    def save_image(self):
+    def save_file(self):
         """Opens a file dialog to select a location to save the image with metadata"""
         while True:
             try:
@@ -246,8 +248,9 @@ class ImageEditorGUI(QWidget):
                 if retval == QMessageBox.Cancel:
                     break
 
-    def display_image(self, image_path):
+    def display_file(self, image_path):
         """Displays the image in the image_label"""
+        logging.debug("Displaying file: %s", image_path)
         if image_path.lower().endswith(".gif"):
             self.movie = QMovie(
                 image_path

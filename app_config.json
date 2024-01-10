@@ -3,8 +3,9 @@
     "USE_GDRIVE": true,
     "GOOGLE_API_ACCESS": "./app_data/raspi.json",
     "DRIVE_DIR_ID": "1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf",
-    "OFF_TIME": "19:30",
+    "OFF_TIME": "23:30",
     "ON_TIME": "07:30",
     "DISPLAYTIME": "10",
-    "BLENDTIME": "900"
+    "BLENDTIME": "900",
+    "PYENV": "./venv"
 }
