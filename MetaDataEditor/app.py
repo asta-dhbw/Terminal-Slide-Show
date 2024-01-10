@@ -43,6 +43,7 @@ def load_styles(self, file):
         self.setStyleSheet(style)
 
 
+# pylint: disable=too-many-instance-attributes
 class ImageEditorGUI(QWidget):
     """
     Main GUI Window for editing images MetaData
