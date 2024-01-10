@@ -14,18 +14,17 @@ else:  # For Mac and Linux
 
 def read_metadata(image_path):
     """Reads the metadata from an image file and returns it as a dictionary"""
-    process = subprocess.Popen(
+    with subprocess.Popen(
         [EXIFTOOLPATH, image_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
-    )
-
-    """ get the tags in dict """
-    metadata = {
-        line.split(":")[0].strip(): line.split(":")[1].strip()
-        for line in process.stdout
-    }
+    ) as process:
+        # get the tags in dict
+        metadata = {
+            line.split(":")[0].strip(): line.split(":")[1].strip()
+            for line in process.stdout
+        }
 
     return pickle.loads(base64.b64decode(metadata["Comment"]))
 

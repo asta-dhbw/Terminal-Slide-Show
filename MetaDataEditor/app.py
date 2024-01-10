@@ -58,6 +58,7 @@ class ImageEditorGUI(QWidget):
         self.setWindowIcon(QIcon(ICON_PATH))
         self.image_path = None
         self.tag_widgets = []
+        self.movie = None
 
         self.init_ui()
 
