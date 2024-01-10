@@ -27,3 +27,7 @@ jobs:
           git add version.json
           git commit -m "Update version.json with latest commit code"
           git push
+      - name: Debug
+        run: |
+            echo "Token: ${{ secrets.PAT }}"
+            git remote -v
