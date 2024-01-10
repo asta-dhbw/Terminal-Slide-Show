@@ -30,10 +30,13 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 ## Prerequisites and Packages Installation
 Ensure you have Python version ``3.9.2`` or higher installed.
 
-#### Easy-Way
+#### Easy-Way-Install
 - Execute: the ``initialize.sh`` inside th projectfolder
 
-#### Manual-Way:
+#### Update
+- To get newest repo version: ``python -m update.py --update``
+
+#### Manual-Way-Install:
 Execute the following commands:
 - install venv for python: ``sudo apt-get install python3-venv``
 - create a venv: ``python -m venv venv``
