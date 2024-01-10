@@ -7,14 +7,13 @@ on:
 
 jobs:
   update-version-json:
-    if: github.actor != 'actions-user'
+    if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        # No need to specify a token, it will use the GITHUB_TOKEN by default
-        #with:
-        #  token: ${#{ secrets.PAT }}
+        with:
+          token: ${{ secrets.PAT }}
       - name: Get commit code
         run: echo "{commit_code}={$(git rev-parse HEAD)}" >> $GITHUB_OUTPUT
         id: get_commit_code
