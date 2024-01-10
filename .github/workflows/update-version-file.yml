@@ -1,21 +1,19 @@
+name: Update Version JSON
+
 on:
   push:
     branches:
       - master
+
 jobs:
   update-version-json:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.PAT }}
-      - name: Check if commit author is GitHub Actions bot
-        id: check_bot
-        run: echo "::set-output name=is_bot::$(if [ $(git log -1 --pretty=format:'%ae') == 'actions@github.com' ]; then echo true; else echo false; fi)"
-      - name: Exit if commit is made by GitHub Actions bot
-        if: steps.check_bot.outputs.is_bot == 'true'
-        run: exit 0
       - name: Get commit code
         run: echo "{commit_code}={$(git rev-parse HEAD)}" >> $GITHUB_OUTPUT
         id: get_commit_code
