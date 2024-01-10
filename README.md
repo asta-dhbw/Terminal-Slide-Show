@@ -80,11 +80,10 @@ To start you have to set some variables inside the [config-file](app_config.json
 
 ## Allowed File Formats
 
-!!! Currently under work for metadata -> currently: ``jpg, jpeg, png`` !!!
+- The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``bmp``, ``.gif(first frame)``.
 
-- The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``.gif(first frame)``.
-
-- The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``.
+- The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``, ``mov``, ``flv``.
+-> Video currently not working using MetaDataEditor
 
 ## Allowed Formats for Google Drive
 
@@ -103,5 +102,8 @@ To configure auto-start:
 - Go to the crontabs: `crontab -e`
 - Add 'chmod' to set the script as always executable and add the path to the script:
 ```bash
-@reboot sudo sleep 8 && cd /path/to/project && chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+@reboot sudo sleep 8 && cd /path/to/project && sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+
+# recommended
+@reboot sudo sleep 8 && cd /path/to/project && dos2unix ./script.sh && sudo chmod +x ./script.sh && ./script.sh >/dev/null 2>/dev/null
 ```

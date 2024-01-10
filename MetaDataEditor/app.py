@@ -16,9 +16,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
     QFileDialog,
     QMessageBox,
 )
-from PyQt5.QtCore import Qt, QSettings, QUrl
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtMultimediaWidgets import QVideoWidget
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
 from custom_widgets import TagWidget
@@ -254,6 +252,7 @@ class ImageEditorGUI(QWidget):
             self.movie = QMovie(
                 image_path
             )  # Store the QMovie object as an instance variable
+            self.movie.setScaledSize(self.scroll_area.size())
             self.image_label.setMovie(self.movie)
             self.movie.start()
         else:

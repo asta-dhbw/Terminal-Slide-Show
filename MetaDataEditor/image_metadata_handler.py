@@ -7,34 +7,27 @@ import logging
 
 # Detect the operating system and set the exifToolPath accordingly
 if os.name == "nt":  # For Windows
-    exifToolPath = "exifTool.exe"
+    EXIFTOOLPATH = "exifTool.exe"
 else:  # For Mac and Linux
-    exifToolPath = "exiftool"
+    EXIFTOOLPATH = "exiftool"
 
 
 def read_metadata(image_path):
     """Reads the metadata from an image file and returns it as a dictionary"""
     process = subprocess.Popen(
-        [exifToolPath, image_path],
+        [EXIFTOOLPATH, image_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
     """ get the tags in dict """
-    infoDict = {}
-    for tag in process.stdout:
-        line = tag.strip().split(":")
-        tag_name = line[0].strip()
-        if tag_name == "Comment":
-            infoDict[tag_name] = line[-1].strip()
+    metadata = {
+        line.split(":")[0].strip(): line.split(":")[1].strip()
+        for line in process.stdout
+    }
 
-    metadata = {}
-    for k, v in infoDict.items():
-        metadata[k] = v
-
-    com = pickle.loads(base64.b64decode(metadata["Comment"]))
-    return com
+    return pickle.loads(base64.b64decode(metadata["Comment"]))
 
 
 def write_metadata(image_path, out_path, metadata=None):
@@ -71,5 +64,4 @@ if __name__ == "__main__":
     )
 
     com = read_metadata(FILE)
-    # com = pickle.loads(base64.b64decode(return_dict["Comment"]))
     print(com)

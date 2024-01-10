@@ -89,6 +89,7 @@ calculate_and_sleep_until_target_time() {
     local seconds_until_target=$((target_timestamp - current_timestamp))
 
     kill_display_processes
+    echo "Sleeping for $seconds_until_target seconds"
     sleep $seconds_until_target
 }
 
@@ -108,6 +109,7 @@ main_loop() {
             display_black_screen
             display_off=true
             calculate_and_sleep_until_target_time "$current_time"
+            echo "Waking up as someone is here"
 
         elif [[ "$is_first_run" = true || "$changes_detected" = 1 ]]; then
             is_first_run=false
