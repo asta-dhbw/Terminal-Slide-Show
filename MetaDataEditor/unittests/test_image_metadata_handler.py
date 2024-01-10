@@ -1,5 +1,4 @@
-# pylint: disable=C
-# pylint: disable=unused-import
+# pylint: disable=all
 import __init__
 import unittest
 from unittest.mock import patch, MagicMock
