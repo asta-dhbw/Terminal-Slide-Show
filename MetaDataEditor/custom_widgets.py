@@ -52,7 +52,7 @@ class TagWidget(QWidget):
     """
 
     def __init__(self, tag_name="", tag_value="", text_field_height=50, parent=None):
-        super(TagWidget, self).__init__(parent)
+        super().__init__(parent)
 
         self.text_field_height = text_field_height
 
