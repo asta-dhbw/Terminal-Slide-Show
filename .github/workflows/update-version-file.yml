@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get commit code
         run: echo "{commit_code}={$(git rev-parse HEAD)}" >> $GITHUB_OUTPUT
         id: get_commit_code
