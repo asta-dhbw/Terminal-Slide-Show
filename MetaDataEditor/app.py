@@ -40,11 +40,12 @@ APP_NAME = "MetaDataEditor"
 
 def load_styles(self, file):
     """Loads the styles from stylefiles to the application"""
-    with open(file, "r", encoding="utf-8") as file:
-        style = file.read()
+    with open(file, "r", encoding="utf-8") as style_file:
+        style = style_file.read()
         self.setStyleSheet(style)
 
 
+# pylint: disable=too-many-instance-attributes
 class ImageEditorGUI(QWidget):
     """
     Main GUI Window for editing images MetaData
@@ -204,8 +205,8 @@ class ImageEditorGUI(QWidget):
                 self.tag_widgets.append(tag_widget)
 
                 self.scroll_layout.addWidget(tag_widget)
-        except:
-            pass
+        except Exception as error:
+            logging.warning(error)
 
     def save_file(self):
         """Opens a file dialog to select a location to save the image with metadata"""
@@ -231,8 +232,8 @@ class ImageEditorGUI(QWidget):
                     try:
                         tag_name, tag_value = tag_widget.get_values()
                         metadata_dict[tag_name] = tag_value
-                    except:
-                        pass
+                    except AttributeError as error:
+                        logging.warning(error)
                 write_metadata(self.image_path, file_dialog[0], metadata_dict)
                 break
             except Exception as e:
@@ -266,6 +267,7 @@ class ImageEditorGUI(QWidget):
             self.image_label.setPixmap(pixmap)
             self.image_path = image_path
 
+    # pylint: disable=invalid-name
     def resizeEvent(self, event):
         """Resizes the image when the window is resized"""
         if (
@@ -284,6 +286,8 @@ class ImageEditorGUI(QWidget):
                 )
                 self.image_label.setPixmap(pixmap)
         super().resizeEvent(event)  # Call the parent class's resizeEvent method
+
+    # pylint: enable=invalid-name
 
 
 if __name__ == "__main__":

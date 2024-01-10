@@ -7,9 +7,8 @@ import logging
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 
-# pylint: disable=broad-except
 
-
+# pylint: disable=too-many-arguments
 def download_file(service, file_item, target_directory="./temp"):
     """Download an item from Google Drive. (file or entire folder)"""
     file_name = file_item["name"]

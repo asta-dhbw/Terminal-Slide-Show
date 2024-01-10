@@ -1,7 +1,5 @@
 """ Unit tests for drive_connector.py """
-# pylint: disable=C
-# pylint: disable=unused-import
-
+# pylint: disable=all
 import setup
 import unittest
 from unittest.mock import patch, MagicMock

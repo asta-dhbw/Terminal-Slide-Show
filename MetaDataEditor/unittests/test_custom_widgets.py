@@ -1,6 +1,4 @@
-# pylint: disable=C
-# pylint: disable=unused-import
-# pylint: disable=pointless-string-statement
+# pylint: disable=all
 import __init__
 import unittest
 from PyQt5.QtWidgets import QApplication
