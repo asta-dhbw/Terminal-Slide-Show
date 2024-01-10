@@ -23,6 +23,13 @@ ON_TIME=$(jq -r '.ON_TIME' $CONFIG_FILE)
 DISPLAYTIME=$(jq -r '.DISPLAYTIME' $CONFIG_FILE) # in seconds
 BLENDTIME=$(jq -r '.BLENDTIME' $CONFIG_FILE)     # in milliseconds
 
+PYENV=$(jq -r '.PYENV' $CONFIG_FILE) # path to python virtual environment
+
+# Activate python virtual environment
+if [[ -n "$PYENV" ]]; then
+    source "$PYENV/bin/activate"
+fi
+
 # Other Constants
 DISPLAYPID=""a
 is_first_run=true
@@ -89,6 +96,7 @@ calculate_and_sleep_until_target_time() {
     local seconds_until_target=$((target_timestamp - current_timestamp))
 
     kill_display_processes
+    echo "Sleeping for $seconds_until_target seconds"
     sleep $seconds_until_target
 }
 
@@ -108,6 +116,7 @@ main_loop() {
             display_black_screen
             display_off=true
             calculate_and_sleep_until_target_time "$current_time"
+            echo "Waking up as someone is here"
 
         elif [[ "$is_first_run" = true || "$changes_detected" = 1 ]]; then
             is_first_run=false
@@ -136,7 +145,39 @@ main_loop() {
     done
 }
 
+# Function to create a default configuration file
+create_default_config() {
+    # Define the default configuration
+    default_config=$(jq -n \
+        --arg td "./app_data/content" \
+        --argjson ug false \
+        --arg ga "" \
+        --arg dd "" \
+        --arg ot "19:30" \
+        --arg ont "07:30" \
+        --arg dt "10" \
+        --arg bt "900" \
+        --arg py "./venv" \
+        '{
+            TARGET_DIR: $td,
+            USE_GDRIVE: $ug,
+            GOOGLE_API_ACCESS: $ga,
+            DRIVE_DIR_ID: $dd,
+            OFF_TIME: $ot,
+            ON_TIME: $ont,
+            DISPLAYTIME: $dt,
+            BLENDTIME: $bt,
+            PYENV: $py
+        }')
+    echo "$default_config" >$CONFIG_FILE
+}
+
 # Main scripts
 clear
+if [ ! -f "$CONFIG_FILE" ]; then
+    # If not, create a default one
+    echo "Creating default config file..."
+    create_default_config
+fi
 sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" &
 main_loop #>/dev/null 2>/dev/null

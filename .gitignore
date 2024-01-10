@@ -1,5 +1,8 @@
 app_data/
 saves/
+exiftool.exe
+TEST*
+*.old*
 
 
 # Byte-compiled / optimized / DLL files
