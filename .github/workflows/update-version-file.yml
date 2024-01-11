@@ -7,7 +7,7 @@ on:
 
 jobs:
   update-version-json:
-    if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code'
+    if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code' && contains(github.event.head_commit.message, 'stable')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
