@@ -1,4 +1,5 @@
 """ Update script for TerminalSlideShow """
+# IS IN DEV!!!
 # pylint: disable=all
 import os
 import sys
