@@ -13,7 +13,7 @@ trap cleanup EXIT
 SCRIPT_PATH="$(realpath "$(dirname "$0")")"
 CONFIG_FILE="$SCRIPT_PATH/app_config.json"
 LOGO_PATH="$SCRIPT_PATH/LOGO.png"
-UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/drive_local_file_manager.py"
+UPDATE_CHECK_SCRIPT="$SCRIPT_PATH/file_manager/drive_local_file_manager.py"
 CURRENT_FILES_FILE="$SCRIPT_PATH/app_data/current_files.json"
 BLACK_IMAGE_FILE="$SCRIPT_PATH/black.png"
 

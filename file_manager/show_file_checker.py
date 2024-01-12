@@ -2,10 +2,16 @@
 This module checks if a file is supposed to be displayed at the current time. 
 It does this by checking the filename or metadata
 """
+import os
+import sys
 import re
 import logging
 from datetime import datetime
 from pathlib import Path
+
+#pylint: disable=wrong-import-position
+PARENT_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PARENT_DIRECTORY_PATH)
 from MetaDataEditor.image_metadata_handler import read_metadata
 
 SUPPORTED_DATE_FORMATS = [

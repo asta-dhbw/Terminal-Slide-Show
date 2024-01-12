@@ -12,7 +12,7 @@ class TestImageMetadataHandler(unittest.TestCase):
         cls.file_format = "JPEG"
 
     def setUp(self):
-        self.mock_open = patch("image_metadata_handler.Image.open").start()
+        self.mock_open = patch("PIL.Image.open").start()
         self.mock_image = self.create_mock_image()
         self.mock_open.return_value = self.mock_image
 
