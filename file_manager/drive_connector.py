@@ -39,5 +39,5 @@ def connect_to_drive(access_file):
 
 
 if __name__ == "__main__":
-    DRIVE = connect_to_drive("./app_data/raspi.json")
+    DRIVE = connect_to_drive("../app_data/raspi.json")
     print(DRIVE)

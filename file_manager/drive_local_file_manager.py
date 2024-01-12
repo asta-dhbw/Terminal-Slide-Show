@@ -14,14 +14,16 @@ logging.basicConfig(level=logging.INFO)
 
 
 current_file_directory = os.path.dirname(os.path.realpath(__file__))
+project_dir = os.path.dirname(current_file_directory)
+
 # Load the configuration from the config.json file
-with open(f"{current_file_directory}/app_config.json", encoding="utf-8") as config_file:
+with open(f"{project_dir}/app_config.json", encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 # Constants
 TARGET_DIR = config["TARGET_DIR"]
-CURRENT_FILES_FILE = f"{current_file_directory}/app_data/current_files.json"
-CHANGES_STATE_FILE = f"{current_file_directory}/app_data/changes_state.json"
+CURRENT_FILES_FILE = f"{project_dir}/app_data/current_files.json"
+CHANGES_STATE_FILE = f"{project_dir}/app_data/changes_state.json"
 USE_GDRIVE = config["USE_GDRIVE"]
 GOOGLE_API_ACCESS = config["GOOGLE_API_ACCESS"]
 DRIVE_DIR_ID = config["DRIVE_DIR_ID"]

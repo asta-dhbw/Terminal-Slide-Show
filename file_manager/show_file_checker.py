@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-#pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
 PARENT_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PARENT_DIRECTORY_PATH)
 from MetaDataEditor.image_metadata_handler import read_metadata
@@ -99,5 +99,5 @@ def check_for_event(file):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    TEST = check_for_event("./app_data/content/xx01.01.24@02.03.25.png")
+    TEST = check_for_event("../app_data/content/xx01.01.24@02.03.25.png")
     print(f"{TEST}")
