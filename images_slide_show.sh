@@ -60,15 +60,31 @@ display() {
 
     kill_display_processes
 
+    # Find an unused TTY
+    unused_tty=""
+    for tty in {1..7}; do
+        if ! who | grep -q "tty$tty"; then
+            unused_tty=$tty
+            break
+        fi
+    done
+
+    if [ -z "$unused_tty" ]; then
+        echo "No unused TTY found!"
+        return 1
+    fi
+
     if [[ ${#image_files[@]} -gt 0 && ${#video_files[@]} -gt 0 ]]; then
         while true; do
-            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose -1 "${image_files[@]}"
+            sudo chvt $unused_tty
+            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose -1 "${image_files[@]}"
             sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))
             sudo pkill -x "fbi"
             cvlc "$video_files"
         done
     elif [ -n "$image_files" ]; then
-        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T 1 --noverbose "${image_files[@]}"
+        sudo chvt $unused_tty
+        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose "${image_files[@]}"
     elif [ -n "$video_files" ]; then
         #clear
         cvlc --loop "$video_files"
