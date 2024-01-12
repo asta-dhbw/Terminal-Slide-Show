@@ -18,7 +18,9 @@ CURRENT_FILES_FILE="$SCRIPT_PATH/app_data/current_files.json"
 BLACK_IMAGE_FILE="$SCRIPT_PATH/black.png"
 
 OFF_TIME=$(jq -r '.OFF_TIME' $CONFIG_FILE)
+OFF_TIME_S=$(date -d"$OFF_TIME" +%s)
 ON_TIME=$(jq -r '.ON_TIME' $CONFIG_FILE)
+ON_TIME_S=$(date -d"$ON_TIME" +%s)
 
 DISPLAYTIME=$(jq -r '.DISPLAYTIME' $CONFIG_FILE) # in seconds
 BLENDTIME=$(jq -r '.BLENDTIME' $CONFIG_FILE)     # in milliseconds
@@ -101,15 +103,14 @@ display_black_screen() {
 calculate_and_sleep_until_target_time() {
     local current_time="$1"
     local target_time=""
-    if [[ "$current_time" < "$ON_TIME" ]]; then
+    if [[ "$current_time" -le "$ON_TIME_S" ]]; then
         target_time=$ON_TIME
     else
         target_time="$ON_TIME tomorrow"
     fi
 
     local target_timestamp=$(date -d "$target_time" +"%s")
-    local current_timestamp=$(date -d "$current_time" +"%s")
-    local seconds_until_target=$((target_timestamp - current_timestamp))
+    local seconds_until_target=$((target_timestamp - current_time))
 
     kill_display_processes
     echo "Sleeping for $seconds_until_target seconds"
@@ -120,14 +121,16 @@ calculate_and_sleep_until_target_time() {
 main_loop() {
     display_off=false
     while true; do
-        local current_time=$(date +"%H:%M")
+        local current_time=$(date +%s)
         local changes_detected=0
 
         # Run Python file and get return value to check if drive folder has been updated (1 = yes, 0 = no)
         check_for_updates
         changes_detected=$?
 
-        if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
+        # If current time is between off and on time, turn off the display
+        if [[ "$ON_TIME_S" -gt "$OFF_TIME_S" && "$current_time" -lt "$ON_TIME_S" && "$current_time" -gt "$OFF_TIME_S" ]] ||
+            [[ "$ON_TIME_S" -le "$OFF_TIME_S" && ("$current_time" -gt "$OFF_TIME_S" || "$current_time" -lt "$ON_TIME_S") ]]; then
             echo "Going to sleep as no one is here"
             display_black_screen
             display_off=true
@@ -169,8 +172,8 @@ create_default_config() {
         --argjson ug false \
         --arg ga "" \
         --arg dd "" \
-        --arg ot "19:30" \
-        --arg ont "07:30" \
+        --arg ot "19:30:00" \
+        --arg ont "07:30:00" \
         --arg dt "10" \
         --arg bt "900" \
         --arg py "./venv" \
