@@ -31,9 +31,10 @@ Follow these steps to set up the Google Cloud project and obtain necessary crede
 Ensure you have Python version ``3.9.2`` or higher installed.
 
 #### Easy-Way-Install
-- Execute: the ``initialize.sh`` inside th projectfolder
+- Execute: the ``initialize.sh`` inside the projectfolder using ``cd path/to/this_repo``
 
 #### Update
+**!!! Currently under dev and not stable yet!!!**
 - To get newest repo version: ``python -m update.py --update``
 
 #### Manual-Way-Install:
@@ -53,7 +54,6 @@ sudo apt upgrade
 # Install required packages:
 sudo apt install fbi vlc jq
 sudo apt install libimage-exiftool-perl
-sudo apt-get install python3-pyqt5
 
 #for MetaDataEdtor on MAC:
 brew install exiftool
@@ -69,14 +69,14 @@ To start you have to set some variables inside the [config-file](app_config.json
 #### Python Variables:
 - ``TARGETDIR`` -> folder where the content will be saved
 - ``USE_GDRIVE`` -> If you want to get the content from Google-Drive set it ``true``
-- ``GOOGLE_API_ACCESS`` -> Specifies the path to you service_account json file
+- ``GOOGLE_API_ACCESS`` -> Specifies the path to your ``service_account.json`` file
 - ``DRIVE_DIR_ID`` -> The ID of the Google-Drive folder with your content
 
 #### Bash Variables:
 - ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display
-- ``DISPLAYTIME`` -> Time for Duration of each image (in seconds)
+- ``DISPLAYTIME`` -> Time for Duration for all images (in seconds)
 - ``BLENDTIME`` -> Time for blending animation (in milliseconds)
-- ``PYENV`` -> Path to the venv if you are using one
+- ``PYENV`` -> Path to the venv if you are using one. Else let it empty
 
 ## MetaDataEditor
 [App](MetaDataEditor/app.py)
@@ -87,13 +87,16 @@ To start you have to set some variables inside the [config-file](app_config.json
 - `STARTDATE` -> Date when it will beginn displaying
 - `ENDDATE` -> Date when it will stop displaying
 
+**!!!Under DEV:!!!**
+- `DisplayTime` -> Time how long the single image will be displayed (in seconds)
+
 
 ## Allowed File Formats
 
 - The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``bmp``, ``.gif(first frame)``.
 
 - The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``, ``mov``, ``flv``.
--> Video currently not working using MetaDataEditor
+**-> Video currently not working when using MetaDataEditor**
 
 ## Allowed Formats for Google Drive
 
@@ -110,7 +113,7 @@ To configure auto-start:
 - Open the rc.local file: `sudo nano /etc/rc.local`
 - Add `sudo reset` to an empty command line
 - Go to the crontabs: `crontab -e`
-- Add 'chmod' to set the script as always executable and add the path to the script:
+- Add `chmod` to set the script as always executable and add the path to the script:
 ```bash
 @reboot sudo sleep 8 && cd /path/to/project && sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
 
