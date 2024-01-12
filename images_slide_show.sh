@@ -85,6 +85,9 @@ display() {
     elif [ -n "$image_files" ]; then
         sudo chvt $unused_tty
         sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose "${image_files[@]}"
+        fbiID=$!
+        sudo chvt $unused_tty
+        wait $fbiID
     elif [ -n "$video_files" ]; then
         #clear
         cvlc --loop "$video_files"
