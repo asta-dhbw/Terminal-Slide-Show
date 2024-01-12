@@ -110,8 +110,7 @@ calculate_and_sleep_until_target_time() {
     fi
 
     local target_timestamp=$(date -d "$target_time" +"%s")
-    local current_timestamp=$(date -d "$current_time" +"%s")
-    local seconds_until_target=$((target_timestamp - current_timestamp))
+    local seconds_until_target=$((target_timestamp - current_time))
 
     kill_display_processes
     echo "Sleeping for $seconds_until_target seconds"
