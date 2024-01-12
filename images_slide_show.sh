@@ -79,14 +79,14 @@ display() {
     if [[ ${#image_files[@]} -gt 0 && ${#video_files[@]} -gt 0 ]]; then
         while true; do
             sudo chvt $unused_tty
-            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose -1 "${image_files[@]}"
+            sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose -1 "${image_files[@]}" &
             sleep $((IMAGE_FILES_COUNT * DISPLAYTIME))
             sudo pkill -x "fbi"
             cvlc "$video_files"
         done
     elif [ -n "$image_files" ]; then
         sudo chvt $unused_tty
-        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose "${image_files[@]}"
+        sudo fbi -a -r 5 -t $DISPLAYTIME --blend $BLENDTIME -T $unused_tty --noverbose "${image_files[@]}" &
         fbiID=$!
         sudo chvt $unused_tty
         wait $fbiID
