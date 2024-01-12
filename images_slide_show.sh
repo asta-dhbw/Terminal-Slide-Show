@@ -36,6 +36,22 @@ fi
 DISPLAYPID=""a
 is_first_run=true
 
+# Find an unused TTY
+unused_tty=""
+for tty in {1..7}; do
+    if ! who | grep -q "tty$tty"; then
+        unused_tty=$tty
+        break
+    fi
+done
+
+if [ -z "$unused_tty" ]; then
+    echo "No unused TTY found!"
+    return 1
+else
+    echo "Using TTY $unused_tty"
+fi
+
 # Function to turn off the cursor
 turn_off_cursor() {
     setterm -cursor off
@@ -62,22 +78,6 @@ display() {
 
     kill_display_processes
 
-    # Find an unused TTY
-    unused_tty=""
-    for tty in {1..7}; do
-        if ! who | grep -q "tty$tty"; then
-            unused_tty=$tty
-            break
-        fi
-    done
-
-    if [ -z "$unused_tty" ]; then
-        echo "No unused TTY found!"
-        return 1
-    else
-        echo "Using TTY $unused_tty"
-    fi
-
     if [[ ${#image_files[@]} -gt 0 && ${#video_files[@]} -gt 0 ]]; then
         while true; do
             sudo fbi -a -r 3 -t $DISPLAYTIME --blend $BLENDTIME -vt $unused_tty --noverbose -1 "${image_files[@]}"
@@ -96,7 +96,7 @@ display() {
 # Function to display black screen
 display_black_screen() {
     kill_display_processes
-    sudo fbi -a -r 5 -T 1 --noverbose "$BLACK_IMAGE_FILE" &
+    sudo fbi -a -r 5 -vt $unused_tty --noverbose "$BLACK_IMAGE_FILE" &
 }
 
 # Function to calculate and sleep until target time
@@ -198,5 +198,6 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo "Creating default config file..."
     create_default_config
 fi
-sudo fbi -a -r 5 -t 5 -T 1 --noverbose "$SCRIPT_PATH/LOGO.png" &
+
+sudo fbi -a -r 5 -t 5 -vt $unused_tty --noverbose "$SCRIPT_PATH/LOGO.png" &
 main_loop #>/dev/null 2>/dev/null
