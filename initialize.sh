@@ -24,8 +24,8 @@ default_config=$(
         --argjson ug false \
         --arg ga "" \
         --arg dd "" \
-        --arg ot "19:30" \
-        --arg ont "07:30" \
+        --arg ot "19:30:00" \
+        --arg ont "07:30:00" \
         --arg dt "10" \
         --arg bt "900" \
         --arg py "./venv" \
