@@ -23,5 +23,7 @@ jobs:
     - name: Set PYTHONPATH
       run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
     - name: Run tests
+      # GOAL: python -m unittest discover -s . -p 'test*.py' -> Problem not fiinding setup file
       run: |
-        python -m unittest discover unittests
+        python -m unittest discover -s file_manager/unittests
+        python -m unittest discover -s MetaDataEditor/unittests
