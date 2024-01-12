@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code'
     runs-on: ubuntu-latest
     strategy:
       matrix:
