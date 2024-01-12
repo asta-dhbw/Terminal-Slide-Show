@@ -24,6 +24,6 @@ jobs:
       run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
     - name: Run tests
       # GOAL: python -m unittest discover -s . -p 'test*.py' -> Problem not fiinding setup file
+      # ALSO bad with MetaDataEditor cant load Qt and exiftool: python -m unittest discover -s MetaDataEditor/unittests
       run: |
         python -m unittest discover -s file_manager/unittests
-        python -m unittest discover -s MetaDataEditor/unittests
