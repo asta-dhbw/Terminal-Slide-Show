@@ -9,6 +9,7 @@ from googleapiclient.errors import HttpError
 
 
 # pylint: disable=too-many-arguments
+#pylint: disable=too-many-locals
 def download_file(service, file_item, target_directory="./temp"):
     """Download an item from Google Drive. (file or entire folder)"""
     file_name = file_item["name"]
