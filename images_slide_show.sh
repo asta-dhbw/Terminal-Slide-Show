@@ -120,14 +120,18 @@ calculate_and_sleep_until_target_time() {
 main_loop() {
     display_off=false
     while true; do
-        local current_time=$(date +"%H:%M")
+        local current_time=$(date +%s)
+        local ON_TIME=$(date -d"$ON_TIME" +%s)
+        local OFF_TIME=$(date -d"$OFF_TIME" +%s)
         local changes_detected=0
 
         # Run Python file and get return value to check if drive folder has been updated (1 = yes, 0 = no)
         check_for_updates
         changes_detected=$?
 
-        if [[ "$current_time" > "$OFF_TIME" || "$current_time" < "$ON_TIME" ]]; then
+        # If current time is between off and on time, turn off the display
+        if [[ "$ON_TIME" -gt "$OFF_TIME" && "$current_time" -lt "$ON_TIME" && "$current_time" -gt "$OFF_TIME" ]] ||
+            [[ "$ON_TIME" -le "$OFF_TIME" && ("$current_time" -gt "$OFF_TIME" || "$current_time" -lt "$ON_TIME") ]]; then
             echo "Going to sleep as no one is here"
             display_black_screen
             display_off=true
