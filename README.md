@@ -69,14 +69,14 @@ To start you have to set some variables inside the [config-file](app_config.json
 #### Python Variables:
 - ``TARGETDIR`` -> folder where the content will be saved
 - ``USE_GDRIVE`` -> If you want to get the content from Google-Drive set it ``true``
-- ``GOOGLE_API_ACCESS`` -> Specifies the path to you ``service_account.json`` file
+- ``GOOGLE_API_ACCESS`` -> Specifies the path to your ``service_account.json`` file
 - ``DRIVE_DIR_ID`` -> The ID of the Google-Drive folder with your content
 
 #### Bash Variables:
 - ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display
-- ``DISPLAYTIME`` -> Time for Duration of each image (in seconds)
+- ``DISPLAYTIME`` -> Time for Duration for all images (in seconds)
 - ``BLENDTIME`` -> Time for blending animation (in milliseconds)
-- ``PYENV`` -> Path to the venv if you are using one
+- ``PYENV`` -> Path to the venv if you are using one. Else let it empty
 
 ## MetaDataEditor
 [App](MetaDataEditor/app.py)
@@ -113,7 +113,7 @@ To configure auto-start:
 - Open the rc.local file: `sudo nano /etc/rc.local`
 - Add `sudo reset` to an empty command line
 - Go to the crontabs: `crontab -e`
-- Add 'chmod' to set the script as always executable and add the path to the script:
+- Add `chmod` to set the script as always executable and add the path to the script:
 ```bash
 @reboot sudo sleep 8 && cd /path/to/project && sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
 
