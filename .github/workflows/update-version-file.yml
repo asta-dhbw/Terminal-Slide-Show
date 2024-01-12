@@ -7,6 +7,7 @@ on:
 
 jobs:
   update-version-json:
+    # only execute if STABLE and last push is not from github-actions[bot]
     if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code' && contains(github.event.head_commit.message, 'STABLE')
     runs-on: ubuntu-latest
     steps:

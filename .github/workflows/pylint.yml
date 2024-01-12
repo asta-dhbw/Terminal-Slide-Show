@@ -1,9 +1,15 @@
 name: Pylint
 
-on: [push]
-
+on:
+  # only execute if python file is changed
+  push:
+    paths:
+      - '**.py'
+      - '**.ipynb'
+      - '**.whl'
 jobs:
   build:
+    # only execute if last push not from github-actions[bot]
     if: github.actor != 'github-actions[bot]' && github.event_name == 'push' && github.event.head_commit.message != 'Update version.json with latest commit code'
     runs-on: ubuntu-latest
     strategy:
