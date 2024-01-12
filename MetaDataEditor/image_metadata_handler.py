@@ -38,19 +38,33 @@ def write_metadata(image_path, out_path, metadata=None):
     # Encode the pickled bytes object as a base64 string
     meta_base64 = base64.b64encode(meta_pickle).decode("utf-8")
 
-    if os.path.exists(out_path):
-        os.remove(out_path)
     # Use exiftool to write the metadata to the Comment tag and overwrite the original file
-    subprocess.run(
-        [
-            "exiftool",
-            "-Comment=" + f"{meta_base64}",
-            "-o",
-            out_path,
-            image_path,
-        ],
-        check=True,
-    )
+    cmd = [
+        "exiftool",
+        "-Comment=" + f"{meta_base64}",
+        "-o",
+        out_path,
+        image_path,
+    ]
+
+    if out_path == image_path:
+        cmd.append("-overwrite_original")
+    elif os.path.exists(out_path):
+        os.remove(out_path)
+    try:
+        subprocess.run(
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except subprocess.CalledProcessError as e:
+        logging.error("exiftool command failed. Return code: %s", {e.returncode})
+        logging.error("Output: %s", {e.output.decode("utf-8")})
+        logging.error("Error: %s", {e.stderr.decode("utf-8")})
+        raise subprocess.CalledProcessError(
+            e.returncode, e.cmd, e.output.decode("utf-8")
+        )
 
 
 if __name__ == "__main__":
