@@ -199,13 +199,13 @@ class ImageEditorGUI(QWidget):
 
                     self.update_window_title()
 
-            # adding tags
-            meta_datas = read_metadata(self.image_path)
-            for key, value in meta_datas.items():
-                tag_widget = TagWidget(tag_name=key, tag_value=value)
-                self.tag_widgets.append(tag_widget)
+                    # adding tags
+                    meta_datas = read_metadata(self.image_path)
+                    for key, value in meta_datas.items():
+                        tag_widget = TagWidget(tag_name=key, tag_value=value)
+                        self.tag_widgets.append(tag_widget)
 
-                self.scroll_layout.addWidget(tag_widget)
+                        self.scroll_layout.addWidget(tag_widget)
         except Exception as error:
             logging.warning(error)
 
@@ -233,8 +233,9 @@ class ImageEditorGUI(QWidget):
                     try:
                         tag_name, tag_value = tag_widget.get_values()
                         metadata_dict[tag_name] = tag_value
-                    except AttributeError as error:
+                    except Exception as error:
                         logging.warning(error)
+
                 write_metadata(self.image_path, file_dialog[0], metadata_dict)
                 break
             except Exception as e:
