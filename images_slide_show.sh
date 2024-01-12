@@ -72,6 +72,8 @@ display() {
     if [ -z "$unused_tty" ]; then
         echo "No unused TTY found!"
         return 1
+    else
+        echo "Using TTY $unused_tty"
     fi
 
     if [[ ${#image_files[@]} -gt 0 && ${#video_files[@]} -gt 0 ]]; then
