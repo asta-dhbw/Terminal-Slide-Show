@@ -73,7 +73,7 @@ To start you have to set some variables inside the [config-file](app_config.json
 - ``DRIVE_DIR_ID`` -> The ID of the Google-Drive folder with your content
 
 #### Bash Variables:
-- ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display
+- ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display ``(HH:MM) or (HH:MM:SS)`` (local time zone!)
 - ``DISPLAYTIME`` -> Time for Duration for all images (in seconds)
 - ``BLENDTIME`` -> Time for blending animation (in milliseconds)
 - ``PYENV`` -> Path to the venv if you are using one. Else let it empty
