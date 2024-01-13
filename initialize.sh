@@ -7,6 +7,7 @@ sudo apt-get install python3-venv -y
 python -m venv venv
 source ./venv/bin/activate
 # install dependencies for project
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 # Install all dependencies for bash script
