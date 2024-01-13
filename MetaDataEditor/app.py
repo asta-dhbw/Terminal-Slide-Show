@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QMovie, QPixmap, QIcon
 
+from moviepy.editor import VideoFileClip
 
 from custom_widgets import TagWidget
 
@@ -30,6 +31,11 @@ CURRENT_DATE = datetime.now().date()
 ICON_PATH = f"{SCRIPT_DIR_PATH}/favicon.ico"
 DARKMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/darkmode_style.qss"
 LIGHTMODE_SYTLE_SHEET = f"{SCRIPT_DIR_PATH}/lightmode_style.qss"
+
+TEMP_PATH = f"{SCRIPT_DIR_PATH}/temp"
+if not os.path.exists(TEMP_PATH):
+    os.makedirs(TEMP_PATH)
+TEMP_Thumbnail_PATH = f"{TEMP_PATH}/thumbnail.jpg"
 
 IMAGE_FORMATS = "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
 VIDEO_FORMATS = "Videos (*.mp4 *.avi *.mkv *.flv *.mov)"
@@ -217,11 +223,15 @@ class ImageEditorGUI(QWidget):
                     break
 
                 options = QFileDialog.Options()
+                file_extension = os.path.splitext(self.image_path)[1].lower()
+                file_format = (
+                    VIDEO_FORMATS if file_extension in VIDEO_FORMATS else IMAGE_FORMATS
+                )
                 file_dialog = QFileDialog.getSaveFileName(
                     self,
-                    "Save Image",
+                    "Save File",
                     f"{self.image_path}",
-                    f"{IMAGE_FORMATS};;{VIDEO_FORMATS}",
+                    f"{file_format}",
                     options=options,
                 )
 
@@ -262,7 +272,16 @@ class ImageEditorGUI(QWidget):
             self.image_label.setMovie(self.movie)
             self.movie.start()
         else:
-            pixmap = QPixmap(image_path)
+            thumbnail_path = image_path
+            file_extension = os.path.splitext(self.image_path)[1].lower()
+            if file_extension in VIDEO_FORMATS.lower():
+                print("video")
+                clip = VideoFileClip(image_path)
+                clip.save_frame(TEMP_Thumbnail_PATH, t="00:00:01")
+                clip.close()
+                thumbnail_path = TEMP_Thumbnail_PATH
+
+            pixmap = QPixmap(thumbnail_path)
             pixmap = pixmap.scaled(
                 self.image_label.width(), self.height(), Qt.KeepAspectRatio
             )
