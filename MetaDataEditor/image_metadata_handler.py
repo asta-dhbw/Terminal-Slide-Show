@@ -51,6 +51,12 @@ def write_metadata(image_path, out_path, metadata=None):
         cmd.append("-overwrite_original")
     elif os.path.exists(out_path):
         os.remove(out_path)
+    logging.info(
+        "immage path: %s with metadata: %s and output: %s",
+        image_path,
+        metadata,
+        out_path,
+    )
     try:
         subprocess.run(
             cmd,
