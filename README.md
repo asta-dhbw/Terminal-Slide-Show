@@ -34,7 +34,6 @@ Ensure you have Python version ``3.9.2`` or higher installed.
 - Execute: the ``initialize.sh`` inside the projectfolder using ``cd path/to/this_repo``
 
 #### Update
-**!!! Currently under dev and not stable yet!!!**
 - To get newest repo version: ``python -m update.py --update``
 
 #### Manual-Way-Install:
