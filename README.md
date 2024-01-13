@@ -95,7 +95,6 @@ To start you have to set some variables inside the [config-file](app_config.json
 - The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``bmp``, ``.gif(first frame)``.
 
 - The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``, ``mov``, ``flv``.
-**-> Video currently not working when using MetaDataEditor**
 
 ## Allowed Formats for Google Drive
 
