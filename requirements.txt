@@ -5,4 +5,5 @@ google-api-python-client
 pillow
 moviepy
 pylint
+sip
 pyqt5
