@@ -1,12 +1,12 @@
-import React from 'react'
-import ModernSlideshow from './components/modernSlideshow'
+import React from 'react';
+import Slideshow from './components/slideshow';
 
 function App() {
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden">
-      <ModernSlideshow />
+    <div>
+      <Slideshow />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
