@@ -20,42 +20,7 @@ This README provides instructions for setting up the project using Python, insta
 
 ```
 // Project structure
-digital-signage/
-  ├── src/
-  │   ├── core/                     # Core functionality
-  │   │   ├── MediaManager.js       # Media handling & processing
-  │   │   ├── ScheduleManager.js    # Scheduling & timing
-  │   │   └── GoogleDriveSync.js    # Google Drive integration
-  │   │
-  │   ├── display/                  # Display adapters
-  │   │   ├── TerminalDisplay.js    # Terminal-based display
-  │   │   ├── BrowserDisplay.js     # Browser-based display
-  │   │   └── DisplayFactory.js     # Display mode selection
-  │   │
-  │   ├── utils/                    # Utility functions
-  │   │   ├── dateParser.js         # Date format parsing
-  │   │   ├── fileUtils.js          # File operations
-  │   │   └── logger.js             # Logging functionality
-  │   │
-  │   ├── config/                   # Configuration
-  │   │   ├── default.js            # Default settings
-  │   │   └── schema.js             # Config validation
-  │   │
-  │   ├── web/                      # Web server (optional)
-  │   │   ├── server.js             # Express server
-  │   │   └── routes.js             # API routes
-  │   │
-  │   └── index.js                  # Main entry point
-  │
-  ├── public/                       # Web assets
-  │   ├── index.html
-  │   └── styles.css
-  │
-  ├── scripts/                      # Installation scripts
-  │   ├── install.js               # Main installer
-  │   └── platform-detect.js       # Platform detection
-  │
-  └── package.json
+
 ```
 
 ## Setting up Google Cloud Project

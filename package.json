@@ -1,0 +1,62 @@
+{
+  "name": "terminal-slide-show",
+  "private": true,
+  "version": "0.9.0",
+  "description": "non-GUI slideshow that fetches new files from Google Drive, allowing you to update the slideshow remotely.",
+  "type": "module",
+  "scripts": {
+    "dev:client": "vite client",
+    "dev:server": "node server/src/index.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "vite build client",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asta-dhbw/Terminal-Slide-Show.git"
+  },
+  "keywords": [
+    "raspberry-pi",
+    "slideshow",
+    "terminal-slideshow",
+    "digital-signage",
+    "image-viewer",
+    "video-player",
+    "google-drive",
+    "remote-content",
+    "content-management",
+    "display-scheduling",
+    "metadata-editor",
+    "media-player",
+    "digital-display",
+    "framebuffer",
+    "raspberry-pi-display",
+    "content-sync",
+    "image-rotation",
+    "video-rotation",
+    "media-management",
+    "display-automation"
+  ],
+  "author": "Christian Kerhault",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/asta-dhbw/Terminal-Slide-Show/issues"
+  },
+  "homepage": "https://github.com/asta-dhbw/Terminal-Slide-Show#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "framer-motion": "^11.11.10",
+    "fs-extra": "^11.2.0",
+    "googleapis": "^144.0.0",
+    "lucide-react": "^0.453.0",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "vite": "^5.0.0"
+  }
+}
