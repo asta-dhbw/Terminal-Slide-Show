@@ -187,9 +187,9 @@ const Slideshow = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              onClick={() => handleNext()}
+              onClick={() => handlePrevious()}
               disabled={loading || isTransitioning || !serverReady}
-              className="fixed left-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-50"
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-50"
             >
               <ChevronLeft className="w-8 h-8 text-white" />
             </motion.button>
@@ -200,7 +200,7 @@ const Slideshow = () => {
               exit={{ opacity: 0, x: 20 }}
               onClick={() => handleNext()}
               disabled={loading || isTransitioning || !serverReady}
-              className="fixed right-4 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-50"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-50"
             >
               <ChevronRight className="w-8 h-8 text-white" />
             </motion.button>
