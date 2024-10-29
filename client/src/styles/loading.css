@@ -1,0 +1,15 @@
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 50;
+}
+
+.loading-text {
+  font-size: 1.5rem;
+  font-weight: 300; 
+}
