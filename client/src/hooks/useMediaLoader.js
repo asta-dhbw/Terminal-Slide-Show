@@ -48,30 +48,30 @@ export const useMediaLoader = () => {
     }
   }, [serverReady, lastModified]);
 
-    const navigateMedia = useCallback(async (direction) => {
+  const navigateMedia = useCallback(async (direction) => {
     if (!serverReady) return;
     setLoading(true);
     
     try {
-        const response = await fetch(`/api/${direction}-media`);
-        const data = await response.json();
-        
-        if (data.error) {
+      const response = await fetch(`/api/${direction}-media`);
+      const data = await response.json();
+      
+      if (data.error) {
         setError('No media available');
         setMedia(null);
         return;
-        }
+      }
 
-        setLastModified(data.lastModified);
-        setMedia(data);
-        setError(null);
+      setLastModified(data.lastModified);
+      setMedia(data);
+      setError(null);
     } catch (err) {
-        setError(`Failed to load ${direction} media`);
-        setMedia(null);
+      setError(`Failed to load ${direction} media`);
+      setMedia(null);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    }, [serverReady]);
+  }, [serverReady]);
 
   useEffect(() => {
     const init = async () => {
