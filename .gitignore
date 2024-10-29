@@ -1,7 +1,6 @@
 #ViteApp
 cache/
-
-
+downloads/
 # Logs
 logs
 *.log
