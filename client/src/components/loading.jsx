@@ -1,7 +1,8 @@
 import React from 'react';
-import { Loader2, Server } from 'lucide-react';
+import { Server } from 'lucide-react';
 import { motion } from 'framer-motion';
 import '../styles/loading.css';
+import BBLoader from './BBLoader';
 
 const Loading = ({ isServerConnecting }) => (
   <motion.div
@@ -20,12 +21,12 @@ const Loading = ({ isServerConnecting }) => (
         repeat: Infinity,
         ease: "easeInOut"
       }}
-      className="icon"
+      style={{ originX: 0.5, originY: 0.5 }} // Ensure rotation around center
     >
       {isServerConnecting ? (
         <Server />
       ) : (
-        <Loader2 />
+        <BBLoader loading={true} color="#FFFFFF" size={50} /> // Use BBLoader
       )}
     </motion.div>
     <motion.p

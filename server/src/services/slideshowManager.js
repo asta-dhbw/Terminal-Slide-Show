@@ -11,12 +11,18 @@ export class SlideshowManager {
     this.currentIndex = 0;
     this.mediaFiles = [];
     this.watchInterval = null;
+    this.initialized = false;
   }
 
   async initialize() {
     await fs.ensureDir(this.mediaPath);
     await this.updateMediaList();
     this.startWatching();
+    this.initialized = true;
+  }
+
+  isInitialized() {
+    return this.initialized;
   }
 
   async updateMediaList() {
@@ -59,6 +65,12 @@ export class SlideshowManager {
   nextMedia() {
     if (this.mediaFiles.length === 0) return null;
     this.currentIndex = (this.currentIndex + 1) % this.mediaFiles.length;
+    return this.getCurrentMedia();
+  }
+
+  previousMedia() {
+    if (this.mediaFiles.length === 0) return null;
+    this.currentIndex = (this.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
     return this.getCurrentMedia();
   }
 

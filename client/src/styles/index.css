@@ -22,8 +22,6 @@ html, body {
   background-color: black;
 }
 
-
-
 .media-wrapper {
   position: relative;
   width: 100%;
@@ -40,8 +38,8 @@ html, body {
 }
 
 .icon {
-  width: 200px;
-  height: 200px;
+  width: 400px;
+  height: 400px;
 }
 
 .message {

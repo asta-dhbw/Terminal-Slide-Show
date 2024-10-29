@@ -63,6 +63,27 @@ app.get('/api/next-media', (req, res) => {
     res.json(media || { error: 'No media available' });
 });
 
+app.get('/api/previous-media', (req, res) => {
+    const media = slideshowManager.nextMedia();
+    res.json(media || { error: 'No media available' });
+});
+
+app.get('/api/server-status', (req, res) => {
+    try {
+      const isGoogleDriveInitialized = googleDriveService.isInitialized();
+      const isSlideshowManagerInitialized = slideshowManager.isInitialized();
+  
+      if (isGoogleDriveInitialized && isSlideshowManagerInitialized) {
+        res.status(200).send('OK');
+      } else {
+        res.status(503).send('Service Unavailable');
+      }
+    } catch (error) {
+      logger.error('Error checking server status:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
 // Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'client', 'index.html'));

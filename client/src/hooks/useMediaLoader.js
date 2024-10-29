@@ -95,3 +95,5 @@ export const useMediaLoader = () => {
     navigateMedia
   };
 };
+
+export default useMediaLoader;

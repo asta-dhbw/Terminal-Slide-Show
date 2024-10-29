@@ -10,6 +10,7 @@ export class GoogleDriveService {
     this.logger = new Logger('GoogleDriveService');
     this.downloadPath = path.join(process.cwd(), 'downloads');
     this.syncInterval = null;
+    this.initialized = false;
   }
 
   async initialize() {
@@ -22,10 +23,15 @@ export class GoogleDriveService {
       this.drive = google.drive({ version: 'v3', auth });
       await fs.ensureDir(this.downloadPath);
       this.logger.info('Google Drive service initialized');
+      this.initialized = true;
     } catch (error) {
       this.logger.error('Failed to initialize Google Drive service:', error);
       throw error;
     }
+  }
+
+  isInitialized() {
+    return this.initialized;
   }
 
   async startSync(interval = 300000) { // 5 minutes default

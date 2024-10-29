@@ -25,3 +25,5 @@ export const useControlsVisibility = (timeout = 3000) => {
 
   return showControls;
 };
+
+export default useControlsVisibility;
