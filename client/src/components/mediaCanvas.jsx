@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 const MediaCanvas = ({ media }) => {
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Get average color from the edge of an image
   const getEdgeColors = (ctx, image, x, y, width, height) => {
@@ -14,7 +15,6 @@ const MediaCanvas = ({ media }) => {
       right: ctx.getImageData(x + width - 1, y + height/2, 1, sampleSize).data
     };
 
-    // Calculate average RGB for each edge
     return Object.entries(colors).reduce((acc, [edge, data]) => {
       let r = 0, g = 0, b = 0;
       for (let i = 0; i < data.length; i += 4) {
@@ -31,13 +31,15 @@ const MediaCanvas = ({ media }) => {
   useEffect(() => {
     if (!media) return;
 
+    const container = containerRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const image = new Image();
     imageRef.current = image;
 
     const resizeCanvas = () => {
-      const { innerWidth: width, innerHeight: height } = window;
+      // Use container dimensions instead of window
+      const { clientWidth: width, clientHeight: height } = container;
       canvas.width = width;
       canvas.height = height;
     };
@@ -115,15 +117,19 @@ const MediaCanvas = ({ media }) => {
     image.onload = drawImage;
     image.src = `/media/${media.name}`;
 
-    window.addEventListener('resize', () => {
+    // Create ResizeObserver for container instead of window
+    const resizeObserver = new ResizeObserver(() => {
       resizeCanvas();
       drawImage();
     });
 
+    resizeObserver.observe(container);
+
+    // Initial setup
     resizeCanvas();
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
+      resizeObserver.disconnect();
       if (imageRef.current) {
         imageRef.current.onload = null;
       }
@@ -131,10 +137,12 @@ const MediaCanvas = ({ media }) => {
   }, [media]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="canvas"
-    />
+    <div ref={containerRef} className="media-canvas-container">
+      <canvas
+        ref={canvasRef}
+        className="media-canvas"
+      />
+    </div>
   );
 };
 

@@ -20,7 +20,7 @@ const Slideshow = () => {
   const handleNavigate = (direction) => {
     setPaused(true);
     navigateMedia(direction);
-    setTimeout(() => setPaused(false), 500); // Pause for the duration of the transition
+    setTimeout(() => setPaused(false), 200); // Pause for the duration of the transition
   };
 
   useEffect(() => {
