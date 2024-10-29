@@ -7,6 +7,7 @@
   background-color: rgba(0, 0, 0, 0.4);
   transition: all 0.3s;
   z-index: 50; /* Ensure buttons are on top of the canvas */
+  pointer-events: auto;
 }
 
 .nav-button:hover {
