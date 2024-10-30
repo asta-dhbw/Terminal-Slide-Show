@@ -66,7 +66,7 @@ app.get('/api/next-media', (req, res) => {
 });
 
 app.get('/api/previous-media', (req, res) => {
-    const media = slideshowManager.nextMedia();
+    const media = slideshowManager.previousMedia();
     res.json(media || { error: 'No media available' });
 });
 
