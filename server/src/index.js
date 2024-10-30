@@ -4,12 +4,14 @@ import { fileURLToPath } from 'url';
 import { GoogleDriveService } from './services/googleDriveService.js';
 import { SlideshowManager } from './services/slideshowManager.js';
 import { Logger } from './utils/logger.js';
+import { config } from '../../config/config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = 3000;
+const port = config.backend.port;
+const host = config.backend.host;
 const logger = new Logger('Main');
 
 // Initialize services
@@ -22,7 +24,7 @@ app.use(express.static(path.join(process.cwd(), 'client', 'public')));
 // 2. Serve the client dist folder (for production)
 app.use(express.static(path.join(process.cwd(), 'dist')));
 // 3. Serve media files
-app.use('/media', express.static(path.join(process.cwd(), 'downloads')));
+app.use('/media', express.static(path.join(process.cwd(), config.paths.downloadPath)));
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -91,7 +93,7 @@ app.get('*', (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-    logger.info(`Server running on port ${port}`);
+    logger.info(`Backend running at http://${host}:${port}/`);
     initialize();
 });
 

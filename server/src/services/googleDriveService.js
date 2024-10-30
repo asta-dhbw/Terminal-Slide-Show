@@ -9,8 +9,8 @@ import { DateParser } from '../utils/dateParser.js';
 export class GoogleDriveService {
   constructor() {
     this.logger = new Logger('GoogleDriveService');
-    this.downloadPath = path.join(process.cwd(), 'downloads');
-    this.syncInterval = null;
+    this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
+    this.syncInterval = config.sync.interval;
     this.initialized = false;
   }
 
@@ -18,10 +18,10 @@ export class GoogleDriveService {
     try {
       const auth = new google.auth.GoogleAuth({
         keyFile: config.google.serviceAccountPath,
-        scopes: ['https://www.googleapis.com/auth/drive.readonly']
+        scopes: [config.google.scopes]
       });
 
-      this.drive = google.drive({ version: 'v3', auth });
+      this.drive = google.drive({ version: config.google.apiVersion, auth });
       await fs.ensureDir(this.downloadPath);
       this.logger.info('Google Drive service initialized');
       this.initialized = true;
@@ -35,7 +35,7 @@ export class GoogleDriveService {
     return this.initialized;
   }
 
-  async startSync(interval = 500) { // 1/2 second default
+  async startSync(interval = config.sync.interval) {
     this.syncInterval = setInterval(async () => {
       try {
         await this.syncFiles();
@@ -85,12 +85,8 @@ export class GoogleDriveService {
   }
 
   async listFiles() {
-    // Fetch the list of files from Google Drive
     const files = await this.fetchFilesFromDrive();
-
-    // Filter files based on DateParser conditions
     const validFiles = files.filter(file => this.isValidFile(file.name));
-
     return validFiles;
   }
 
@@ -101,7 +97,6 @@ export class GoogleDriveService {
         fields: 'files(id, name, mimeType)',
         spaces: 'drive'
       });
-
       return response.data.files;
     } catch (error) {
       this.logger.error('Failed to fetch files from Google Drive:', error);

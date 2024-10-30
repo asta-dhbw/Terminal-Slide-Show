@@ -3,11 +3,13 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '../utils/logger.js';
 import { DateParser } from '../utils/dateParser.js';
+import { config } from '../../../config/config.js';
 
 export class SlideshowManager {
   constructor() {
     this.logger = new Logger('SlideshowManager');
-    this.mediaPath = path.join(process.cwd(), 'downloads');
+    this.downloadPath = config.paths.downloadPath;
+    this.mediaPath = path.join(process.cwd(), this.downloadPath);
     this.currentIndex = 0;
     this.mediaFiles = [];
     this.watchInterval = null;
@@ -17,7 +19,7 @@ export class SlideshowManager {
   async initialize() {
     await fs.ensureDir(this.mediaPath);
     await this.updateMediaList();
-    this.startWatching();
+    this.startWatching(config.slideshow.watchInterval);
     this.initialized = true;
   }
 

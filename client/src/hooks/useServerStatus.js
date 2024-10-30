@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { config } from '../../../config/config';
 
-export const useServerStatus = (pollingInterval = 5000) => {
+export const useServerStatus = (pollingInterval = config.polling.serverStatusInterval) => {
   const [isServerConnected, setIsServerConnected] = useState(false);
 
   useEffect(() => {

@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-
-const POLL_INTERVAL = 5000;
-const MIN_INITIAL_LOADING_DURATION = 2000; // 2 seconds minimum for initial load only
+import { config } from '../../../config/config';
 
 export const useMediaLoader = () => {
   const [media, setMedia] = useState(null);
@@ -54,7 +52,7 @@ export const useMediaLoader = () => {
         // Handle initial loading duration
         if (serverReconnected && initialLoadStartTime) {
           const elapsed = Date.now() - initialLoadStartTime;
-          const remainingTime = Math.max(0, MIN_INITIAL_LOADING_DURATION - elapsed);
+          const remainingTime = Math.max(0, config.polling.initLoadDuration - elapsed);
           
           // Only apply minimum duration for initial load after reconnection
           setTimeout(() => {
@@ -110,12 +108,12 @@ export const useMediaLoader = () => {
     };
     init();
 
-    const serverPollInterval = setInterval(checkServer, POLL_INTERVAL);
+    const serverPollInterval = setInterval(checkServer, config.polling.mediaLoaderInterval);
     const mediaPollInterval = setInterval(() => {
       if (serverReady) {
         loadMedia();
       }
-    }, POLL_INTERVAL);
+    }, config.polling.mediaLoaderInterval);
 
     return () => {
       clearInterval(serverPollInterval);

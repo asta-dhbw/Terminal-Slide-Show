@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { config } from '../config/config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,17 +10,17 @@ export default defineConfig({
   root: './client',
   plugins: [react()],
   server: {
-    port: 5173,
+    port: config.frontend.port,
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: `http://${config.backend.host}:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
         ws: true
       },
       '/media': {
-        target: 'http://localhost:3000',
+        target: `http://${config.backend.host}:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
       }

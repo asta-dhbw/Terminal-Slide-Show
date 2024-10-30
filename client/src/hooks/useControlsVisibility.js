@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { config } from '../../../config/config.js';
 
-export const useControlsVisibility = (timeout = 3000) => {
+export const useControlsVisibility = (timeout = config.sync.controlsInterval) => {
   const [showControls, setShowControls] = useState(true);
 
   useEffect(() => {

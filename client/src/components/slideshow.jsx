@@ -7,8 +7,7 @@ import MediaCanvas from './mediaCanvas';
 import Controls from './controls';
 import Loading from './loading';
 import ErrorToast from './errorToast';
-
-const AUTO_CONTINUE_INTERVAL = 5000; // 5 seconds
+import { config } from '../../../config/config';
 
 const Slideshow = () => {
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader();
@@ -28,7 +27,7 @@ const Slideshow = () => {
 
     autoContinueTimer.current = setTimeout(() => {
       navigateMedia('next');
-    }, AUTO_CONTINUE_INTERVAL);
+    }, config.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, navigateMedia]);
