@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '../utils/logger.js';
-import { config } from '../../config/config.js';
+import { config } from '../../../config/config.js';
 import { DateParser } from '../utils/dateParser.js';
 
 export class GoogleDriveService {
