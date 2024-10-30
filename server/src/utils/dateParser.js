@@ -1,8 +1,12 @@
 export class DateParser {
   static parseFileName(filename) {
     const patterns = [
-      /(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})@(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})/,
-      /(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})(?:T(\d+))?/
+      // Original patterns with full dates
+      /(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})@(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})/, // dd.mm.yyyy@dd.mm.yyyy
+      /(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})(?:T(\d+))?/, // dd.mm.yyyy
+      // New patterns without year
+      /(\d{1,2})[-._](\d{1,2})@(\d{1,2})[-._](\d{1,2})/, // dd.mm@dd.mm
+      /(\d{1,2})[-._](\d{1,2})/ // dd.mm
     ];
 
     for (const pattern of patterns) {
@@ -10,12 +14,27 @@ export class DateParser {
       if (!match) continue;
 
       try {
-        const startDate = DateParser.createDate(match[1], match[2], match[3]);
-        if (match.length > 4) {
-          const endDate = DateParser.createDate(match[4], match[5], match[6]);
-          return { startDate, endDate };
+        if (match[0].includes('@')) {
+          // Pattern with start and end dates
+          if (match.length === 7) {
+            // Full dates with years
+            const startDate = DateParser.createDate(match[1], match[2], match[3]);
+            const endDate = DateParser.createDate(match[4], match[5], match[6]);
+            return { startDate, endDate };
+          } else {
+            // Dates without years
+            const currentYear = new Date().getUTCFullYear().toString();
+            const startDate = DateParser.createDate(match[1], match[2], currentYear);
+            const endDate = DateParser.createDate(match[3], match[4], currentYear);
+            return { startDate, endDate };
+          }
+        } else {
+          // Single date pattern
+          const currentYear = new Date().getUTCFullYear().toString();
+          const year = match[3] || currentYear;
+          const startDate = DateParser.createDate(match[1], match[2], year);
+          return { startDate, endDate: null };
         }
-        return { startDate, endDate: null };
       } catch (error) {
         console.warn(`Invalid date in filename: ${filename}`, error);
         continue;

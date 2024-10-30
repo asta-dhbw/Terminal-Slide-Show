@@ -90,14 +90,25 @@ export class GoogleDriveService {
     return validFiles;
   }
 
-  async fetchFilesFromDrive() {
+  async fetchFilesFromDrive(folderId = config.google.folderId) {
     try {
       const response = await this.drive.files.list({
-        q: `'${config.google.folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType)',
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: 'files(id, name, mimeType, parents)',
         spaces: 'drive'
       });
-      return response.data.files;
+
+      const files = response.data.files;
+
+      // Recursively fetch files from subfolders
+      for (const file of files) {
+        if (file.mimeType === 'application/vnd.google-apps.folder') {
+          const subfolderFiles = await this.fetchFilesFromDrive(file.id);
+          files.push(...subfolderFiles);
+        }
+      }
+
+      return files;
     } catch (error) {
       this.logger.error('Failed to fetch files from Google Drive:', error);
       throw error;
