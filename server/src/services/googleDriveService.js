@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '../utils/logger.js';
 import { config } from '../../../config/config.js';
-import { DateParser } from '../utils/dateParser.js';
+import { isValidFile } from '../utils/fileValidator.js';
 
 export class GoogleDriveService {
   constructor() {
@@ -86,7 +86,7 @@ export class GoogleDriveService {
 
   async listFiles() {
     const files = await this.fetchFilesFromDrive();
-    const validFiles = files.filter(file => this.isValidFile(file.name));
+    const validFiles = files.filter(file => isValidFile(file.name));
     return validFiles;
   }
 
@@ -102,11 +102,6 @@ export class GoogleDriveService {
       this.logger.error('Failed to fetch files from Google Drive:', error);
       throw error;
     }
-  }
-
-  isValidFile(filename) {
-    const parsedDate = DateParser.parseFileName(filename);
-    return parsedDate !== null;
   }
 
   async downloadFile(fileId, localPath) {

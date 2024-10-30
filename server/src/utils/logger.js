@@ -15,16 +15,15 @@ export class Logger {
     ).join(' ');
 
     if (this.format === 'json') {
-      return JSON.stringify({
+      return JSON.stringify([
         timestamp,
         level,
-        context: this.context,
-        message,
-        args: formattedArgs
-      });
+        this.context,
+        message
+      ]);
     }
 
-    return `[${timestamp}] [${level}] [${this.context}] ${message} ${formattedArgs}`.trim();
+    return `${timestamp} ${level} ${this.context} ${message} ${formattedArgs}`.trim();
   }
 
   log(level, message, ...args) {

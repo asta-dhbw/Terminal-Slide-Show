@@ -6,7 +6,7 @@ export const config = {
     apiVersion: 'v3' // Google Drive API version
   },
   sync: {
-    interval: 500, // Default sync interval in milliseconds
+    interval: 1000, // Default sync interval in milliseconds
     controlsInterval: 3000, // Interval for showing/hiding controls in milliseconds
     retryAttempts: 3, // Number of retry attempts for failed syncs
     retryDelay: 1000 // Delay between retry attempts in milliseconds

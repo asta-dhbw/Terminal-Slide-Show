@@ -4,6 +4,7 @@ import path from 'path';
 import { Logger } from '../utils/logger.js';
 import { DateParser } from '../utils/dateParser.js';
 import { config } from '../../../config/config.js';
+import { isValidFile } from '../utils/fileValidator.js';
 
 export class SlideshowManager {
   constructor() {
@@ -40,23 +41,12 @@ export class SlideshowManager {
           path: path.join(this.mediaPath, file),
           dates: DateParser.parseFileName(file)
         }))
-        .filter(file => this.isFileValid(file));
+        .filter(file => isValidFile(file.name));
 
       this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
     } catch (error) {
       this.logger.error('Failed to update media list:', error);
     }
-  }
-
-  isFileValid(file) {
-    if (!file.dates) return false; // Reject files without valid date format
-    const now = new Date();
-    
-    if (file.dates.endDate) {
-      return now >= file.dates.startDate && now <= file.dates.endDate;
-    }
-    
-    return now >= file.dates.startDate;
   }
 
   getCurrentMedia() {
