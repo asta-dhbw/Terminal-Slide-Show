@@ -5,32 +5,15 @@ const MediaCanvas = ({ media }) => {
   const canvasRef = useRef(null);
   const imageRef = useRef(new Image());
   const videoRef = useRef(null);
-  const [isVideo, setIsVideo] = useState(false);
+  const [mediaType, setMediaType] = useState('image');
+  const [dimensions, setDimensions] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Video handling functions
-  const initializeVideo = () => {
-    if (!videoRef.current) {
-      videoRef.current = document.createElement('video');
-      videoRef.current.playsInline = true;
-      videoRef.current.muted = config.mediaTypes.muted;
-      videoRef.current.autoplay = config.mediaTypes.autoplay;
-      videoRef.current.loop = config.mediaTypes.loop;
-    }
-  };
-
-  const playVideo = async () => {
-    try {
-      videoRef.current.src = `/media/${media.name}`;
-      await videoRef.current.play();
-    } catch (error) {
-      console.error('Error playing video:', error);
-    }
-  };
-
-  // Image handling functions
-  const resizeCanvas = (canvas) => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  const getMediaType = (filename) => {
+    const extension = filename.toLowerCase().split('.').pop();
+    if (extension === 'gif') return 'gif';
+    if (config.mediaTypes.videoTypes.some(type => type.includes(extension))) return 'video';
+    return 'image';
   };
 
   const calculateImageDimensions = (imgWidth, imgHeight, canvasWidth, canvasHeight) => {
@@ -56,21 +39,13 @@ const MediaCanvas = ({ media }) => {
     tempCanvas.width = canvasWidth;
     tempCanvas.height = canvasHeight;
 
-    // Draw center image
     tempCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
-
-    // Apply blur
     tempCtx.filter = 'blur(20px)';
 
-    // Draw edges
     const edges = [
-      // Left edge
       { sx: 0, sy: 0, sw: 1, sh: imgHeight, dx: 0, dy: 0, dw: x, dh: canvasHeight },
-      // Right edge
       { sx: imgWidth - 1, sy: 0, sw: 1, sh: imgHeight, dx: x + scaledWidth, dy: 0, dw: canvasWidth - (x + scaledWidth), dh: canvasHeight },
-      // Top edge
       { sx: 0, sy: 0, sw: imgWidth, sh: 1, dx: x, dy: 0, dw: scaledWidth, dh: y },
-      // Bottom edge
       { sx: 0, sy: imgHeight - 1, sw: imgWidth, sh: 1, dx: x, dy: y + scaledHeight, dw: scaledWidth, dh: canvasHeight - (y + scaledHeight) }
     ];
 
@@ -81,14 +56,16 @@ const MediaCanvas = ({ media }) => {
     return tempCanvas;
   };
 
-  const drawImage = () => {
-    if (!imageRef.current.complete) return;
+  const updateCanvas = (image) => {
+    if (!image?.complete || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const image = imageRef.current;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    const dimensions = calculateImageDimensions(
+    const ctx = canvas.getContext('2d');
+    
+    const dims = calculateImageDimensions(
       image.width,
       image.height,
       canvas.width,
@@ -97,63 +74,79 @@ const MediaCanvas = ({ media }) => {
 
     const blurredBackground = createBlurredBackground(
       image,
-      dimensions,
+      dims,
       canvas.width,
       canvas.height
     );
 
-    // Reset filter and draw final composition
     ctx.filter = 'none';
     ctx.drawImage(blurredBackground, 0, 0);
-    ctx.drawImage(
-      image,
-      dimensions.x,
-      dimensions.y,
-      dimensions.scaledWidth,
-      dimensions.scaledHeight
-    );
+    
+    if (mediaType !== 'gif') {
+      ctx.drawImage(
+        image,
+        dims.x,
+        dims.y,
+        dims.scaledWidth,
+        dims.scaledHeight
+      );
+    }
+
+    setDimensions(dims);
+    setIsLoading(false);
   };
 
-  // Main effect for handling media changes
   useEffect(() => {
     if (!media) return;
 
-    const isVideoFile = new RegExp(`(${config.mediaTypes.videoTypes.join('|')})$`, 'i').test(media.name);
-    setIsVideo(isVideoFile);
+    setIsLoading(true);
+    setDimensions(null);
 
-    if (isVideoFile) {
-      initializeVideo();
-      playVideo();
+    const type = getMediaType(media.name);
+    setMediaType(type);
+
+    // Clean up previous media
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.removeAttribute('src');
+      videoRef.current.load();
+    }
+
+    if (type === 'video') {
+      // Initialize video
+      if (!videoRef.current) {
+        videoRef.current = document.createElement('video');
+      }
+      videoRef.current.playsInline = true;
+      videoRef.current.muted = config.mediaTypes.muted;
+      videoRef.current.autoplay = config.mediaTypes.autoplay;
+      videoRef.current.loop = config.mediaTypes.loop;
+      videoRef.current.src = `/media/${media.name}`;
+      videoRef.current.play().catch(console.error);
+      setIsLoading(false);
     } else {
-      const canvas = canvasRef.current;
-
+      // Handle images and GIFs
       const handleResize = () => {
-        resizeCanvas(canvas);
-        drawImage();
+        if (imageRef.current?.complete) {
+          updateCanvas(imageRef.current);
+        }
       };
 
-      imageRef.current.onload = drawImage;
+      imageRef.current = new Image();
+      imageRef.current.onload = () => updateCanvas(imageRef.current);
       imageRef.current.src = `/media/${media.name}`;
 
       window.addEventListener('resize', handleResize);
-      resizeCanvas(canvas);
-
       return () => {
         window.removeEventListener('resize', handleResize);
-        imageRef.current.onload = null;
+        if (imageRef.current) {
+          imageRef.current.onload = null;
+        }
       };
     }
-
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.removeAttribute('src');
-        videoRef.current.load();
-      }
-    };
   }, [media]);
 
-  if (isVideo) {
+  if (mediaType === 'video') {
     return (
       <video
         ref={videoRef}
@@ -168,10 +161,25 @@ const MediaCanvas = ({ media }) => {
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="canvas"
-    />
+    <div className="fixed inset-0 bg-black">
+      <canvas ref={canvasRef} className="absolute inset-0 z-0" />
+      {mediaType === 'gif' && dimensions && !isLoading && (
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <img
+            src={`/media/${media?.name}`}
+            alt="Animated GIF"
+            style={{
+              position: 'absolute',
+              left: dimensions.x,
+              top: dimensions.y,
+              width: dimensions.scaledWidth,
+              height: dimensions.scaledHeight,
+              objectFit: 'contain'
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 };
 

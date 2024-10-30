@@ -13,3 +13,10 @@ video {
   height: 100%;
   background-color: black;
 }
+
+/* Ensure the container takes full dimensions */
+.relative {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

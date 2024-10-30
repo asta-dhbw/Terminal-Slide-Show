@@ -1,7 +1,7 @@
 export const config = {
   google: {
     serviceAccountPath: './config/service-account.json', // Path to Google Drive service account file
-    folderId: '1bCGQehPOsDEJiI7RzEAyVbSzngfQMpdf', // Google Drive folder ID
+    folderId: 'ID', // Google Drive folder ID
     scopes: ['https://www.googleapis.com/auth/drive.readonly'], // Google Drive API scopes
     apiVersion: 'v3' // Google Drive API version
   },
@@ -53,9 +53,9 @@ export const config = {
     muted: true // Mute media files
   },
   info: {
-    location : 'Friedrichshafen',
+    location : 'CITY',
   },
   apiKeys: {
-    NASA_API_KEY: 'vKgsNqVwEyj8Ni8nh55SpTTWXvPKMxFhLwfUvlwe'
+    NASA_API_KEY: 'KEY'
   }
 };

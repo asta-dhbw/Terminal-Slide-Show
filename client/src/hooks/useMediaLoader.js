@@ -38,23 +38,22 @@ export const useMediaLoader = () => {
       const data = await response.json();
       
       if (data.error) {
-        setError('No media available');
-        setMedia(null);
+        setError(null); // Clear any existing errors
+        setMedia(null); // Set media to null to trigger DynamicDailyView
+        setLoading(false);
         return;
       }
-
+  
       // Force media update on server reconnection
       if (serverReconnected || data.lastModified !== lastModified) {
         setLastModified(data.lastModified);
         setMedia(data);
         setError(null);
         
-        // Handle initial loading duration
         if (serverReconnected && initialLoadStartTime) {
           const elapsed = Date.now() - initialLoadStartTime;
           const remainingTime = Math.max(0, config.polling.initLoadDuration - elapsed);
           
-          // Only apply minimum duration for initial load after reconnection
           setTimeout(() => {
             setLoading(false);
             setServerReconnected(false);

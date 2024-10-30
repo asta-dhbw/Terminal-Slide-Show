@@ -1,4 +1,3 @@
-// src/components/slideshow.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useMediaLoader } from '../hooks/useMediaLoader';
@@ -9,6 +8,7 @@ import MediaCanvas from './mediaCanvas';
 import Controls from './controls';
 import Loading from './loading';
 import ErrorToast from './errorToast';
+import DynamicDailyView from './dynamicDailyView';
 import { config } from '../../../config/config';
 
 const Slideshow = () => {
@@ -57,6 +57,11 @@ const Slideshow = () => {
   
   if (loading) {
     return <Loading key="loading" isServerConnecting={false} />;
+  }
+
+  // Show dynamic daily view when no media is available and not in error state
+  if (!media && !error) {
+    return <DynamicDailyView />;
   }
   
   if (error) {
