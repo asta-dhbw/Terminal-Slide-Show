@@ -2,7 +2,7 @@ import React from 'react';
 import { Server } from 'lucide-react';
 import { motion } from 'framer-motion';
 import '../styles/loading.css';
-import BBLoader from './BBLoader';
+import BBLoader from './loader';
 
 const Loading = ({ isServerConnecting }) => (
   <motion.div
