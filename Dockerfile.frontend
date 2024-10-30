@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies first for better caching
+COPY package*.json ./
+RUN npm install
+
+# Copy the entire project structure
+COPY . .
+
+# Set the host for Vite
+ENV VITE_HOST=0.0.0.0
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev:client"]

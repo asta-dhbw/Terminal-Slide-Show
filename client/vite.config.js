@@ -5,22 +5,27 @@ import path from 'path';
 import { config } from '../config/config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
   root: './client',
   plugins: [react()],
   server: {
+    host: isDevelopment ? 'localhost' : '0.0.0.0',
     port: config.frontend.port,
-    host: true,
+    strictPort: false, // Allow fallback to next available port
     proxy: {
       '/api': {
-        target: `http://${config.backend.host}:${config.backend.port}`,
+        target: isDevelopment 
+          ? `http://localhost:${config.backend.port}`
+          : `http://backend:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
-        ws: true
       },
       '/media': {
-        target: `http://${config.backend.host}:${config.backend.port}`,
+        target: isDevelopment 
+          ? `http://localhost:${config.backend.port}`
+          : `http://backend:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
       }

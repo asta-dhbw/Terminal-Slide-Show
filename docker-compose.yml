@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app/client
+      - ./config:/app/config
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3000
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app/server
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
