@@ -47,7 +47,7 @@ export class SlideshowManager {
   }
 
   isFileValid(file) {
-    if (!file.dates) return true; // No date restrictions
+    if (!file.dates) return false; // Reject files without valid date format
     const now = new Date();
     
     if (file.dates.endDate) {
@@ -63,13 +63,13 @@ export class SlideshowManager {
   }
 
   nextMedia() {
-    if (this.mediaFiles.length === 0) return null;
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(); // Do not change if only one media file
     this.currentIndex = (this.currentIndex + 1) % this.mediaFiles.length;
     return this.getCurrentMedia();
   }
 
   previousMedia() {
-    if (this.mediaFiles.length === 0) return null;
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(); // Do not change if only one media file
     this.currentIndex = (this.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
     return this.getCurrentMedia();
   }
