@@ -11,6 +11,7 @@ const Loading = ({ isServerConnecting }) => (
     exit={{ opacity: 0 }}
     className="loading-overlay"
   >
+    <div className="loading-overlay-background" />
     <motion.div
       animate={{
         scale: [1, 1.1, 1],
@@ -24,9 +25,9 @@ const Loading = ({ isServerConnecting }) => (
       style={{ originX: 0.5, originY: 0.5 }} // Ensure rotation around center
     >
       {isServerConnecting ? (
-        <Server />
+        <Server style={{ width: 100, height: 100 }} /> // Set size for Server
       ) : (
-        <BBLoader loading={true} color="#FFFFFF" size={50} /> // Use BBLoader
+        <BBLoader loading={true} color="#FFFFFF" size={100} /> // Use BBLoader
       )}
     </motion.div>
     <motion.p
