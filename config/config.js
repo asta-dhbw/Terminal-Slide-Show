@@ -38,8 +38,11 @@ export const config = {
   },
   schedule: {
     enabled: true, // Enable or disable the schedule feature
-    onTime: '06:00', // Time to turn on the slideshow (24-hour format)
+    onTime: '06:30', // Time to turn on the slideshow (24-hour format)
     offTime: '20:00', // Time to turn off the slideshow (24-hour format)
-    days: [1, 2, 3, 4, 5] // Days to run the slideshow (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
+    days: [1, 2, 3, 4, 5], // Days to run the slideshow (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
+    vacationPeriods: [
+      { start: '24.06.2024', end: '24.07.2024' }, // Example vacation period
+    ],
   }
 };

@@ -1,4 +1,3 @@
-// src/hooks/useSchedule.js
 import { useState, useEffect } from 'react';
 import { config } from '../../../config/config';
 
@@ -11,8 +10,29 @@ export const useSchedule = () => {
       return;
     }
 
+    const isDateInVacationPeriod = (date) => {
+      if (!config.schedule.vacationPeriods?.length) return false;
+
+      return config.schedule.vacationPeriods.some(period => {
+        const [startDay, startMonth, startYear] = period.start.split('.').map(Number);
+        const [endDay, endMonth, endYear] = period.end.split('.').map(Number);
+
+        const startDate = new Date(startYear, startMonth - 1, startDay);
+        const endDate = new Date(endYear, endMonth - 1, endDay);
+        
+        return date >= startDate && date <= endDate;
+      });
+    };
+
     const checkSchedule = () => {
       const now = new Date();
+
+      // Check if current date is in vacation period
+      if (isDateInVacationPeriod(now)) {
+        setIsActive(false);
+        return;
+      }
+      
       const currentDay = now.getDay();
       
       // Check if current day is in schedule
