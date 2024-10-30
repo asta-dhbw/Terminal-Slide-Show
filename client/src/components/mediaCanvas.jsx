@@ -4,30 +4,6 @@ const MediaCanvas = ({ media }) => {
   const canvasRef = useRef(null);
   const imageRef = useRef(new Image());
 
-  // Get average color from the edge of an image
-  const getEdgeColors = (ctx, x, y, width, height) => {
-    const sampleSize = 10;
-    const colors = {
-      top: ctx.getImageData(x + width/2, y, sampleSize, 1).data,
-      bottom: ctx.getImageData(x + width/2, y + height - 1, sampleSize, 1).data,
-      left: ctx.getImageData(x, y + height/2, 1, sampleSize).data,
-      right: ctx.getImageData(x + width - 1, y + height/2, 1, sampleSize).data
-    };
-
-    // Calculate average RGB for each edge
-    return Object.entries(colors).reduce((acc, [edge, data]) => {
-      let r = 0, g = 0, b = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-      }
-      const pixelCount = data.length / 4;
-      acc[edge] = `rgb(${Math.round(r/pixelCount)}, ${Math.round(g/pixelCount)}, ${Math.round(b/pixelCount)})`;
-      return acc;
-    }, {});
-  };
-
   useEffect(() => {
     if (!media) return;
 
@@ -57,8 +33,14 @@ const MediaCanvas = ({ media }) => {
       const x = (canvasWidth - scaledWidth) / 2;
       const y = (canvasHeight - scaledHeight) / 2;
 
-      // First draw the image to get its edge colors
-      ctx.drawImage(
+      // Create temporary canvas for blur effects
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = canvasWidth;
+      tempCanvas.height = canvasHeight;
+
+      // Draw the image to get edge portions
+      tempCtx.drawImage(
         imageRef.current,
         x,
         y,
@@ -66,41 +48,44 @@ const MediaCanvas = ({ media }) => {
         scaledHeight
       );
 
-      // Get edge colors
-      const edgeColors = getEdgeColors(ctx, x, y, scaledWidth, scaledHeight);
+      // Apply blur to temp canvas
+      tempCtx.filter = 'blur(20px)';
 
-      // Clear canvas and fill background with gradients
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      // Draw left side - stretched and blurred
+      tempCtx.drawImage(
+        imageRef.current,
+        0, 0, 1, imgHeight,  // Source: left edge strip
+        0, 0, x, canvasHeight  // Destination: left area
+      );
 
-      // Fill left side
-      const leftGradient = ctx.createLinearGradient(0, 0, x, 0);
-      leftGradient.addColorStop(0, edgeColors.left);
-      leftGradient.addColorStop(1, edgeColors.left);
-      ctx.fillStyle = leftGradient;
-      ctx.fillRect(0, 0, x, canvasHeight);
+      // Draw right side - stretched and blurred
+      tempCtx.drawImage(
+        imageRef.current,
+        imgWidth - 1, 0, 1, imgHeight,  // Source: right edge strip
+        x + scaledWidth, 0, canvasWidth - (x + scaledWidth), canvasHeight  // Destination: right area
+      );
 
-      // Fill right side
-      const rightGradient = ctx.createLinearGradient(x + scaledWidth, 0, canvasWidth, 0);
-      rightGradient.addColorStop(0, edgeColors.right);
-      rightGradient.addColorStop(1, edgeColors.right);
-      ctx.fillStyle = rightGradient;
-      ctx.fillRect(x + scaledWidth, 0, canvasWidth - (x + scaledWidth), canvasHeight);
+      // Draw top - stretched and blurred
+      tempCtx.drawImage(
+        imageRef.current,
+        0, 0, imgWidth, 1,  // Source: top edge strip
+        x, 0, scaledWidth, y  // Destination: top area
+      );
 
-      // Fill top
-      const topGradient = ctx.createLinearGradient(0, 0, 0, y);
-      topGradient.addColorStop(0, edgeColors.top);
-      topGradient.addColorStop(1, edgeColors.top);
-      ctx.fillStyle = topGradient;
-      ctx.fillRect(x, 0, scaledWidth, y);
+      // Draw bottom - stretched and blurred
+      tempCtx.drawImage(
+        imageRef.current,
+        0, imgHeight - 1, imgWidth, 1,  // Source: bottom edge strip
+        x, y + scaledHeight, scaledWidth, canvasHeight - (y + scaledHeight)  // Destination: bottom area
+      );
 
-      // Fill bottom
-      const bottomGradient = ctx.createLinearGradient(0, y + scaledHeight, 0, canvasHeight);
-      bottomGradient.addColorStop(0, edgeColors.bottom);
-      bottomGradient.addColorStop(1, edgeColors.bottom);
-      ctx.fillStyle = bottomGradient;
-      ctx.fillRect(x, y + scaledHeight, scaledWidth, canvasHeight - (y + scaledHeight));
+      // Reset filter for main canvas
+      ctx.filter = 'none';
 
-      // Draw the image again on top
+      // Draw the blurred background onto main canvas
+      ctx.drawImage(tempCanvas, 0, 0);
+
+      // Draw the original image in the center
       ctx.drawImage(
         imageRef.current,
         x,

@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '../utils/logger.js';
 import { config } from '../../config/config.js';
+import { DateParser } from '../utils/dateParser.js';
 
 export class GoogleDriveService {
   constructor() {
@@ -34,7 +35,7 @@ export class GoogleDriveService {
     return this.initialized;
   }
 
-  async startSync(interval = 300000) { // 5 minutes default
+  async startSync(interval = 500) { // 1/2 second default
     this.syncInterval = setInterval(async () => {
       try {
         await this.syncFiles();
@@ -49,15 +50,12 @@ export class GoogleDriveService {
 
   async syncFiles() {
     try {
-      const response = await this.drive.files.list({
-        q: `'${config.google.folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType)',
-        spaces: 'drive'
-      });
+      const files = await this.listFiles();
+      this.logger.info(`Found ${files.length} valid files in Google Drive`);
 
-      const files = response.data.files;
-      this.logger.info(`Found ${files.length} files in Google Drive`);
+      const localFiles = await fs.readdir(this.downloadPath);
 
+      // Download new files
       for (const file of files) {
         const localPath = path.join(this.downloadPath, file.name);
         
@@ -70,11 +68,50 @@ export class GoogleDriveService {
         this.logger.info(`Downloaded: ${file.name}`);
       }
 
+      // Remove local files that are no longer on Google Drive
+      for (const localFile of localFiles) {
+        if (!files.some(file => file.name === localFile)) {
+          const localPath = path.join(this.downloadPath, localFile);
+          await fs.remove(localPath);
+          this.logger.info(`Removed local file: ${localFile}`);
+        }
+      }
+
       return files;
     } catch (error) {
       this.logger.error('Failed to sync files:', error);
       throw error;
     }
+  }
+
+  async listFiles() {
+    // Fetch the list of files from Google Drive
+    const files = await this.fetchFilesFromDrive();
+
+    // Filter files based on DateParser conditions
+    const validFiles = files.filter(file => this.isValidFile(file.name));
+
+    return validFiles;
+  }
+
+  async fetchFilesFromDrive() {
+    try {
+      const response = await this.drive.files.list({
+        q: `'${config.google.folderId}' in parents and trashed = false`,
+        fields: 'files(id, name, mimeType)',
+        spaces: 'drive'
+      });
+
+      return response.data.files;
+    } catch (error) {
+      this.logger.error('Failed to fetch files from Google Drive:', error);
+      throw error;
+    }
+  }
+
+  isValidFile(filename) {
+    const parsedDate = DateParser.parseFileName(filename);
+    return parsedDate !== null;
   }
 
   async downloadFile(fileId, localPath) {
