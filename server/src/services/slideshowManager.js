@@ -34,7 +34,7 @@ export class SlideshowManager {
       this.mediaFiles = files
         .filter(file => {
           const ext = path.extname(file).toLowerCase();
-          return ['.jpg', '.jpeg', '.png', '.gif', '.mp4'].includes(ext);
+          return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
         })
         .map(file => ({
           name: file,

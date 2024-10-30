@@ -44,5 +44,12 @@ export const config = {
     vacationPeriods: [
       { start: '24.06.2024', end: '24.07.2024' }, // Example vacation period
     ],
+  },
+  mediaTypes: {
+    imageTypes: ['.jpg', '.jpeg', '.png', '.gif'], // Supported image types
+    videoTypes: ['.mp4', '.webm', '.ogg'], // Supported video types
+    loop: true, // Loop media files
+    autoplay: true, // Autoplay media files
+    muted: true // Mute media files
   }
 };

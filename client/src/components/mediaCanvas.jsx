@@ -1,117 +1,171 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { config } from '../../../config/config.js';
 
 const MediaCanvas = ({ media }) => {
   const canvasRef = useRef(null);
   const imageRef = useRef(new Image());
+  const videoRef = useRef(null);
+  const [isVideo, setIsVideo] = useState(false);
 
-  useEffect(() => {
-    if (!media) return;
+  // Video handling functions
+  const initializeVideo = () => {
+    if (!videoRef.current) {
+      videoRef.current = document.createElement('video');
+      videoRef.current.playsInline = true;
+      videoRef.current.muted = config.mediaTypes.muted;
+      videoRef.current.autoplay = config.mediaTypes.autoplay;
+      videoRef.current.loop = config.mediaTypes.loop;
+    }
+  };
+
+  const playVideo = async () => {
+    try {
+      videoRef.current.src = `/media/${media.name}`;
+      await videoRef.current.play();
+    } catch (error) {
+      console.error('Error playing video:', error);
+    }
+  };
+
+  // Image handling functions
+  const resizeCanvas = (canvas) => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+
+  const calculateImageDimensions = (imgWidth, imgHeight, canvasWidth, canvasHeight) => {
+    const scale = Math.min(
+      canvasWidth / imgWidth,
+      canvasHeight / imgHeight
+    );
+
+    return {
+      scaledWidth: imgWidth * scale,
+      scaledHeight: imgHeight * scale,
+      x: (canvasWidth - imgWidth * scale) / 2,
+      y: (canvasHeight - imgHeight * scale) / 2
+    };
+  };
+
+  const createBlurredBackground = (image, dimensions, canvasWidth, canvasHeight) => {
+    const { scaledWidth, scaledHeight, x, y } = dimensions;
+    const { width: imgWidth, height: imgHeight } = image;
+
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = canvasWidth;
+    tempCanvas.height = canvasHeight;
+
+    // Draw center image
+    tempCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
+
+    // Apply blur
+    tempCtx.filter = 'blur(20px)';
+
+    // Draw edges
+    const edges = [
+      // Left edge
+      { sx: 0, sy: 0, sw: 1, sh: imgHeight, dx: 0, dy: 0, dw: x, dh: canvasHeight },
+      // Right edge
+      { sx: imgWidth - 1, sy: 0, sw: 1, sh: imgHeight, dx: x + scaledWidth, dy: 0, dw: canvasWidth - (x + scaledWidth), dh: canvasHeight },
+      // Top edge
+      { sx: 0, sy: 0, sw: imgWidth, sh: 1, dx: x, dy: 0, dw: scaledWidth, dh: y },
+      // Bottom edge
+      { sx: 0, sy: imgHeight - 1, sw: imgWidth, sh: 1, dx: x, dy: y + scaledHeight, dw: scaledWidth, dh: canvasHeight - (y + scaledHeight) }
+    ];
+
+    edges.forEach(edge => {
+      tempCtx.drawImage(image, edge.sx, edge.sy, edge.sw, edge.sh, edge.dx, edge.dy, edge.dw, edge.dh);
+    });
+
+    return tempCanvas;
+  };
+
+  const drawImage = () => {
+    if (!imageRef.current.complete) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const image = imageRef.current;
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+    const dimensions = calculateImageDimensions(
+      image.width,
+      image.height,
+      canvas.width,
+      canvas.height
+    );
 
-    const drawImage = () => {
-      if (!imageRef.current.complete) return;
+    const blurredBackground = createBlurredBackground(
+      image,
+      dimensions,
+      canvas.width,
+      canvas.height
+    );
 
-      const { width: imgWidth, height: imgHeight } = imageRef.current;
-      const { width: canvasWidth, height: canvasHeight } = canvas;
+    // Reset filter and draw final composition
+    ctx.filter = 'none';
+    ctx.drawImage(blurredBackground, 0, 0);
+    ctx.drawImage(
+      image,
+      dimensions.x,
+      dimensions.y,
+      dimensions.scaledWidth,
+      dimensions.scaledHeight
+    );
+  };
 
-      const scale = Math.min(
-        canvasWidth / imgWidth,
-        canvasHeight / imgHeight
-      );
+  // Main effect for handling media changes
+  useEffect(() => {
+    if (!media) return;
 
-      const scaledWidth = imgWidth * scale;
-      const scaledHeight = imgHeight * scale;
+    const isVideoFile = new RegExp(`(${config.mediaTypes.videoTypes.join('|')})$`, 'i').test(media.name);
+    setIsVideo(isVideoFile);
 
-      const x = (canvasWidth - scaledWidth) / 2;
-      const y = (canvasHeight - scaledHeight) / 2;
+    if (isVideoFile) {
+      initializeVideo();
+      playVideo();
+    } else {
+      const canvas = canvasRef.current;
 
-      // Create temporary canvas for blur effects
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCanvas.width = canvasWidth;
-      tempCanvas.height = canvasHeight;
+      const handleResize = () => {
+        resizeCanvas(canvas);
+        drawImage();
+      };
 
-      // Draw the image to get edge portions
-      tempCtx.drawImage(
-        imageRef.current,
-        x,
-        y,
-        scaledWidth,
-        scaledHeight
-      );
+      imageRef.current.onload = drawImage;
+      imageRef.current.src = `/media/${media.name}`;
 
-      // Apply blur to temp canvas
-      tempCtx.filter = 'blur(20px)';
+      window.addEventListener('resize', handleResize);
+      resizeCanvas(canvas);
 
-      // Draw left side - stretched and blurred
-      tempCtx.drawImage(
-        imageRef.current,
-        0, 0, 1, imgHeight,  // Source: left edge strip
-        0, 0, x, canvasHeight  // Destination: left area
-      );
-
-      // Draw right side - stretched and blurred
-      tempCtx.drawImage(
-        imageRef.current,
-        imgWidth - 1, 0, 1, imgHeight,  // Source: right edge strip
-        x + scaledWidth, 0, canvasWidth - (x + scaledWidth), canvasHeight  // Destination: right area
-      );
-
-      // Draw top - stretched and blurred
-      tempCtx.drawImage(
-        imageRef.current,
-        0, 0, imgWidth, 1,  // Source: top edge strip
-        x, 0, scaledWidth, y  // Destination: top area
-      );
-
-      // Draw bottom - stretched and blurred
-      tempCtx.drawImage(
-        imageRef.current,
-        0, imgHeight - 1, imgWidth, 1,  // Source: bottom edge strip
-        x, y + scaledHeight, scaledWidth, canvasHeight - (y + scaledHeight)  // Destination: bottom area
-      );
-
-      // Reset filter for main canvas
-      ctx.filter = 'none';
-
-      // Draw the blurred background onto main canvas
-      ctx.drawImage(tempCanvas, 0, 0);
-
-      // Draw the original image in the center
-      ctx.drawImage(
-        imageRef.current,
-        x,
-        y,
-        scaledWidth,
-        scaledHeight
-      );
-    };
-
-    image.onload = drawImage;
-    image.src = `/media/${media.name}`;
-
-    window.addEventListener('resize', () => {
-      resizeCanvas();
-      drawImage();
-    });
-
-    resizeCanvas();
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        imageRef.current.onload = null;
+      };
+    }
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (imageRef.current) {
-        imageRef.current.onload = null;
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
       }
     };
   }, [media]);
+
+  if (isVideo) {
+    return (
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain bg-black"
+        playsInline
+        muted
+        autoPlay
+        loop
+        src={`/media/${media?.name}`}
+      />
+    );
+  }
 
   return (
     <canvas
