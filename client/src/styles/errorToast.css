@@ -1,4 +1,4 @@
-body {
+body.error-toast-active {
     background-image: url("/LOGO.png"); /* Add this line */
     background-size: cover; /* Ensure the logo covers the entire background */
     background-repeat: no-repeat; /* Prevent the logo from repeating */
