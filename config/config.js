@@ -35,5 +35,11 @@ export const config = {
     serverStatusInterval: 5000, // Interval for polling server status in milliseconds
     mediaLoaderInterval: 5000, // Interval for polling media loader in milliseconds
     initLoadDuration: 2000 // Initial load duration in milliseconds
+  },
+  schedule: {
+    enabled: true, // Enable or disable the schedule feature
+    onTime: '06:00', // Time to turn on the slideshow (24-hour format)
+    offTime: '20:00', // Time to turn off the slideshow (24-hour format)
+    days: [1, 2, 3, 4, 5] // Days to run the slideshow (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
   }
 };
