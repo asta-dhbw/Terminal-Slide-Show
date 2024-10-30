@@ -1,0 +1,31 @@
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  background-image: url("/LOGO.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 50;
+}
+
+.loading-overlay-background {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent layer */
+  z-index: 1;
+}
+
+.loading-text {
+  font-size: 1.5rem;
+  font-weight: 300;
+  z-index: 2;
+}
+
+.loading-overlay > * {
+  z-index: 2; /* Ensure all children are above the background layer */
+}

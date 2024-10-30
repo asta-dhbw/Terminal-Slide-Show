@@ -1,0 +1,43 @@
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1rem;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: all 0.3s;
+  z-index: 50; /* Ensure this is higher than canvas and controls */
+  pointer-events: auto; /* Re-enable pointer events for buttons */
+}
+
+.nav-button:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-button-left {
+  left: 1rem;
+}
+
+.nav-button-right {
+  right: 1rem;
+}
+
+.swipe-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  z-index: 60; /* Ensure this is higher than canvas and controls */
+}
+
+.controls-container {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* Ensure this is higher than canvas */
+  pointer-events: none; /* Allow clicks to pass through to swipe container */
+}
