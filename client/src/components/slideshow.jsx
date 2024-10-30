@@ -20,7 +20,7 @@ const Slideshow = () => {
   const handleNavigate = (direction) => {
     setPaused(true);
     navigateMedia(direction);
-    setTimeout(() => setPaused(false), 200); // Pause for the duration of the transition
+    setTimeout(() => setPaused(false), 200);
   };
 
   useEffect(() => {
@@ -33,12 +33,6 @@ const Slideshow = () => {
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, navigateMedia]);
 
-  useEffect(() => {
-    console.log('isServerConnected:', isServerConnected);
-    console.log('loading:', loading);
-    console.log('error:', error);
-  }, [isServerConnected, loading, error]);
-
   if (!isServerConnected) {
     return <Loading key="loading" isServerConnecting={!isServerConnected} />;
   }
@@ -48,7 +42,7 @@ const Slideshow = () => {
   }
   
   if (error) {
-    return <ErrorToast key="error" message={error.message} />;
+    return <ErrorToast message={error} />;
   }
 
   return (

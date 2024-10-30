@@ -2,10 +2,10 @@ import React, { useRef, useEffect } from 'react';
 
 const MediaCanvas = ({ media }) => {
   const canvasRef = useRef(null);
-  const imageRef = useRef(null);
+  const imageRef = useRef(new Image());
 
   // Get average color from the edge of an image
-  const getEdgeColors = (ctx, image, x, y, width, height) => {
+  const getEdgeColors = (ctx, x, y, width, height) => {
     const sampleSize = 10;
     const colors = {
       top: ctx.getImageData(x + width/2, y, sampleSize, 1).data,
@@ -33,13 +33,11 @@ const MediaCanvas = ({ media }) => {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const image = new Image();
-    imageRef.current = image;
+    const image = imageRef.current;
 
     const resizeCanvas = () => {
-      const { innerWidth: width, innerHeight: height } = window;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     };
 
     const drawImage = () => {
@@ -69,7 +67,7 @@ const MediaCanvas = ({ media }) => {
       );
 
       // Get edge colors
-      const edgeColors = getEdgeColors(ctx, imageRef.current, x, y, scaledWidth, scaledHeight);
+      const edgeColors = getEdgeColors(ctx, x, y, scaledWidth, scaledHeight);
 
       // Clear canvas and fill background with gradients
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
