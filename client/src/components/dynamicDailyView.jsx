@@ -16,6 +16,8 @@ const DynamicDailyView = () => {
   const [showNasaInfo, setShowNasaInfo] = useState(false);
   const [greetings, setGreetings] = useState({});
 
+  const isNight = time.getHours() >= 18 || time.getHours() < 6;
+
   const fetchQuotes = async () => {
     try {
       const response = await fetch('src/data/quotes.json');
@@ -101,33 +103,40 @@ const DynamicDailyView = () => {
     }
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
+// Combine all timers in a single useEffect
+useEffect(() => {
+  // Timer for time updates
+  const timer = setInterval(() => {
+    setTime(new Date());
+  }, 1000);
 
-    const contentTimer = setInterval(() => {
-      fetchQuotes();
-      fetchWeather();
-      fetchFacts();
-    }, 300000);
-
-    const nasaInfoTimer = setInterval(() => {
-      setShowNasaInfo(prev => !prev);
-    }, 30000);
-
+  // Timer for content updates
+  const contentTimer = setInterval(() => {
     fetchQuotes();
     fetchWeather();
     fetchFacts();
-    fetchNasaImage();
-    fetchGreetings();
+  }, 300000);
 
-    return () => {
-      clearInterval(timer);
-      clearInterval(contentTimer);
-      clearInterval(nasaInfoTimer);
-    };
-  }, []);
+  // NASA info auto-toggle timer
+  const nasaInfoTimer = setInterval(() => {
+    setShowNasaInfo(prev => !prev); // Toggle between open and closed
+  }, 60000); // Toggles every 30 seconds
+
+  // Initial fetches
+  fetchQuotes();
+  fetchWeather();
+  fetchFacts();
+  fetchNasaImage();
+  fetchGreetings();
+
+  // Cleanup all timers
+  return () => {
+    clearInterval(timer);
+    clearInterval(contentTimer);
+    clearInterval(nasaInfoTimer);
+  };
+}, []);
+
 
   const formattedDate = time.toLocaleDateString('de-DE', {
     weekday: 'long',
@@ -143,14 +152,14 @@ const DynamicDailyView = () => {
   });
 
   return (
-    <div className="daily-view">
+    <div className={`daily-view ${isNight ? 'night' : 'day'}`}>
       {nasaImage && (
         <>
           <div 
-            className="nasa-background" 
+            className={`nasa-background ${isNight ? 'night' : 'day'}`}
             style={{ backgroundImage: `url(${nasaImage.url})` }}
           />
-          <div className="background-overlay" />
+          <div className={`background-overlay ${isNight ? 'night' : 'day'}`} />
         </>
       )}
       
@@ -162,7 +171,7 @@ const DynamicDailyView = () => {
 
       <div className="content-wrapper">
         <div className="dhbw-logo">
-          <img src="/dhbw.png" alt="DHBW Logo" />
+          <a href="https://www.stuv-ravensburg.de"><img src="/dhbw.png" alt="DHBW Logo" /></a>
         </div>
 
         <div className="location-badge">
@@ -217,14 +226,14 @@ const DynamicDailyView = () => {
         )}
       </div>
 
-        {nasaImage && (
+      {nasaImage && (
           <div 
-            className="nasa-info"
+            className={`nasa-info ${showNasaInfo ? 'expanded' : ''}`}
             onClick={() => setShowNasaInfo(!showNasaInfo)}
           >
-            <div className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-300" />
+            <div className="flex items-center justify-between gap-2">
               <h3 className="nasa-title">{nasaImage.title}</h3>
+              <Info className="w-5 h-5 text-blue-300" />
             </div>
             <p className={`nasa-description ${showNasaInfo ? 'expanded' : ''}`}>
               {nasaImage.explanation}

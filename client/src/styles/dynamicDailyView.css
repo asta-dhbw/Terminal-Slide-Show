@@ -1,291 +1,407 @@
 .daily-view {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-  }
-  
-  .nasa-background {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.7;
-    transition: opacity 0.5s ease;
-  }
-  
-  .nasa-info {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    padding: 1rem 1.5rem;
-    border-radius: 1rem;
-    max-width: 600px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 20;
-  }
-  
-  .nasa-info:hover {
-    background: rgba(0, 0, 0, 0.8);
-    transform: translateX(-50%) translateY(-2px);
-  }
-  
-  .nasa-title {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #fff;
-    margin-bottom: 0.5rem;
-  }
-  
-  .nasa-description {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.4;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-  }
-  
-  .nasa-description.expanded {
-    max-height: 200px;
-    margin-top: 0.5rem;
-  }
-  
-  .background-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, 
-      rgba(26, 42, 108, 0.7),
-      rgba(178, 31, 31, 0.6),
-      rgba(253, 187, 45, 0.5)
-    );
-    z-index: 1;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  transition: background 0.5s ease;
+}
+
+.daily-view.day {
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+}
+
+.daily-view.night {
+  background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+}
+
+
+.nasa-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.5s ease;
+}
+
+.nasa-background.day {
+  opacity: 0.7;
+}
+
+.nasa-background.night {
+  opacity: 0.4;
+}
+
+.nasa-info {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%) translateX(-90%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 1rem 1.5rem;
+  border-radius: 0 1rem 1rem 0;
+  max-width: 340px;
+  max-height: 80vh;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nasa-info.expanded {
+  transform: translateY(-50%) translateX(0);
+}
+
+.nasa-info:hover {
+  transform: translateY(-50%) translateX(-10%);
+}
+
+.nasa-info.expanded:hover {
+  transform: translateY(-50%) translateX(0);
+}
+
+.nasa-info .flex {
+  display: flex;
+}
+
+.nasa-info .items-center {
+  align-items: center;
+}
+
+.nasa-info .justify-between {
+  justify-content: space-between;
+}
+
+.nasa-info .gap-2 {
+  gap: 0.5rem;
+  /* Adjust the gap as needed */
+}
+
+.nasa-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nasa-description {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  overflow-y: auto;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+.nasa-description.expanded {
+  max-height: calc(70vh - 4rem);
+  margin-top: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.background-overlay {
+  position: absolute;
+  inset: 0;
+  transition: background 0.5s ease;
+  z-index: 1;
+}
+
+.background-overlay.day {
+  background: linear-gradient(135deg, 
+    rgba(26, 42, 108, 0.7),
+    rgba(178, 31, 31, 0.6),
+    rgba(253, 187, 45, 0.5)
+  );
+}
+
+.background-overlay.night {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.8),
+    rgba(30, 41, 59, 0.7),
+    rgba(51, 65, 85, 0.6)
+  );
+}
+
+.background-effects {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.shooting-star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  animation: shoot 3s linear infinite;
+  opacity: 0;
+}
+
+.delay-1 {
+  animation-delay: 1s;
+}
+
+.delay-2 {
+  animation-delay: 2s;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translateX(-100%) translateY(0);
+    opacity: 1;
   }
 
-  .background-effects {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
+  70% {
+    opacity: 1;
   }
-  
-  .shooting-star {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: white;
-    border-radius: 50%;
-    animation: shoot 3s linear infinite;
+
+  100% {
+    transform: translateX(200%) translateY(100%);
     opacity: 0;
   }
-  
-  .delay-1 { animation-delay: 1s; }
-  .delay-2 { animation-delay: 2s; }
-  
-  @keyframes shoot {
-    0% {
-      transform: translateX(-100%) translateY(0);
-      opacity: 1;
-    }
-    70% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateX(200%) translateY(100%);
-      opacity: 0;
-    }
-  }
-  
-  .content-wrapper {
-    position: relative;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    color: white;
-    z-index: 10;
-  }
-  
-  .location-badge {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    padding: 0.75rem 1.5rem;
-    border-radius: 9999px;
-    font-size: 1.125rem;
-    font-weight: 500;
-    transition: transform 0.3s ease;
-  }
-  
-  .location-badge:hover {
-    transform: translateY(-2px);
-  }
-  
-  .main-content {
-    text-align: center;
-    max-width: 48rem;
-    animation: fadeIn 1s ease-out;
-  }
-  
-  .greeting-text {
-    font-size: 4rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(45deg, #fff, #f0f0f0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: pulse 4s ease-in-out infinite;
-  }
-  
-  .datetime-display {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .date, .time {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    font-size: 1.5rem;
-  }
-  
-  .quote-card, .fact-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin: 1rem 0;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .quote-card:hover, .fact-card:hover {
-    transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.1);
-  }
-  
-  .quote-text {
-    font-size: 1.5rem;
-    font-style: italic;
-    margin: 1rem 0;
-    line-height: 1.4;
-  }
-  
-  .quote-author {
-    font-size: 1.125rem;
-    color: rgba(255, 255, 255, 0.8);
-  }
-  
-  .quote-translation {
-    font-size: 1rem;
-    color: #93c5fd;
-    margin-top: 1rem;
-    animation: fadeIn 0.3s ease-out;
-  }
-  
-  .decorative-wind {
-    position: absolute;
-    bottom: 2rem;
-    left: 2rem;
-    animation: sway 4s ease-in-out infinite;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  @keyframes sway {
-    0%, 100% { transform: translateX(0) rotate(0deg); }
-    50% { transform: translateX(10px) rotate(5deg); }
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-  }
-  
-  @media (max-width: 640px) {
-    .greeting-text {
-      font-size: 2.5rem;
-    }
-    
-    .location-badge {
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-    }
-    
-    .quote-text {
-      font-size: 1.25rem;
-    }
+}
+
+.content-wrapper {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: white;
+  z-index: 10;
+}
+
+.location-badge {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: transform 0.3s ease;
+}
+
+.location-badge:hover {
+  transform: translateY(-2px);
+}
+
+.main-content {
+  text-align: center;
+  max-width: 48rem;
+  animation: fadeIn 1s ease-out;
+}
+
+.greeting-text {
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, #fff, #f0f0f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.datetime-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.date,
+.time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.quote-card,
+.fact-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.quote-card:hover,
+.fact-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.quote-text {
+  font-size: 1.5rem;
+  font-style: italic;
+  margin: 1rem 0;
+  line-height: 1.4;
+}
+
+.quote-author {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.quote-translation {
+  font-size: 1rem;
+  color: #93c5fd;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.decorative-wind {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  animation: sway 4s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 
-  .content-wrapper {
-    z-index: 10;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes sway {
+
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateX(10px) rotate(5deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 640px) {
+  .greeting-text {
+    font-size: 2.5rem;
+  }
+
+  .location-badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .quote-text {
+    font-size: 1.25rem;
+  }
+}
+
+.content-wrapper {
+  z-index: 10;
+}
+
+
+/* Update the existing DHBW logo styles */
+.dhbw-logo {
+  position: absolute;
+  bottom: 70px;
+  right: 10px;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  z-index: 20;
+}
+
+.day .dhbw-logo {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.night .dhbw-logo {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.dhbw-logo img {
+  height: 120px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+.day .dhbw-logo img {
+  opacity: 0.9;
+  filter: none;
+}
+
+.night .dhbw-logo img {
+  opacity: 1;
+  /* Complex filter to darken grays while preserving red */
+  filter: 
+    brightness(0.9) /* Slightly reduce overall brightness */
+    contrast(1.2)   /* Increase contrast */
+    saturate(1.2)   /* Boost color saturation */
+    hue-rotate(-5deg); /* Slight hue adjustment to preserve red */
+}
+
+.dhbw-logo:hover {
+  transform: translateY(-2px);
+}
+
+.night .dhbw-logo:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Keep existing mobile styles */
+@media (max-width: 640px) {
+  .dhbw-logo img {
+    height: 30px;
   }
   
   .dhbw-logo {
-    position: absolute;
-    bottom: 70px;
-    right: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    padding: 0.75rem;
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-    z-index: 20;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem;
   }
-  
-  .dhbw-logo img {
-    height: 120px;
-    width: auto;
-    opacity: 0.9;
-    transition: opacity 0.3s ease;
-  }
-  
-  .dhbw-logo:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.2);
-  }
-  
-  .dhbw-logo:hover img {
-    opacity: 1;
-  }
-  
-  /* Update media queries for NASA info on mobile */
-  @media (max-width: 640px) {
-    .dhbw-logo img {
-      height: 30px;
-    }
-    
-    .dhbw-logo {
-      bottom: 0.5rem;
-      right: 0.5rem;
-      padding: 0.5rem;
-    }
-    
-    .content-wrapper {
-      padding-top: 4rem;
-    }
-  }
-
-  
+}
