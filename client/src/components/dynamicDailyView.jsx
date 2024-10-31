@@ -23,11 +23,9 @@ const DynamicDailyView = () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      console.log('Fetched quotes:', data); // Log the fetched data
       const quotesArray = data.quotes; // Access the quotes array
       const randomIndex = Math.floor(Math.random() * quotesArray.length);
       setQuote(quotesArray[randomIndex]);
-      console.log('Selected quote:', quotesArray[randomIndex]); // Log the selected quote
       setError(null);
     } catch (err) {
       setError('Failed to load quote. Please try again later. ' + err);
@@ -91,9 +89,10 @@ const DynamicDailyView = () => {
       const { latitude, longitude } = geoData.results[0];
       
       const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=kmh&timezone=auto`
       );
       const weatherData = await weatherResponse.json();
+      console.log('Fetched weather:', weatherData);
       
       setWeather(weatherData.current_weather);
     } catch (err) {
@@ -208,9 +207,15 @@ const DynamicDailyView = () => {
           </div>
         </div>
 
-        <div className="weather-badge">
-        {weather && <AnimatedWeather weatherCode={weather.weathercode} temperature={weather.temperature} />}
-        </div>
+      <div>
+        {weather && (
+          <AnimatedWeather 
+            weatherCode={weather.weathercode}
+            temperature={weather.temperature}
+            windSpeed={weather.windspeed}
+          />
+        )}
+      </div>
 
         {nasaImage && (
           <div 
