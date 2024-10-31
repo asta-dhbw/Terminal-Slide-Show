@@ -75,7 +75,7 @@ export const useMediaLoader = () => {
 
   const navigateMedia = useCallback(async (direction) => {
     if (!serverReady) return;
-    setLoading(true);
+    // setLoading(true);
     
     try {
       const response = await fetch(`/api/${direction}-media`);
@@ -86,7 +86,6 @@ export const useMediaLoader = () => {
         setMedia(null);
         return;
       }
-
       setLastModified(data.lastModified);
       setMedia(data);
       setError(null);
