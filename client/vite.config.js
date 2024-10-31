@@ -5,25 +5,30 @@ import path from 'path';
 import { config } from '../config/config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
   root: './client',
   plugins: [react()],
   server: {
-    host: '0.0.0.0', // Always bind to all network interfaces
+    host: isDevelopment ? 'localhost' : '0.0.0.0',
     port: config.frontend.port,
-    strictPort: true, // Force the specified port
+    strictPort: false,
     watch: {
       usePolling: true // Important for Docker volumes
     },
     proxy: {
       '/api': {
-        target: 'http://backend:3000', // Use service name from docker-compose
+        target: isDevelopment 
+          ? `http://localhost:${config.backend.port}`
+          : `http://backend:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
       },
       '/media': {
-        target: 'http://backend:3000',
+        target: isDevelopment 
+          ? `http://localhost:${config.backend.port}`
+          : `http://backend:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
       }
