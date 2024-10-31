@@ -8,6 +8,7 @@ const MediaCanvas = ({ media }) => {
   const [mediaType, setMediaType] = useState('image');
   const [dimensions, setDimensions] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   const getMediaType = (filename) => {
     const extension = filename.toLowerCase().split('.').pop();
@@ -96,11 +97,22 @@ const MediaCanvas = ({ media }) => {
     setIsLoading(false);
   };
 
+  const handleVideoEnd = () => {
+    if (!config.mediaTypes.loop) {
+      setIsVideoEnded(true);
+      // Pause the video on the last frame
+      if (videoRef.current) {
+        videoRef.current.currentTime = videoRef.current.duration;
+      }
+    }
+  };
+
   useEffect(() => {
     if (!media) return;
 
     setIsLoading(true);
     setDimensions(null);
+    setIsVideoEnded(false);
 
     const type = getMediaType(media.name);
     setMediaType(type);
@@ -122,6 +134,10 @@ const MediaCanvas = ({ media }) => {
       videoRef.current.autoplay = config.mediaTypes.autoplay;
       videoRef.current.loop = config.mediaTypes.loop;
       videoRef.current.src = `/media/${media.name}`;
+      
+      // Add ended event listener
+      videoRef.current.addEventListener('ended', handleVideoEnd);
+      
       videoRef.current.play().catch(console.error);
       setIsLoading(false);
     } else {
@@ -142,6 +158,9 @@ const MediaCanvas = ({ media }) => {
         if (imageRef.current) {
           imageRef.current.onload = null;
         }
+        if (videoRef.current) {
+          videoRef.current.removeEventListener('ended', handleVideoEnd);
+        }
       };
     }
   }, [media]);
@@ -154,7 +173,8 @@ const MediaCanvas = ({ media }) => {
         playsInline
         muted
         autoPlay
-        loop
+        loop={config.mediaTypes.loop}
+        onEnded={handleVideoEnd}
         src={`/media/${media?.name}`}
       />
     );
