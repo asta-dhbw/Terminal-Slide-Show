@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useMediaLoader } from '../hooks/useMediaLoader';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
 import { useServerStatus } from '../hooks/useServerStatus';
@@ -16,61 +16,10 @@ const Slideshow = () => {
   const showControls = useControlsVisibility();
   const isServerConnected = useServerStatus();
   const isScheduleActive = useSchedule();
-  const [currentView, setCurrentView] = useState('dynamic'); // 'dynamic' or 'media'
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
 
-  // Handle navigation between views
-  const handleNavigate = (direction) => {
-    if (!isScheduleActive) return;
-    
-    clearTimeout(autoContinueTimer.current);
-    setPaused(true);
-
-    if (currentView === 'dynamic') {
-      setCurrentView('media');
-      navigateMedia(direction);
-    } else if (currentView === 'media') {
-      if (direction === 'next' && !media) {
-        // If we're moving forward and there's no media, show dynamic view
-        setCurrentView('dynamic');
-      } else {
-        // Otherwise, navigate through media
-        navigateMedia(direction);
-      }
-    }
-    
-    setTimeout(() => setPaused(false), 200);
-  };
-
-  // Auto-advance timer effect
-  useEffect(() => {
-    if (paused || loading || !isScheduleActive) return;
-
-    clearTimeout(autoContinueTimer.current);
-
-    const duration = currentView === 'dynamic' ? 20000 : config.slideshow.defaultSlideDuration;
-    
-    autoContinueTimer.current = setTimeout(() => {
-      handleNavigate('next');
-    }, duration);
-
-    return () => clearTimeout(autoContinueTimer.current);
-  }, [currentView, media, paused, loading, isScheduleActive]);
-
-  // Effect to switch to dynamic view when no media is available
-  useEffect(() => {
-    if (!media && currentView === 'media' && !loading && !paused) {
-      setCurrentView('dynamic');
-    }
-  }, [media, currentView, loading, paused]);
-
-  // Effect to clean up timers
-  useEffect(() => {
-    return () => clearTimeout(autoContinueTimer.current);
-  }, []);
-
-  // Stop all timers when schedule is inactive
+  // Stop all timers and clear media when schedule is inactive
   useEffect(() => {
     if (!isScheduleActive) {
       clearTimeout(autoContinueTimer.current);
@@ -80,6 +29,24 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
+  const handleNavigate = (direction) => {
+    if (!isScheduleActive) return;
+    setPaused(true);
+    navigateMedia(direction);
+    setTimeout(() => setPaused(false), 200);
+  };
+
+  useEffect(() => {
+    if (paused || !media || loading || !isScheduleActive) return;
+
+    autoContinueTimer.current = setTimeout(() => {
+      navigateMedia('next');
+    }, config.slideshow.defaultSlideDuration);
+
+    return () => clearTimeout(autoContinueTimer.current);
+  }, [paused, media, loading, navigateMedia, isScheduleActive]);
+
+  // Return black screen when schedule is inactive
   if (!isScheduleActive) {
     return <div className="w-screen h-screen bg-black" />;
   }
@@ -92,35 +59,25 @@ const Slideshow = () => {
     return <Loading key="loading" isServerConnecting={false} />;
   }
 
+  // Show dynamic daily view when no media is available and not in error state
+  if (!media && !error) {
+    return <DynamicDailyView />;
+  }
+  
+  if (error) {
+    return <ErrorToast message={error} />;
+  }
+
   return (
     <div className="slideshow-container">
-      <AnimatePresence mode="wait">
-        {currentView === 'dynamic' ? (
-          <motion.div
-            key="dynamic-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full h-full"
-          >
-            <DynamicDailyView />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="media-canvas"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <MediaCanvas media={media} />
-          </motion.div>
+      <AnimatePresence>
+        {media && !loading && (
+          <MediaCanvas media={media} />
         )}
       </AnimatePresence>
 
       <Controls
-        show={showControls && !loading}
+        show={showControls && !loading && media}
         onPrevious={() => handleNavigate('previous')}
         onNext={() => handleNavigate('next')}
         disabled={loading || !serverReady || paused}
