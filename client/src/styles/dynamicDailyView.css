@@ -197,22 +197,6 @@
     animation: fadeIn 0.3s ease-out;
   }
   
-  .weather-badge {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    padding: 1rem;
-    border-radius: 1rem;
-    animation: float 3s ease-in-out infinite;
-  }
-  
-  .weather-icon {
-    width: 3rem;
-    height: 3rem;
-  }
-  
   .decorative-wind {
     position: absolute;
     bottom: 2rem;

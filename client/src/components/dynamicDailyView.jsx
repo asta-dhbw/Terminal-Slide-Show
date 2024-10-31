@@ -1,47 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Sun, Moon, Quote, Coffee, Wind, MapPin, Clock, Cloud, Droplets, CloudSnow, Info } from 'lucide-react';
 import '../styles/dynamicDailyView.css';
+import AnimatedWeather from './animatedWeather';
 import { config } from '../../../config/config';
-
-const bodenseeFacts = [
-  "Der Bodensee ist mit 536 km² der drittgrößte See Mitteleuropas.",
-  "Friedrichshafen ist bekannt für seine Zeppelin-Geschichte.",
-  "Der Bodensee grenzt an drei Länder: Deutschland, Österreich und die Schweiz.",
-  "Die Stadt wurde nach König Friedrich I. von Württemberg benannt.",
-  "Der Bodensee versorgt rund 4,5 Millionen Menschen mit Trinkwasser.",
-  "Das Zeppelin Museum in Friedrichshafen ist das größte Luftfahrtmuseum der Welt.",
-  "Die Region ist bekannt für ihren Weinbau und Obstanbau.",
-  "Der See wird auch 'Schwäbisches Meer' genannt."
-];
-
-const getGermanGreeting = (hour) => {
-  if (hour >= 5 && hour < 12) return 'Guten Morgen';
-  if (hour >= 12 && hour < 17) return 'Guten Tag';
-  if (hour >= 17 && hour < 22) return 'Guten Abend';
-  return 'Gute Nacht';
-};
-
-const getWeatherIcon = (weatherCode) => {
-  // WMO Weather interpretation codes (https://open-meteo.com/en/docs)
-  if (weatherCode <= 1) return <Sun className="weather-icon text-yellow-300" />;
-  if (weatherCode <= 3) return <Cloud className="weather-icon text-gray-300" />;
-  if (weatherCode <= 49) return <Droplets className="weather-icon text-blue-300" />;
-  if (weatherCode <= 69) return <CloudSnow className="weather-icon text-white" />;
-  if (weatherCode <= 79) return <CloudSnow className="weather-icon text-blue-200" />;
-  if (weatherCode <= 99) return <Cloud className="weather-icon text-gray-400" />;
-  return <Sun className="weather-icon text-yellow-300" />;
-};
 
 const DynamicDailyView = () => {
   const [time, setTime] = useState(new Date());
   const [quote, setQuote] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [fact, setFact] = useState(bodenseeFacts[0]);
+  const [fact, setFact] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [weather, setWeather] = useState(null);
   const [nasaImage, setNasaImage] = useState(null);
   const [showNasaInfo, setShowNasaInfo] = useState(false);
+  const [greetings, setGreetings] = useState({});
+
+  const fetchQuotes = async () => {
+    try {
+      const response = await fetch('src/data/quotes.json');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log('Fetched quotes:', data); // Log the fetched data
+      const quotesArray = data.quotes; // Access the quotes array
+      const randomIndex = Math.floor(Math.random() * quotesArray.length);
+      setQuote(quotesArray[randomIndex]);
+      console.log('Selected quote:', quotesArray[randomIndex]); // Log the selected quote
+      setError(null);
+    } catch (err) {
+      setError('Failed to load quote. Please try again later. ' + err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFacts = async () => {
+    try {
+      const response = await fetch('src/data/facts.json');
+      const data = await response.json();
+      const randomIndex = Math.floor(Math.random() * data.length);
+      setFact(data[randomIndex]);
+    } catch (err) {
+      console.error('Failed to fetch facts:', err);
+    }
+  };
+
+  const fetchGreetings = async () => {
+    try {
+      const response = await fetch('src/data/greetings.json');
+      const data = await response.json();
+      setGreetings(data);
+    } catch (err) {
+      console.error('Failed to fetch greetings:', err);
+    }
+  };
+
+  const getGreetings = (hour) => {
+    for (const range in greetings) {
+      const [start, end] = range.split('-').map(Number);
+      if (hour >= start && hour < end) {
+        return greetings[range];
+      }
+    }
+    return 'Nachtschicht oder Feierabend? 🌙';
+  };
 
   const fetchNasaImage = async () => {
     try {
@@ -55,7 +79,6 @@ const DynamicDailyView = () => {
 
   const fetchWeather = async () => {
     try {
-      // First, get coordinates for the location
       const geoResponse = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(config.info.location)}&count=1`
       );
@@ -67,7 +90,6 @@ const DynamicDailyView = () => {
 
       const { latitude, longitude } = geoData.results[0];
       
-      // Then get weather data
       const weatherResponse = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
       );
@@ -80,44 +102,26 @@ const DynamicDailyView = () => {
     }
   };
 
-  const fetchQuote = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('https://api.quotable.io/random');
-      if (!response.ok) throw new Error('Failed to fetch quote');
-      const data = await response.json();
-
-      setQuote({
-        text: data.content,
-        author: data.author,
-      });
-    } catch (err) {
-      setError('Failed to load quote. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
 
     const contentTimer = setInterval(() => {
-      fetchQuote();
+      fetchQuotes();
       fetchWeather();
-      setFact(bodenseeFacts[Math.floor(Math.random() * bodenseeFacts.length)]);
+      fetchFacts();
     }, 300000);
 
     const nasaInfoTimer = setInterval(() => {
       setShowNasaInfo(prev => !prev);
-    }, 30000); // Toggle every 10 seconds
+    }, 30000);
 
-    // Initial fetches
-    fetchQuote();
+    fetchQuotes();
     fetchWeather();
-    fetchNasaImage(); // Fetch NASA image once per day is enough as it updates daily
+    fetchFacts();
+    fetchNasaImage();
+    fetchGreetings();
 
     return () => {
       clearInterval(timer);
@@ -167,9 +171,8 @@ const DynamicDailyView = () => {
           <span>{config.info.location}</span>
         </div>
 
-        {/* Rest of the existing content */}
         <div className="main-content">
-          <h1 className="greeting-text">{getGermanGreeting(time.getHours())}</h1>
+          <h1 className="greeting-text">{getGreetings(time.getHours())}</h1>
 
           <div className="datetime-display">
             <div className="date">
@@ -206,14 +209,7 @@ const DynamicDailyView = () => {
         </div>
 
         <div className="weather-badge">
-          {weather ? (
-            <div className="flex flex-col items-center gap-2">
-              {getWeatherIcon(weather.weathercode)}
-              <span className="text-lg font-bold">{Math.round(weather.temperature)}°C</span>
-            </div>
-          ) : (
-            <Sun className="weather-icon text-yellow-300 animate-pulse" />
-          )}
+        {weather && <AnimatedWeather weatherCode={weather.weathercode} temperature={weather.temperature} />}
         </div>
 
         {nasaImage && (
@@ -230,10 +226,6 @@ const DynamicDailyView = () => {
             </p>
           </div>
         )}
-
-        <div className="decorative-wind">
-          <Wind className="text-white/30" />
-        </div>
       </div>
     </div>
   );

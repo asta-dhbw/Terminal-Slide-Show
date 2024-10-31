@@ -1,0 +1,100 @@
+/* Weather Badge Styles */
+.weather-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .weather-badge:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+  
+  .weather-animation-wrapper {
+    width: 120px !important;  /* Increased from 96px (w-24) */
+    height: 120px !important;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+  }
+  
+  /* Temperature Display */
+  .weather-temperature {
+    font-size: 2rem !important;  /* Increased from 1.125rem */
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-top: 0.5rem;
+  }
+  
+  /* Animation Enhancements */
+  .sunny-circle {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+  }
+  
+  .cloudy-cloud {
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+  }
+  
+  .rain-drop {
+    stroke-width: 3;  /* Thicker raindrops */
+  }
+  
+  .snow-flake {
+    r: 3;  /* Larger snowflakes */
+  }
+  
+  .lightning {
+    stroke-width: 4;  /* Thicker lightning */
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .weather-badge {
+      padding: 1rem;
+    }
+    
+    .weather-animation-wrapper {
+      width: 90px !important;
+      height: 90px !important;
+    }
+    
+    .weather-temperature {
+      font-size: 1.5rem !important;
+    }
+  }
+  
+  /* Enhanced Animation Keyframes */
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(-5px) translateX(5px); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.1); filter: brightness(1.2); }
+  }
+  
+  @keyframes rain {
+    0% { transform: translateY(-15px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(15px); opacity: 0; }
+  }
+  
+  @keyframes snow {
+    0% { transform: translateY(-15px) rotate(0deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(15px) rotate(360deg); opacity: 0; }
+  }
+  
+  @keyframes lightning {
+    0%, 90%, 100% { opacity: 0; filter: brightness(1); }
+    92%, 95% { opacity: 1; filter: brightness(1.5); }
+  }
