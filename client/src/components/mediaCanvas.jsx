@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { config } from '../../../config/config.js';
 
 const MediaCanvas = ({ media }) => {
@@ -167,9 +168,14 @@ const MediaCanvas = ({ media }) => {
 
   if (mediaType === 'video') {
     return (
-      <video
+      <motion.video
+        key={media.name + "-video"}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
         ref={videoRef}
-        className="w-full h-full object-contain bg-black"
+        className="w-full h-full object-contain"
         playsInline
         muted
         autoPlay
@@ -181,7 +187,14 @@ const MediaCanvas = ({ media }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <motion.div
+      className="fixed inset-0 bg-black"
+      key={media.name + "-image"}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      >
       <canvas ref={canvasRef} className="absolute inset-0 z-0" />
       {mediaType === 'gif' && dimensions && !isLoading && (
         <div className="absolute inset-0 z-10 pointer-events-none">
@@ -199,7 +212,7 @@ const MediaCanvas = ({ media }) => {
           />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
