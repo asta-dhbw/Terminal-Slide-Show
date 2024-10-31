@@ -9,7 +9,12 @@
     "dev:server": "node server/src/index.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "vite build client",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:restart": "docker compose restart",
+    "docker": "npm run docker:down && npm run docker:build && npm run docker:up"
   },
   "repository": {
     "type": "git",

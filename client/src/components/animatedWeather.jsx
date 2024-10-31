@@ -1,6 +1,6 @@
 import React from 'react';
 import { Wind, Droplets, ArrowUp } from 'lucide-react';
-import '../styles/AnimatedWeather.css';
+import '../styles/animatedWeather.css';
 
 const AnimatedWeather = ({ weatherCode, temperature, windSpeed, windDirection }) => {
   return (
