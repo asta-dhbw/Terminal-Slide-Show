@@ -86,11 +86,15 @@ app.get('/api/server-status', (req, res) => {
     }
   });
 
+// Add this route before the wildcard route
+app.get('/dynamic-view', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
+
 // Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
 });
-
 // Start the server
 app.listen(port, () => {
     logger.info(`Backend running at http://${host}:${port}/`);
