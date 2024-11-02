@@ -1,10 +1,9 @@
-
 .daily-view {
   position: fixed;
   inset: 0;
   overflow: hidden;
   transition: background 0.5s ease;
-  lex-direction: column;
+  flex-direction: column;
 }
 
 .daily-view.day {
@@ -14,7 +13,6 @@
 .daily-view.night {
   background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
 }
-
 
 .nasa-background {
   position: absolute;
@@ -40,9 +38,9 @@
   transform: translateY(-50%) translateX(-90%);
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
-  padding: 1rem 1.5rem;
+  padding: clamp(1rem, 1vw, 2rem) clamp(1.5rem, 1.5vw, 3rem);
   border-radius: 0 1rem 1rem 0;
-  max-width: 340px;
+  max-width: clamp(340px, 25vw, 600px);
   max-height: 80vh;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -77,22 +75,21 @@
 }
 
 .nasa-info .gap-2 {
-  gap: 0.5rem;
-  /* Adjust the gap as needed */
+  gap: clamp(0.5rem, 0.5vw, 1rem);
 }
 
 .nasa-title {
-  font-size: 1rem;
+  font-size: clamp(1rem, 1vw, 2rem);
   font-weight: 500;
   color: #fff;
-  margin-bottom: 0.5rem;
+  margin-bottom: clamp(0.5rem, 0.5vw, 1rem);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .nasa-description {
-  font-size: 0.875rem;
+  font-size: clamp(0.875rem, 0.875vw, 1.75rem);
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
   overflow-y: auto;
@@ -102,8 +99,8 @@
 
 .nasa-description.expanded {
   max-height: calc(70vh - 4rem);
-  margin-top: 0.5rem;
-  padding-right: 0.5rem;
+  margin-top: clamp(0.5rem, 0.5vw, 1rem);
+  padding-right: clamp(0.5rem, 0.5vw, 1rem);
 }
 
 .background-overlay {
@@ -118,6 +115,15 @@
     rgba(26, 42, 108, 0.7),
     rgba(178, 31, 31, 0.6),
     rgba(253, 187, 45, 0.5)
+  );
+}
+
+
+.background-overlay.night {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.8),
+    rgba(30, 41, 59, 0.7),
+    rgba(51, 65, 85, 0.6)
   );
 }
 
@@ -137,36 +143,12 @@
 
 .shooting-star {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: clamp(4px, 0.3vw, 8px);
+  height: clamp(4px, 0.3vw, 8px);
   background: white;
   border-radius: 50%;
   animation: shoot 3s linear infinite;
   opacity: 0;
-}
-
-.delay-1 {
-  animation-delay: 1s;
-}
-
-.delay-2 {
-  animation-delay: 2s;
-}
-
-@keyframes shoot {
-  0% {
-    transform: translateX(-100%) translateY(0);
-    opacity: 1;
-  }
-
-  70% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(200%) translateY(100%);
-    opacity: 0;
-  }
 }
 
 .content-wrapper {
@@ -176,7 +158,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 2vw, 2rem);
+  padding: clamp(1rem, 2vw, 4rem);
   color: white;
   z-index: 10;
   max-width: 100%;
@@ -185,16 +167,16 @@
 
 .location-badge {
   position: absolute;
-  top: 2rem;
-  left: 2rem;
+  top: clamp(2rem, 2vw, 4rem);
+  left: clamp(2rem, 2vw, 4rem);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: clamp(0.5rem, 0.5vw, 1rem);
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
-  padding: 0.75rem 1.5rem;
+  padding: clamp(0.75rem, 0.75vw, 1.5rem) clamp(1.5rem, 1.5vw, 3rem);
   border-radius: 9999px;
-  font-size: 1.125rem;
+  font-size: clamp(1.125rem, 1.125vw, 2.25rem);
   font-weight: 500;
   transition: transform 0.3s ease;
 }
@@ -205,14 +187,14 @@
 
 .main-content {
   text-align: center;
-  max-width: 48rem;
+  max-width: clamp(48rem, 50vw, 96rem);
   animation: fadeIn 1s ease-out;
 }
 
 .greeting-text {
-  font-size: 4rem;
+  font-size: clamp(4rem, 4vw, 8rem);
   font-weight: bold;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1.5rem, 1.5vw, 3rem);
   color: #fff;
   animation: pulse 4s ease-in-out infinite;
 }
@@ -220,8 +202,8 @@
 .datetime-display {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
+  gap: clamp(0.5rem, 0.5vw, 1rem);
+  margin-bottom: clamp(2rem, 2vw, 4rem);
 }
 
 .date,
@@ -229,19 +211,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
+  gap: clamp(0.75rem, 0.75vw, 1.5rem);
+  font-size: clamp(1.5rem, 1.5vw, 3rem);
 }
 
 .quote-card,
 .fact-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  margin: 1rem 0;
+  border-radius: clamp(1rem, 1vw, 2rem);
+  padding: clamp(1.5rem, 1.5vw, 3rem);
+  margin: clamp(1rem, 1vw, 2rem) 0;
   transition: all 0.3s ease;
   cursor: pointer;
+  max-width: clamp(48rem, 50vw, 96rem);
 }
 
 .quote-card:hover,
@@ -251,78 +234,24 @@
 }
 
 .quote-text {
-  font-size: 1.5rem;
+  font-size: clamp(1.5rem, 1.5vw, 3rem);
   font-style: italic;
-  margin: 1rem 0;
+  margin: clamp(1rem, 1vw, 2rem) 0;
   line-height: 1.4;
 }
 
 .quote-author {
-  font-size: 1.125rem;
+  font-size: clamp(1.125rem, 1.125vw, 2.25rem);
   color: rgba(255, 255, 255, 0.8);
 }
 
 .quote-translation {
-  font-size: 1rem;
+  font-size: clamp(1rem, 1vw, 2rem);
   color: #93c5fd;
-  margin-top: 1rem;
+  margin-top: clamp(1rem, 1vw, 2rem);
   animation: fadeIn 0.3s ease-out;
 }
 
-.decorative-wind {
-  position: absolute;
-  bottom: 2rem;
-  left: 2rem;
-  animation: sway 4s ease-in-out infinite;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes sway {
-
-  0%,
-  100% {
-    transform: translateX(0) rotate(0deg);
-  }
-
-  50% {
-    transform: translateX(10px) rotate(5deg);
-  }
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
-}
 
 @media (max-width: 640px) {
   .greeting-text {
@@ -390,7 +319,6 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Keep existing mobile styles */
 @media (max-width: 640px) {
   .dhbw-logo img {
     height: 30px;
@@ -403,7 +331,6 @@
   }
 }
 
-/* ...existing code... */
 
 @media (max-width: 1200px) {
   .greeting-text {
@@ -490,33 +417,122 @@
 
   .quote-card,
   .fact-card {
-    padding: 1rem;
-    margin: 0.5rem 0;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border-radius: clamp(1rem, 1vw, 2rem);
+    padding: clamp(1.5rem, 1.5vw, 3rem);
+    margin: clamp(1rem, 1vw, 2rem) 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    max-width: clamp(48rem, 50vw, 96rem);
+  }
+  
+  .quote-card:hover,
+  .fact-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .quote-text {
+    font-size: clamp(1.5rem, 1.5vw, 3rem);
+    font-style: italic;
+    margin: clamp(1rem, 1vw, 2rem) 0;
+    line-height: 1.4;
+  }
+  
+  .quote-author {
+    font-size: clamp(1.125rem, 1.125vw, 2.25rem);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .quote-translation {
+    font-size: clamp(1rem, 1vw, 2rem);
+    color: #93c5fd;
+    margin-top: clamp(1rem, 1vw, 2rem);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .dhbw-logo {
+    position: absolute;
+    bottom: clamp(70px, 7vh, 140px);
+    right: clamp(10px, 1vw, 20px);
+    padding: clamp(0.75rem, 0.75vw, 1.5rem);
+    border-radius: clamp(1rem, 1vw, 2rem);
+    transition: all 0.3s ease;
+    z-index: 20;
+  }
+
+
+  .dhbw-logo img {
+    height: clamp(120px, 12vh, 240px);
+    width: auto;
+    transition: all 0.3s ease;
+  }
+}
+
+
+/* Media Queries */
+@media (min-width: 2560px) {
+  :root {
+    font-size: 20px;
+  }
+  
+  .greeting-text {
+    font-size: 6rem;
+  }
+  
+  .quote-text {
+    font-size: 2.5rem;
+  }
+  
+  .dhbw-logo img {
+    height: 180px;
+  }
+}
+
+@media (min-width: 3840px) {
+  :root {
+    font-size: 24px;
+  }
+  
+  .greeting-text {
+    font-size: 8rem;
+  }
+  
+  .quote-text {
+    font-size: 3rem;
+  }
+  
+  .dhbw-logo img {
+    height: 240px;
+  }
+}
+
+@media (max-width: 640px) {
+  .greeting-text {
+    font-size: 2.5rem;
+  }
+
+  .location-badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
   }
 
   .quote-text {
     font-size: 1.25rem;
   }
-
-  .quote-author {
-    font-size: 1rem;
-  }
-
-  .quote-translation {
-    font-size: 0.875rem;
-  }
-
+  
   .dhbw-logo {
     bottom: 0.5rem;
-    right: 50%;
-    transform: translateX(50%);
+    right: 0.5rem;
     padding: 0.5rem;
   }
-
+  
   .dhbw-logo img {
     height: 30px;
   }
 }
+
 
 @media (max-width: 400px) {
   .greeting-text {
@@ -533,32 +549,59 @@
   }
 }
 
-@media (min-width: 1600px) {
-  .greeting-text {
-    font-size: 5rem;
-  }
 
-  .location-badge {
-    font-size: 1.5rem;
-    padding: 1rem 2rem;
-  }
 
-  .quote-text {
-    font-size: 2rem;
+/* Animations */
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (min-width: 1200px) {
-  .greeting-text {
-    font-size: 4.5rem;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
   }
-
-  .location-badge {
-    font-size: 1.375rem;
-    padding: 0.8rem 1.5rem;
+  50% {
+    transform: translateY(-10px);
   }
+}
 
-  .quote-text {
-    font-size: 1.75rem;
+@keyframes shoot {
+  0% {
+    transform: translateX(-100%) translateY(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200%) translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes sway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateX(10px) rotate(5deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
