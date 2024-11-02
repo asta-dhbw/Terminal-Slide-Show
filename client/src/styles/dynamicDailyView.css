@@ -209,10 +209,38 @@
   font-size: 4rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.greeting-text span {
   background: linear-gradient(45deg, #fff, #f0f0f0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: pulse 4s ease-in-out infinite;
+}
+
+.greeting-text .square-icon {
+  width: 1em;
+  height: 1em;
+  background-color: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.night .greeting-text .square-icon {
+  background-color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.day .greeting-text .square-icon {
+  background-color: #fff;
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .datetime-display {
