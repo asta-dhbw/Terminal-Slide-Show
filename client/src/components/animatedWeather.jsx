@@ -332,17 +332,17 @@ const AnimatedWeather = ({ weatherCode, temperature, windSpeed, windDirection })
 
   return (
     <div className={`weather-badge ${isNight ? 'night' : 'day'}`}>
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-2 sm:gap-3">
         <div>
           {getWeatherAnimation(weatherCode, isNight)}
         </div>
         <div className="temperature-container">
-          <span className="text-4xl font-extrabold temperature-text">
+          <span className="text-3xl sm:text-4xl font-extrabold temperature-text">
             {Math.round(temperature)}°C
           </span>
         </div>
         <div className="weather-details">
-          <div className="wind-info flex items-center gap-2">
+          <div className="wind-info flex items-center gap-1 sm:gap-2">
             <Wind className="wind-icon" />
             <span className="wind-speed">
               {windSpeed} km/h
