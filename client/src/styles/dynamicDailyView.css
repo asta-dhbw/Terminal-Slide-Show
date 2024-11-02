@@ -213,9 +213,7 @@
   font-size: 4rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
   animation: pulse 4s ease-in-out infinite;
 }
 

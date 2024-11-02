@@ -83,19 +83,19 @@ const DynamicDailyView = () => {
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(config.info.location)}&count=1`
       );
       const geoData = await geoResponse.json();
-      
+
       if (!geoData.results?.[0]) {
         throw new Error('Location not found');
       }
 
       const { latitude, longitude } = geoData.results[0];
-      
+
       const weatherResponse = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=kmh&timezone=auto`
       );
       const weatherData = await weatherResponse.json();
       console.log('Fetched weather:', weatherData);
-      
+
       setWeather(weatherData.current_weather);
     } catch (err) {
       console.error('Failed to fetch weather:', err);
@@ -103,39 +103,39 @@ const DynamicDailyView = () => {
     }
   };
 
-// Combine all timers in a single useEffect
-useEffect(() => {
-  // Timer for time updates
-  const timer = setInterval(() => {
-    setTime(new Date());
-  }, 1000);
+  // Combine all timers in a single useEffect
+  useEffect(() => {
+    // Timer for time updates
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
 
-  // Timer for content updates
-  const contentTimer = setInterval(() => {
+    // Timer for content updates
+    const contentTimer = setInterval(() => {
+      fetchQuotes();
+      fetchWeather();
+      fetchFacts();
+    }, 300000);
+
+    // NASA info auto-toggle timer
+    const nasaInfoTimer = setInterval(() => {
+      setShowNasaInfo(prev => !prev); // Toggle between open and closed
+    }, 60000); // Toggles every 30 seconds
+
+    // Initial fetches
     fetchQuotes();
     fetchWeather();
     fetchFacts();
-  }, 300000);
+    fetchNasaImage();
+    fetchGreetings();
 
-  // NASA info auto-toggle timer
-  const nasaInfoTimer = setInterval(() => {
-    setShowNasaInfo(prev => !prev); // Toggle between open and closed
-  }, 60000); // Toggles every 30 seconds
-
-  // Initial fetches
-  fetchQuotes();
-  fetchWeather();
-  fetchFacts();
-  fetchNasaImage();
-  fetchGreetings();
-
-  // Cleanup all timers
-  return () => {
-    clearInterval(timer);
-    clearInterval(contentTimer);
-    clearInterval(nasaInfoTimer);
-  };
-}, []);
+    // Cleanup all timers
+    return () => {
+      clearInterval(timer);
+      clearInterval(contentTimer);
+      clearInterval(nasaInfoTimer);
+    };
+  }, []);
 
 
   const formattedDate = time.toLocaleDateString('de-DE', {
@@ -155,14 +155,14 @@ useEffect(() => {
     <div className={`daily-view ${isNight ? 'night' : 'day'}`}>
       {nasaImage && (
         <>
-          <div 
+          <div
             className={`nasa-background ${isNight ? 'night' : 'day'}`}
             style={{ backgroundImage: `url(${nasaImage.url})` }}
           />
           <div className={`background-overlay ${isNight ? 'night' : 'day'}`} />
         </>
       )}
-      
+
       <div className="background-effects">
         <div className="shooting-star"></div>
         <div className="shooting-star delay-1"></div>
@@ -184,12 +184,12 @@ useEffect(() => {
 
           <div className="datetime-display">
             <div className="date">
-              <Calendar className="text-blue-300" />
-              <span>{formattedDate}</span>
+              <Calendar className="text-blue-300 select-none" />
+              <span className="select-text">{formattedDate}</span>
             </div>
             <div className="time">
-              <Clock />
-              <span>{formattedTime}</span>
+              <Clock className="text-blue-300 select-none" />
+              <span className="select-text">{formattedTime}</span>
             </div>
           </div>
 
@@ -216,18 +216,18 @@ useEffect(() => {
           </div>
         </div>
 
-      <div>
-        {weather && (
-          <AnimatedWeather 
-            weatherCode={weather.weathercode}
-            temperature={weather.temperature}
-            windSpeed={weather.windspeed}
-          />
-        )}
-      </div>
+        <div>
+          {weather && (
+            <AnimatedWeather
+              weatherCode={weather.weathercode}
+              temperature={weather.temperature}
+              windSpeed={weather.windspeed}
+            />
+          )}
+        </div>
 
-      {nasaImage && (
-          <div 
+        {nasaImage && (
+          <div
             className={`nasa-info ${showNasaInfo ? 'expanded' : ''}`}
             onClick={() => setShowNasaInfo(!showNasaInfo)}
           >
