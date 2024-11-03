@@ -39,7 +39,7 @@ async function initialize() {
 const handleClientActivity = (req, res, next) => {
     powerManager.handleClientActivity();
     next();
-  };
+};
 
 
 // Serve static files - order matters!
@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', handleClientActivity);
-  
+
 
 // API endpoints
 app.get('/api/current-media', (req, res) => {
@@ -123,9 +123,9 @@ app.listen(port, () => {
 
 // Handle shutdown
 process.on('SIGINT', () => {
-  logger.info('Shutting down...');
-  powerManager.stop();
-  googleDriveService.stop();
-  slideshowManager.stop();
-  process.exit(0);
+    logger.info('Shutting down...');
+    powerManager.stop();
+    googleDriveService.stop();
+    slideshowManager.stop();
+    process.exit(0);
 });

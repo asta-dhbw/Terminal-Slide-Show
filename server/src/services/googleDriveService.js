@@ -1,4 +1,3 @@
-// src/services/googleDriveService.js
 import { google } from 'googleapis';
 import fs from 'fs-extra';
 import path from 'path';
@@ -6,7 +5,16 @@ import { Logger } from '../utils/logger.js';
 import { config } from '../../../config/config.js';
 import { isValidFile } from '../utils/fileValidator.js';
 
+/**
+ * Service for managing Google Drive interactions and file synchronization
+ * @class
+ * @description Handles authentication, file listing, downloading, and sync with Google Drive
+ */
 export class GoogleDriveService {
+    /**
+   * Creates a new GoogleDriveService instance
+   * @constructor
+   */
   constructor() {
     this.logger = new Logger('GoogleDriveService');
     this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
@@ -35,6 +43,12 @@ export class GoogleDriveService {
     return this.initialized;
   }
 
+    /**
+   * Starts periodic file synchronization with Google Drive
+   * @async
+   * @param {number} [interval=config.sync.interval] - Sync interval in milliseconds
+   * @returns {Promise<void>}
+   */
   async startSync(interval = config.sync.interval) {
     this.syncInterval = setInterval(async () => {
       try {
@@ -48,6 +62,12 @@ export class GoogleDriveService {
     await this.syncFiles();
   }
 
+    /**
+   * Synchronizes files between Google Drive and local storage
+   * @async
+   * @throws {Error} If sync operation fails
+   * @returns {Promise<Array<Object>>} List of synchronized files
+   */
   async syncFiles() {
     try {
       const files = await this.listFiles();
@@ -84,12 +104,24 @@ export class GoogleDriveService {
     }
   }
 
+    /**
+   * Lists valid files from Google Drive
+   * @async
+   * @returns {Promise<Array<Object>>} Array of file objects
+   */
   async listFiles() {
     const files = await this.fetchFilesFromDrive();
     const validFiles = files.filter(file => isValidFile(file.name));
     return validFiles;
   }
 
+    /**
+   * Fetches files from a specific Google Drive folder
+   * @async
+   * @param {string} [folderId=config.google.folderId] - Google Drive folder ID
+   * @throws {Error} If fetching files fails
+   * @returns {Promise<Array<Object>>} Array of file objects
+   */
   async fetchFilesFromDrive(folderId = config.google.folderId) {
     try {
       const response = await this.drive.files.list({
@@ -115,6 +147,14 @@ export class GoogleDriveService {
     }
   }
 
+    /**
+   * Downloads a file from Google Drive
+   * @async
+   * @param {string} fileId - Google Drive file ID
+   * @param {string} localPath - Local path to save the file
+   * @throws {Error} If download fails
+   * @returns {Promise<void>}
+   */
   async downloadFile(fileId, localPath) {
     try {
       const response = await this.drive.files.get(
@@ -141,6 +181,7 @@ export class GoogleDriveService {
       this.syncInterval = null;
     }
   }
+  
  async pause() {
     this.logger.info('Pausing Google Drive service');
     if (this.syncInterval) {
@@ -154,3 +195,29 @@ export class GoogleDriveService {
     await this.startSync(this.syncInterval);
   }
 }
+
+
+//TODO Allow downloading public files without requiring authentication/service account
+
+// import fs from 'fs';
+// import https from 'https';
+// async function downloadPublicFile(fileId, localPath) {
+//   // Google Drive direct download link format
+//   const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  
+//   return new Promise((resolve, reject) => {
+//     const file = fs.createWriteStream(localPath);
+    
+//     https.get(downloadUrl, (response) => {
+//       response.pipe(file);
+      
+//       file.on('finish', () => {
+//         file.close();
+//         resolve();
+//       });
+//     }).on('error', (err) => {
+//       fs.unlink(localPath);
+//       reject(err);
+//     });
+//   });
+// }
