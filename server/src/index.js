@@ -1,13 +1,10 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleDriveService } from './services/googleDriveService.js';
 import { SlideshowManager } from './services/slideshowManager.js';
+import { PowerManager } from './services/powerManager.js';
 import { Logger } from './utils/logger.js';
 import { config } from '../../config/config.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = config.backend.port;
@@ -17,6 +14,33 @@ const logger = new Logger('Main');
 // Initialize services
 const googleDriveService = new GoogleDriveService();
 const slideshowManager = new SlideshowManager();
+const powerManager = new PowerManager({
+    inactivityTimeout: config.backendPowerSaving?.timeout || 5 * 60 * 1000 // 5 minutes default
+});
+
+async function initialize() {
+    try {
+        await googleDriveService.initialize();
+        await googleDriveService.startSync();
+        await slideshowManager.initialize();
+
+        // Initialize power manager and register services
+        powerManager.initialize();
+        powerManager.registerService('googleDrive', googleDriveService);
+        powerManager.registerService('slideshow', slideshowManager);
+
+        logger.info('All services initialized successfully');
+    } catch (error) {
+        logger.error('Failed to initialize services:', error);
+        process.exit(1);
+    }
+}
+
+const handleClientActivity = (req, res, next) => {
+    powerManager.handleClientActivity();
+    next();
+  };
+
 
 // Serve static files - order matters!
 // 1. Serve public files first
@@ -42,52 +66,48 @@ app.use((req, res, next) => {
     next();
 });
 
-async function initialize() {
-    try {
-        await googleDriveService.initialize();
-        await googleDriveService.startSync();
-        await slideshowManager.initialize();
-        logger.info('All services initialized successfully');
-    } catch (error) {
-        logger.error('Failed to initialize services:', error);
-        process.exit(1);
-    }
-}
+app.use('/api', handleClientActivity);
+  
 
 // API endpoints
 app.get('/api/current-media', (req, res) => {
+    logger.debug('Getting current media');
     const media = slideshowManager.getCurrentMedia();
     res.json(media || { error: 'No media available' });
 });
 
 app.get('/api/next-media', (req, res) => {
+    logger.debug('Navigating to next media');
     const media = slideshowManager.nextMedia();
     res.json(media || { error: 'No media available' });
 });
 
 app.get('/api/previous-media', (req, res) => {
+    logger.debug('Navigating to previous media');
     const media = slideshowManager.previousMedia();
     res.json(media || { error: 'No media available' });
 });
 
 app.get('/api/server-status', (req, res) => {
+    logger.debug('Checking server status');
     try {
-      const isGoogleDriveInitialized = googleDriveService.isInitialized();
-      const isSlideshowManagerInitialized = slideshowManager.isInitialized();
-  
-      if (isGoogleDriveInitialized && isSlideshowManagerInitialized) {
-        res.status(200).send('OK');
-      } else {
-        res.status(503).send('Service Unavailable');
-      }
+        const isGoogleDriveInitialized = googleDriveService.isInitialized();
+        const isSlideshowManagerInitialized = slideshowManager.isInitialized();
+
+        if (isGoogleDriveInitialized && isSlideshowManagerInitialized) {
+            res.status(200).send('OK');
+        } else {
+            res.status(503).send('Service Unavailable');
+        }
     } catch (error) {
-      logger.error('Error checking server status:', error);
-      res.status(500).send('Internal Server Error');
+        logger.error('Error checking server status:', error);
+        res.status(500).send('Internal Server Error');
     }
-  });
+});
 
 // Add this route before the wildcard route
 app.get('/dynamic-view', (req, res) => {
+    logger.debug('Serving dynamic view');
     res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
 });
 
@@ -103,8 +123,9 @@ app.listen(port, () => {
 
 // Handle shutdown
 process.on('SIGINT', () => {
-    logger.info('Shutting down...');
-    googleDriveService.stop();
-    slideshowManager.stop();
-    process.exit(0);
+  logger.info('Shutting down...');
+  powerManager.stop();
+  googleDriveService.stop();
+  slideshowManager.stop();
+  process.exit(0);
 });

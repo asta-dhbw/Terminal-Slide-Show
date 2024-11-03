@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useMediaLoader } from '../hooks/useMediaLoader';
-import { useControlsVisibility } from '../hooks/useControlsVisibility';
-import { useServerStatus } from '../hooks/useServerStatus';
-import { useSchedule } from '../hooks/useSchedule';
+import { useMediaLoader } from '../../hooks/useMediaLoader';
+import { useControlsVisibility } from '../../hooks/useControlsVisibility';
+import { useServerStatus } from '../../hooks/useServerStatus';
+import { useSchedule } from '../../hooks/useSchedule';
 import MediaCanvas from './mediaCanvas';
 import Controls from './controls';
-import Loading from './loading';
-import ErrorToast from './errorToast';
-import DynamicDailyView from './dynamicDailyView';
-import { config } from '../../../config/config';
+import Loading from '../loading';
+import ErrorToast from '../errorToast';
+import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
+import { config } from '../../../../config/config';
 
 const Slideshow = () => {
-  const { media, loading, error, serverReady, navigateMedia } = useMediaLoader();
-  const showControls = useControlsVisibility();
-  const isServerConnected = useServerStatus();
   const isScheduleActive = useSchedule();
+  // Only initialize hooks if schedule is active
+  const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
+  const showControls = useControlsVisibility();
+  const isServerConnected = useServerStatus(isScheduleActive);
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
 
@@ -51,20 +52,21 @@ const Slideshow = () => {
     return <div className="w-screen h-screen bg-black" />;
   }
 
-  if (!isServerConnected) {
+  // Only show loading states if schedule is active
+  if (!isServerConnected && isScheduleActive) {
     return <Loading key="loading" isServerConnecting={!isServerConnected} />;
   }
-  
-  if (loading) {
+
+  if (loading && isScheduleActive) {
     return <Loading key="loading" isServerConnecting={false} />;
   }
 
   // Show dynamic daily view when no media is available and not in error state
-  if (!media && !error) {
+  if (!media && !error && isScheduleActive) {
     return <DynamicDailyView />;
   }
-  
-  if (error) {
+
+  if (error && isScheduleActive) {
     return <ErrorToast message={error} />;
   }
 
@@ -84,13 +86,13 @@ const Slideshow = () => {
       />
 
       <AnimatePresence>
-        {(loading || !serverReady) && (
+        {(loading || !serverReady) && isScheduleActive && (
           <Loading isServerConnecting={!serverReady} />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {error && !loading && (
+        {error && !loading && isScheduleActive && (
           <ErrorToast message={error} />
         )}
       </AnimatePresence>

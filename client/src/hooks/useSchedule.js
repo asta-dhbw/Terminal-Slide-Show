@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { config } from '../../../config/config';
 
+/**
+ * Custom hook to manage schedule-based activation states
+ * Handles vacation periods, daily schedules, and time windows
+ * @returns {boolean} Current activation state based on schedule
+ */
 export const useSchedule = () => {
   const [isActive, setIsActive] = useState(false);
 
@@ -10,6 +15,11 @@ export const useSchedule = () => {
       return;
     }
 
+    /**
+     * Checks if given date falls within configured vacation periods
+     * @param {Date} date - Date to check
+     * @returns {boolean} True if date is in vacation period
+     */
     const isDateInVacationPeriod = (date) => {
       if (!config.schedule.vacationPeriods?.length) return false;
 
@@ -19,23 +29,25 @@ export const useSchedule = () => {
 
         const startDate = new Date(startYear, startMonth - 1, startDay);
         const endDate = new Date(endYear, endMonth - 1, endDay);
-        
+
         return date >= startDate && date <= endDate;
       });
     };
 
+    /**
+     * Evaluates current schedule state based on time and configuration
+     * @function
+     */
     const checkSchedule = () => {
       const now = new Date();
 
-      // Check if current date is in vacation period
       if (isDateInVacationPeriod(now)) {
         setIsActive(false);
         return;
       }
-      
+
       const currentDay = now.getDay();
-      
-      // Check if current day is in schedule
+
       if (!config.schedule.days.includes(currentDay)) {
         setIsActive(false);
         return;
@@ -44,7 +56,7 @@ export const useSchedule = () => {
       // Parse schedule times
       const [onHour, onMinute] = config.schedule.onTime.split(':').map(Number);
       const [offHour, offMinute] = config.schedule.offTime.split(':').map(Number);
-      
+
       // Convert current time to minutes for easier comparison
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
       const onTimeMinutes = onHour * 60 + onMinute;
@@ -53,23 +65,24 @@ export const useSchedule = () => {
       // Handle cases where off time is on the next day
       if (offTimeMinutes < onTimeMinutes) {
         setIsActive(
-          currentMinutes >= onTimeMinutes || 
+          currentMinutes >= onTimeMinutes ||
           currentMinutes < offTimeMinutes
         );
       } else {
         setIsActive(
-          currentMinutes >= onTimeMinutes && 
+          currentMinutes >= onTimeMinutes &&
           currentMinutes < offTimeMinutes
         );
       }
     };
 
-    // Initial check
+    // Initial schedule check
     checkSchedule();
 
-    // Check every minute
+    // Check schedule every minute
     const interval = setInterval(checkSchedule, 60000);
 
+    // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, []);
 

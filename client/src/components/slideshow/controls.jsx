@@ -2,13 +2,28 @@ import React, { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
-import '../styles/controls.css';
+import '../../styles/controls.css';
 
+/**
+ * Controls component for navigation with buttons and swipe gestures
+ * @component
+ * @param {Object} props
+ * @param {boolean} props.show - Controls visibility of navigation buttons
+ * @param {Function} props.onPrevious - Callback for previous navigation action
+ * @param {Function} props.onNext - Callback for next navigation action
+ * @param {boolean} props.disabled - Disables navigation controls when true
+ * @returns {JSX.Element} Navigation controls with animation
+ */
 const Controls = ({ show, onPrevious, onNext, disabled }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [lastActionTime, setLastActionTime] = useState(0);
-  const debounceDelay = 500; // Adjust the delay as needed
 
+  const [lastActionTime, setLastActionTime] = useState(0);
+  const debounceDelay = 500; // Minimum time between actions in ms
+
+  /**
+   * Handles previous navigation with debouncing and loading state
+   * @function
+   */
   const handlePrevious = useCallback(async () => {
     const now = Date.now();
     if (disabled || isLoading || now - lastActionTime < debounceDelay) return;
@@ -18,6 +33,10 @@ const Controls = ({ show, onPrevious, onNext, disabled }) => {
     setIsLoading(false);
   }, [disabled, isLoading, lastActionTime, onPrevious]);
 
+  /**
+   * Handles next navigation with debouncing and loading state
+   * @function
+   */
   const handleNext = useCallback(async () => {
     const now = Date.now();
     if (disabled || isLoading || now - lastActionTime < debounceDelay) return;
@@ -27,6 +46,7 @@ const Controls = ({ show, onPrevious, onNext, disabled }) => {
     setIsLoading(false);
   }, [disabled, isLoading, lastActionTime, onNext]);
 
+  // Configure swipe gesture handlers
   const handlers = useSwipeable({
     onSwipedLeft: () => !disabled && handleNext(),
     onSwipedRight: () => !disabled && handlePrevious(),
@@ -39,6 +59,7 @@ const Controls = ({ show, onPrevious, onNext, disabled }) => {
       <AnimatePresence>
         {show && (
           <>
+            {/* Previous button with slide animation */}
             <motion.button
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -50,7 +71,8 @@ const Controls = ({ show, onPrevious, onNext, disabled }) => {
             >
               <ChevronLeft className="w-8 h-8" />
             </motion.button>
-            
+
+            {/* Next button with slide animation */}
             <motion.button
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

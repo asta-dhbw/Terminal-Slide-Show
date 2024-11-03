@@ -111,28 +111,25 @@
 }
 
 .background-overlay.day {
-  background: linear-gradient(135deg, 
-    rgba(26, 42, 108, 0.7),
-    rgba(178, 31, 31, 0.6),
-    rgba(253, 187, 45, 0.5)
-  );
+  background: linear-gradient(135deg,
+      rgba(26, 42, 108, 0.7),
+      rgba(178, 31, 31, 0.6),
+      rgba(253, 187, 45, 0.5));
 }
 
 
 .background-overlay.night {
-  background: linear-gradient(135deg, 
-    rgba(15, 23, 42, 0.8),
-    rgba(30, 41, 59, 0.7),
-    rgba(51, 65, 85, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(15, 23, 42, 0.8),
+      rgba(30, 41, 59, 0.7),
+      rgba(51, 65, 85, 0.6));
 }
 
 .background-overlay.night {
-  background: linear-gradient(135deg, 
-    rgba(15, 23, 42, 0.8),
-    rgba(30, 41, 59, 0.7),
-    rgba(51, 65, 85, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(15, 23, 42, 0.8),
+      rgba(30, 41, 59, 0.7),
+      rgba(51, 65, 85, 0.6));
 }
 
 .background-effects {
@@ -304,11 +301,15 @@
 .night .dhbw-logo img {
   opacity: 1;
   /* Complex filter to darken grays while preserving red */
-  filter: 
-    brightness(0.9) /* Slightly reduce overall brightness */
-    contrast(1.2)   /* Increase contrast */
-    saturate(1.2)   /* Boost color saturation */
-    hue-rotate(-5deg); /* Slight hue adjustment to preserve red */
+  filter:
+    brightness(0.9)
+    /* Slightly reduce overall brightness */
+    contrast(1.2)
+    /* Increase contrast */
+    saturate(1.2)
+    /* Boost color saturation */
+    hue-rotate(-5deg);
+  /* Slight hue adjustment to preserve red */
 }
 
 .dhbw-logo:hover {
@@ -323,7 +324,7 @@
   .dhbw-logo img {
     height: 30px;
   }
-  
+
   .dhbw-logo {
     bottom: 0.5rem;
     right: 0.5rem;
@@ -426,25 +427,25 @@
     cursor: pointer;
     max-width: clamp(48rem, 50vw, 96rem);
   }
-  
+
   .quote-card:hover,
   .fact-card:hover {
     transform: translateY(-4px);
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   .quote-text {
     font-size: clamp(1.5rem, 1.5vw, 3rem);
     font-style: italic;
     margin: clamp(1rem, 1vw, 2rem) 0;
     line-height: 1.4;
   }
-  
+
   .quote-author {
     font-size: clamp(1.125rem, 1.125vw, 2.25rem);
     color: rgba(255, 255, 255, 0.8);
   }
-  
+
   .quote-translation {
     font-size: clamp(1rem, 1vw, 2rem);
     color: #93c5fd;
@@ -476,15 +477,15 @@
   :root {
     font-size: 20px;
   }
-  
+
   .greeting-text {
     font-size: 6rem;
   }
-  
+
   .quote-text {
     font-size: 2.5rem;
   }
-  
+
   .dhbw-logo img {
     height: 180px;
   }
@@ -494,15 +495,15 @@
   :root {
     font-size: 24px;
   }
-  
+
   .greeting-text {
     font-size: 8rem;
   }
-  
+
   .quote-text {
     font-size: 3rem;
   }
-  
+
   .dhbw-logo img {
     height: 240px;
   }
@@ -521,13 +522,13 @@
   .quote-text {
     font-size: 1.25rem;
   }
-  
+
   .dhbw-logo {
     bottom: 0.5rem;
     right: 0.5rem;
     padding: 0.5rem;
   }
-  
+
   .dhbw-logo img {
     height: 30px;
   }
@@ -559,6 +560,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -566,9 +568,12 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -579,9 +584,11 @@
     transform: translateX(-100%) translateY(0);
     opacity: 1;
   }
+
   70% {
     opacity: 1;
   }
+
   100% {
     transform: translateX(200%) translateY(100%);
     opacity: 0;
@@ -589,18 +596,24 @@
 }
 
 @keyframes sway {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0) rotate(0deg);
   }
+
   50% {
     transform: translateX(10px) rotate(5deg);
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }

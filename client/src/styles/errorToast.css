@@ -1,9 +1,14 @@
 body.error-toast-active {
-    background-image: url("/LOGO.png"); /* Add this line */
-    background-size: cover; /* Ensure the logo covers the entire background */
-    background-repeat: no-repeat; /* Prevent the logo from repeating */
-    background-position: center; /* Center the logo */
-    position: relative; /* Ensure the body is positioned relative for the overlay */
+    background-image: url("/LOGO.png");
+    /* Add this line */
+    background-size: cover;
+    /* Ensure the logo covers the entire background */
+    background-repeat: no-repeat;
+    /* Prevent the logo from repeating */
+    background-position: center;
+    /* Center the logo */
+    position: relative;
+    /* Ensure the body is positioned relative for the overlay */
 }
 
 .overlay {
@@ -12,8 +17,10 @@ body.error-toast-active {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Black overlay with 50% opacity */
-    z-index: 10; /* Ensure the overlay is above the background but below the toast */
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Black overlay with 50% opacity */
+    z-index: 10;
+    /* Ensure the overlay is above the background but below the toast */
 }
 
 .error-toast {
@@ -21,22 +28,25 @@ body.error-toast-active {
     top: 1rem;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 50; /* Ensure the toast is above the overlay */
+    z-index: 50;
+    /* Ensure the toast is above the overlay */
     background-color: rgba(239, 68, 68, 0.2);
     backdrop-filter: blur(10px);
     border-radius: 0.5rem;
-    padding: 0.5rem; 
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    max-width: 80%; 
+    max-width: 80%;
     font-size: 0.875rem;
 }
+
 .error-toast .icon {
     width: 100px;
     height: 100px;
     color: rgba(255, 255, 255, 0.9);
 }
+
 .error-toast .message {
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;

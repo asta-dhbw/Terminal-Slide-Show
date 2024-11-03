@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Sun, Moon, Quote, Coffee, Wind, MapPin, Clock, Cloud, Droplets, CloudSnow, Info } from 'lucide-react';
-import '../styles/dynamicDailyView.css';
+import '../../styles/dynamicDailyView.css';
 import AnimatedWeather from './animatedWeather';
-import { config } from '../../../config/config';
+import { config } from '../../../../config/config';
 
 const DynamicDailyView = () => {
   const [time, setTime] = useState(new Date());

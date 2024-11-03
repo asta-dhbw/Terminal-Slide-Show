@@ -1,25 +1,43 @@
 import { useState, useCallback, useEffect } from 'react';
 import { config } from '../../../config/config';
 
-export const useMediaLoader = () => {
+export const useMediaLoader = (isScheduleActive = true) => {
   const [media, setMedia] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false since we won't load if schedule is inactive
   const [error, setError] = useState(null);
   const [serverReady, setServerReady] = useState(false);
   const [lastModified, setLastModified] = useState(null);
   const [serverReconnected, setServerReconnected] = useState(false);
   const [initialLoadStartTime, setInitialLoadStartTime] = useState(null);
 
+  // Reset all state when schedule becomes inactive
+  useEffect(() => {
+    if (!isScheduleActive) {
+      setMedia(null);
+      setLoading(false);
+      setError(null);
+      setServerReady(false);
+      setLastModified(null);
+      setServerReconnected(false);
+      setInitialLoadStartTime(null);
+    }
+  }, [isScheduleActive]);
+
   const checkServer = useCallback(async () => {
+    // Don't check server if schedule is inactive
+    if (!isScheduleActive) {
+      setServerReady(false);
+      return false;
+    }
+
     try {
       const response = await fetch('/api/health');
       const isReady = response.ok;
       
-      // Detect server reconnection
       if (!serverReady && isReady) {
         setServerReconnected(true);
         setLoading(true);
-        setInitialLoadStartTime(Date.now()); // Start timing for initial load
+        setInitialLoadStartTime(Date.now());
       }
       
       setServerReady(isReady);
@@ -28,23 +46,23 @@ export const useMediaLoader = () => {
       setServerReady(false);
       return false;
     }
-  }, [serverReady]);
+  }, [serverReady, isScheduleActive]);
 
   const loadMedia = useCallback(async () => {
-    if (!serverReady) return;
+    // Don't load media if schedule is inactive
+    if (!serverReady || !isScheduleActive) return;
     
     try {
       const response = await fetch('/api/current-media');
       const data = await response.json();
       
       if (data.error) {
-        setError(null); // Clear any existing errors
-        setMedia(null); // Set media to null to trigger DynamicDailyView
+        setError(null);
+        setMedia(null);
         setLoading(false);
         return;
       }
   
-      // Force media update on server reconnection
       if (serverReconnected || data.lastModified !== lastModified) {
         setLastModified(data.lastModified);
         setMedia(data);
@@ -71,11 +89,11 @@ export const useMediaLoader = () => {
       setMedia(null);
       setLoading(false);
     }
-  }, [serverReady, lastModified, serverReconnected, initialLoadStartTime]);
+  }, [serverReady, lastModified, serverReconnected, initialLoadStartTime, isScheduleActive]);
 
   const navigateMedia = useCallback(async (direction) => {
-    if (!serverReady) return;
-    // setLoading(true);
+    // Don't navigate if schedule is inactive
+    if (!serverReady || !isScheduleActive) return;
     
     try {
       const response = await fetch(`/api/${direction}-media`);
@@ -95,29 +113,35 @@ export const useMediaLoader = () => {
     } finally {
       setLoading(false);
     }
-  }, [serverReady]);
+  }, [serverReady, isScheduleActive]);
 
   useEffect(() => {
-    const init = async () => {
-      const isReady = await checkServer();
-      if (isReady) {
-        await loadMedia();
-      }
-    };
-    init();
+    let serverPollInterval;
+    let mediaPollInterval;
 
-    const serverPollInterval = setInterval(checkServer, config.polling.mediaLoaderInterval);
-    const mediaPollInterval = setInterval(() => {
-      if (serverReady) {
-        loadMedia();
-      }
-    }, config.polling.mediaLoaderInterval);
+    // Only start polling if schedule is active
+    if (isScheduleActive) {
+      const init = async () => {
+        const isReady = await checkServer();
+        if (isReady) {
+          await loadMedia();
+        }
+      };
+      init();
+
+      serverPollInterval = setInterval(checkServer, config.polling.mediaLoaderInterval);
+      mediaPollInterval = setInterval(() => {
+        if (serverReady) {
+          loadMedia();
+        }
+      }, config.polling.mediaLoaderInterval);
+    }
 
     return () => {
       clearInterval(serverPollInterval);
       clearInterval(mediaPollInterval);
     };
-  }, [checkServer, loadMedia, serverReady]);
+  }, [checkServer, loadMedia, serverReady, isScheduleActive]);
 
   return {
     media,

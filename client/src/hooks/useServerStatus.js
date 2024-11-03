@@ -1,10 +1,27 @@
 import { useState, useEffect } from 'react';
 import { config } from '../../../config/config';
 
-export const useServerStatus = (pollingInterval = config.polling.serverStatusInterval) => {
+/**
+ * Custom hook to monitor server connection status with periodic polling
+ * @param {boolean} isScheduleActive - Whether the schedule is currently active
+ * @param {number} [pollingInterval=config.polling.serverStatusInterval] - Interval in ms between status checks
+ * @returns {boolean} Current server connection status
+ */
+export const useServerStatus = (isScheduleActive = true, pollingInterval = config.polling.serverStatusInterval) => {
   const [isServerConnected, setIsServerConnected] = useState(false);
 
   useEffect(() => {
+    // Reset connection status when schedule becomes inactive
+    if (!isScheduleActive) {
+      setIsServerConnected(false);
+      return;
+    }
+
+    /**
+     * Checks server status via API endpoint
+     * @async
+     * @function
+     */
     const checkServerStatus = async () => {
       try {
         const response = await fetch('/api/server-status');
@@ -18,11 +35,15 @@ export const useServerStatus = (pollingInterval = config.polling.serverStatusInt
       }
     };
 
+    // Initial check
     checkServerStatus();
+
+    // Set up periodic polling only if schedule is active
     const intervalId = setInterval(checkServerStatus, pollingInterval);
 
+    // Cleanup interval on unmount or when schedule becomes inactive
     return () => clearInterval(intervalId);
-  }, [pollingInterval]);
+  }, [pollingInterval, isScheduleActive]);
 
   return isServerConnected;
 };

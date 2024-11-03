@@ -6,8 +6,10 @@
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.4);
   transition: all 0.3s;
-  z-index: 50; /* Ensure this is higher than canvas and controls */
-  pointer-events: auto; /* Re-enable pointer events for buttons */
+  z-index: 50;
+  /* Ensure this is higher than canvas and controls */
+  pointer-events: auto;
+  /* Re-enable pointer events for buttons */
 }
 
 .nav-button:hover {
@@ -32,12 +34,15 @@
   height: 100%;
   position: absolute;
   inset: 0;
-  z-index: 60; /* Ensure this is higher than canvas and controls */
+  z-index: 60;
+  /* Ensure this is higher than canvas and controls */
 }
 
 .controls-container {
   position: absolute;
   inset: 0;
-  z-index: 2; /* Ensure this is higher than canvas */
-  pointer-events: none; /* Allow clicks to pass through to swipe container */
+  z-index: 2;
+  /* Ensure this is higher than canvas */
+  pointer-events: none;
+  /* Allow clicks to pass through to swipe container */
 }

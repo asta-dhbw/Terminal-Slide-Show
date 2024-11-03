@@ -19,14 +19,14 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: isDevelopment 
+        target: isDevelopment
           ? `http://localhost:${config.backend.port}`
           : `http://backend:${config.backend.port}`,
         changeOrigin: true,
         secure: false,
       },
       '/media': {
-        target: isDevelopment 
+        target: isDevelopment
           ? `http://localhost:${config.backend.port}`
           : `http://backend:${config.backend.port}`,
         changeOrigin: true,

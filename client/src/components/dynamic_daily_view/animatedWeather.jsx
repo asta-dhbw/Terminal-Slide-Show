@@ -1,13 +1,13 @@
 import React from 'react';
 import { Wind, Droplets, ArrowUp } from 'lucide-react';
-import '../styles/animatedWeather.css';
+import '../../styles/animatedWeather.css';
 
 const getWeatherAnimation = (code, isNight) => {
   if (isNight) {
     if (code <= 1) return <MoonAnimation />;
     if (code <= 3) return <NightlyPartlyCloudyAnimation />;
   }
-  
+
   if (code <= 1) return <SunnyAnimation />;
   if (code <= 3) return <PartlyCloudyAnimation />;
   if (code <= 49) return <RainyAnimation />;
@@ -30,17 +30,17 @@ const MoonAnimation = () => (
         <stop offset="100%" style={{ stopColor: "#A0A0A0", stopOpacity: 0.3 }} />
       </radialGradient>
     </defs>
-    <circle 
-      cx="50" 
-      cy="50" 
-      r="20" 
+    <circle
+      cx="50"
+      cy="50"
+      r="20"
       fill="url(#moon-gradient)"
       className="moon-circle"
     />
-    <circle 
-      cx="50" 
-      cy="50" 
-      r="20" 
+    <circle
+      cx="50"
+      cy="50"
+      r="20"
       fill="url(#moon-shadow)"
       className="moon-shadow"
     />
@@ -72,10 +72,10 @@ const SunnyAnimation = () => (
         <stop offset="100%" style={{ stopColor: "#FFA500", stopOpacity: 1 }} />
       </radialGradient>
     </defs>
-    <circle 
-      cx="50" 
-      cy="50" 
-      r="20" 
+    <circle
+      cx="50"
+      cy="50"
+      r="20"
       fill="url(#sun-gradient)"
       className="sunny-circle"
     />
@@ -155,10 +155,10 @@ const NightlyPartlyCloudyAnimation = () => (
         <stop offset="100%" style={{ stopColor: "#303030", stopOpacity: 1 }} />
       </linearGradient>
     </defs>
-    <circle 
-      cx="35" 
-      cy="40" 
-      r="15" 
+    <circle
+      cx="35"
+      cy="40"
+      r="15"
       fill="url(#night-moon-gradient)"
       className="night-moon"
     />
@@ -250,8 +250,8 @@ const ThunderstormAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
       <linearGradient id="storm-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{stopColor:"#4A4A4A", stopOpacity:1}} />
-        <stop offset="100%" style={{stopColor:"#1A1A1A", stopOpacity:1}} />
+        <stop offset="0%" style={{ stopColor: "#4A4A4A", stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: "#1A1A1A", stopOpacity: 1 }} />
       </linearGradient>
     </defs>
     <CloudyAnimation />
@@ -293,10 +293,10 @@ const PartlyCloudyAnimation = () => (
         <stop offset="100%" style={{ stopColor: "#B0B0B0", stopOpacity: 1 }} />
       </linearGradient>
     </defs>
-    <circle 
-      cx="35" 
-      cy="40" 
-      r="15" 
+    <circle
+      cx="35"
+      cy="40"
+      r="15"
       fill="url(#partly-cloudy-sun-gradient)"
       className="partly-cloudy-sun"
     />
@@ -347,12 +347,12 @@ const AnimatedWeather = ({ weatherCode, temperature, windSpeed, windDirection })
             <span className="wind-speed">
               {windSpeed} km/h
             </span>
-            <ArrowUp 
-              className="wind-direction-arrow" 
-              style={{ 
+            <ArrowUp
+              className="wind-direction-arrow"
+              style={{
                 transform: `rotate(${windDirection}deg)`,
                 transition: 'transform 0.5s ease'
-              }} 
+              }}
             />
           </div>
         </div>

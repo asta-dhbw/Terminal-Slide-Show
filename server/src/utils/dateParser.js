@@ -1,3 +1,8 @@
+/**
+ * Utility class for parsing dates from filenames
+ * Supports multiple date formats and patterns with/without years
+ * @class
+ */
 export class DateParser {
   static parseFileName(filename) {
     const patterns = [
@@ -45,7 +50,7 @@ export class DateParser {
 
   static createDate(day, month, year) {
     const normalizedYear = year.length === 2 ? '20' + year : year;
-    
+
     // Create a UTC date by explicitly setting UTC components
     const date = new Date(Date.UTC(
       parseInt(normalizedYear),
@@ -57,6 +62,7 @@ export class DateParser {
       0  // Milliseconds
     ));
 
+    // Validate date is not invalid (NaN)
     if (isNaN(date.getTime())) {
       throw new Error('Invalid date');
     }

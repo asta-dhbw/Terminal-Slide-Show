@@ -5,7 +5,6 @@ import { Logger } from '../utils/logger.js';
 import { DateParser } from '../utils/dateParser.js';
 import { config } from '../../../config/config.js';
 import { isValidFile } from '../utils/fileValidator.js';
-
 export class SlideshowManager {
   constructor() {
     this.logger = new Logger('SlideshowManager');
@@ -15,6 +14,7 @@ export class SlideshowManager {
     this.mediaFiles = [];
     this.watchInterval = null;
     this.initialized = false;
+    this.isPaused = false;  // Add flag to track pause state
   }
 
   async initialize() {
@@ -29,6 +29,11 @@ export class SlideshowManager {
   }
 
   async updateMediaList() {
+    // Don't update if paused
+    if (this.isPaused) {
+      return;
+    }
+
     try {
       const files = await fs.readdir(this.mediaPath);
       this.mediaFiles = files
@@ -55,20 +60,28 @@ export class SlideshowManager {
   }
 
   nextMedia() {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(); // Do not change if only one media file
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia();
     this.currentIndex = (this.currentIndex + 1) % this.mediaFiles.length;
     return this.getCurrentMedia();
   }
 
   previousMedia() {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(); // Do not change if only one media file
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia();
     this.currentIndex = (this.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
     return this.getCurrentMedia();
   }
 
-  startWatching(interval = 1000) { // Check every second
+  startWatching(interval = 1000) {
+    // Don't start if already paused
+    if (this.isPaused) {
+      return;
+    }
+
     this.watchInterval = setInterval(async () => {
-      await this.updateMediaList();
+      // Only update if not paused
+      if (!this.isPaused) {
+        await this.updateMediaList();
+      }
     }, interval);
   }
 
@@ -77,5 +90,21 @@ export class SlideshowManager {
       clearInterval(this.watchInterval);
       this.watchInterval = null;
     }
+  }
+
+  async pause() {
+    this.logger.info('Pausing Slideshow Manager');
+    this.isPaused = true;  // Set pause flag
+    if (this.watchInterval) {
+      clearInterval(this.watchInterval);
+      this.watchInterval = null;
+    }
+  }
+
+  async resume() {
+    this.logger.info('Resuming Slideshow Manager');
+    this.isPaused = false;  // Clear pause flag
+    await this.updateMediaList();  // Get fresh list
+    this.startWatching(config.slideshow.watchInterval);
   }
 }

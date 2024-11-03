@@ -4,7 +4,15 @@ import { motion } from 'framer-motion';
 import '../styles/loading.css';
 import BBLoader from './loader';
 
+/**
+ * Loading component that displays either a server connection or media loading animation
+ * @component
+ * @param {Object} props
+ * @param {boolean} props.isServerConnecting - Flag to determine which loading state to show
+ * @returns {JSX.Element} Animated loading overlay with status message
+ */
 const Loading = ({ isServerConnecting }) => (
+  // Main container with fade in/out animation
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -12,11 +20,15 @@ const Loading = ({ isServerConnecting }) => (
     className="loading-overlay"
   >
     <div className="loading-overlay-background" />
+
+    {/* Animated container for loading icon */}
     <motion.div
       animate={
         isServerConnecting ? {
+          // Server connecting animation: pulsing scale effect
           scale: [1, 1.15, 0.95, 1.1, 1],
         } : {
+          // Media loading animation: subtle scale with glow effect
           scale: [1, 1.1, 1],
           filter: [
             "drop-shadow(0 0 0px rgba(255,255,255,0)) drop-shadow(0 0 0px rgba(0,123,255,0))",
@@ -28,6 +40,7 @@ const Loading = ({ isServerConnecting }) => (
       }
     >
       {isServerConnecting ? (
+        // Server icon with continuous pulse and glow animation
         <motion.div
           initial={{ scale: 1 }}
           animate={{
@@ -51,20 +64,24 @@ const Loading = ({ isServerConnecting }) => (
             transformOrigin: "center center"
           }}
         >
-          <Server 
-            style={{ 
-              width: "100%", 
+          <Server
+            style={{
+              width: "100%",
               height: "100%",
-            }} 
+            }}
           />
         </motion.div>
       ) : (
+        // Custom loader component for media loading state
         <BBLoader loading={true} color="#FFFFFF" size={100} />
       )}
     </motion.div>
+
+    {/* Status message with fade and bounce animation */}
     <motion.p
       initial={{ opacity: 0, y: 10 }}
       animate={isServerConnecting ? {
+        // Server connecting message animation
         opacity: [0.4, 1, 0.4],
         y: [0, -5, 0],
         filter: [
@@ -73,6 +90,7 @@ const Loading = ({ isServerConnecting }) => (
           "drop-shadow(0 0 0px rgba(255,255,255,0))"
         ]
       } : {
+        // Media loading message animation
         opacity: 1,
         y: 0
       }}

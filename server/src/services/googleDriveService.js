@@ -58,7 +58,7 @@ export class GoogleDriveService {
       // Download new files
       for (const file of files) {
         const localPath = path.join(this.downloadPath, file.name);
-        
+
         // Skip if file already exists
         if (await fs.pathExists(localPath)) {
           continue;
@@ -140,5 +140,17 @@ export class GoogleDriveService {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
     }
+  }
+ async pause() {
+    this.logger.info('Pausing Google Drive service');
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
+  }
+
+  async resume() {
+    this.logger.info('Resuming Google Drive service');
+    await this.startSync(this.syncInterval);
   }
 }

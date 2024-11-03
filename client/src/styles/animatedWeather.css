@@ -2,16 +2,16 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.2), 
-    rgba(255, 255, 255, 0.1)
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.1));
   backdrop-filter: blur(15px);
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0 0 0 1.5rem;  /* Only round the bottom-left corner */
-  box-shadow: 
-    0 15px 35px rgba(0, 0, 0, 0.1), 
+  border-radius: 0 0 0 1.5rem;
+  /* Only round the bottom-left corner */
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.1),
     0 5px 15px rgba(0, 0, 0, 0.05);
   max-width: min(90vw, 200px);
   transition: all 0.4s ease;
@@ -60,13 +60,27 @@
 }
 
 @keyframes temperature-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes wind-sway {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(5deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(5deg);
+  }
 }
 
 @media (max-width: 600px) {
