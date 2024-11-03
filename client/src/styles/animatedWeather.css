@@ -9,7 +9,6 @@
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 0 0 0 1.5rem;
-  /* Only round the bottom-left corner */
   box-shadow:
     0 15px 35px rgba(0, 0, 0, 0.1),
     0 5px 15px rgba(0, 0, 0, 0.05);

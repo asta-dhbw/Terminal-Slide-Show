@@ -11,16 +11,26 @@ import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
 import { config } from '../../../../config/config';
 
+/**
+ * @component Slideshow
+ * @description A media slideshow component that handles automatic playback, navigation,
+ * loading states, and error handling. Only active when schedule is enabled.
+ * 
+ * @returns {JSX.Element} The rendered slideshow component
+ */
 const Slideshow = () => {
   const isScheduleActive = useSchedule();
-  // Only initialize hooks if schedule is active
+
+  // Custom hooks for managing media, controls, and server state
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
   const showControls = useControlsVisibility();
   const isServerConnected = useServerStatus(isScheduleActive);
+
+  // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
 
-  // Stop all timers and clear media when schedule is inactive
+  // Cleanup effect when schedule becomes inactive
   useEffect(() => {
     if (!isScheduleActive) {
       clearTimeout(autoContinueTimer.current);
@@ -37,6 +47,7 @@ const Slideshow = () => {
     setTimeout(() => setPaused(false), 200);
   };
 
+  // Auto-advance timer effect
   useEffect(() => {
     if (paused || !media || loading || !isScheduleActive) return;
 
@@ -78,6 +89,7 @@ const Slideshow = () => {
         )}
       </AnimatePresence>
 
+      {/* Navigation controls */}
       <Controls
         show={showControls && !loading && media}
         onPrevious={() => handleNavigate('previous')}
@@ -85,12 +97,14 @@ const Slideshow = () => {
         disabled={loading || !serverReady || paused}
       />
 
+      {/* Loading overlay */}
       <AnimatePresence>
         {(loading || !serverReady) && isScheduleActive && (
           <Loading isServerConnecting={!serverReady} />
         )}
       </AnimatePresence>
 
+      {/* Error toast */}
       <AnimatePresence>
         {error && !loading && isScheduleActive && (
           <ErrorToast message={error} />

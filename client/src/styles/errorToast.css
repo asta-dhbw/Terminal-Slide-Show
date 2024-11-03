@@ -1,14 +1,9 @@
 body.error-toast-active {
     background-image: url("/LOGO.png");
-    /* Add this line */
     background-size: cover;
-    /* Ensure the logo covers the entire background */
     background-repeat: no-repeat;
-    /* Prevent the logo from repeating */
     background-position: center;
-    /* Center the logo */
     position: relative;
-    /* Ensure the body is positioned relative for the overlay */
 }
 
 .overlay {
@@ -18,9 +13,7 @@ body.error-toast-active {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    /* Black overlay with 50% opacity */
     z-index: 10;
-    /* Ensure the overlay is above the background but below the toast */
 }
 
 .error-toast {
@@ -29,7 +22,6 @@ body.error-toast-active {
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
-    /* Ensure the toast is above the overlay */
     background-color: rgba(239, 68, 68, 0.2);
     backdrop-filter: blur(10px);
     border-radius: 0.5rem;

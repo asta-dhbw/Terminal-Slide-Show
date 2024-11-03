@@ -25,7 +25,7 @@ const DynamicDailyView = () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      const quotesArray = data.quotes; // Access the quotes array
+      const quotesArray = data.quotes;
       const randomIndex = Math.floor(Math.random() * quotesArray.length);
       setQuote(quotesArray[randomIndex]);
       setError(null);

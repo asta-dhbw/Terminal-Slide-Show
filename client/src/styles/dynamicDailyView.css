@@ -265,7 +265,6 @@
   }
 }
 
-/* Update the existing DHBW logo styles */
 .dhbw-logo {
   position: absolute;
   bottom: 70px;
@@ -309,7 +308,6 @@
     saturate(1.2)
     /* Boost color saturation */
     hue-rotate(-5deg);
-  /* Slight hue adjustment to preserve red */
 }
 
 .dhbw-logo:hover {

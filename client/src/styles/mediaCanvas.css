@@ -14,7 +14,6 @@ video {
   background-color: rgba(0, 0, 0, 0);
 }
 
-/* Ensure the container takes full dimensions */
 .relative {
   position: relative;
   width: 100%;

@@ -17,7 +17,6 @@
   position: absolute;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.7);
-  /* Semi-transparent layer */
   z-index: 1;
 }
 
@@ -29,5 +28,4 @@
 
 .loading-overlay>* {
   z-index: 2;
-  /* Ensure all children are above the background layer */
 }
