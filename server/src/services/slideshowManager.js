@@ -5,16 +5,17 @@ import { Logger } from '../utils/logger.js';
 import { DateParser } from '../utils/dateParser.js';
 import { config } from '../../../config/config.js';
 import { isValidFile } from '../utils/fileValidator.js';
+
 export class SlideshowManager {
   constructor() {
     this.logger = new Logger('SlideshowManager');
     this.downloadPath = config.paths.downloadPath;
     this.mediaPath = path.join(process.cwd(), this.downloadPath);
-    this.currentIndex = 0;
     this.mediaFiles = [];
     this.watchInterval = null;
     this.initialized = false;
-    this.isPaused = false;  // Add flag to track pause state
+    this.isPaused = false;
+    this.clientSessions = new Map(); // Store client-specific indices
   }
 
   async initialize() {
@@ -29,10 +30,7 @@ export class SlideshowManager {
   }
 
   async updateMediaList() {
-    // Don't update if paused
-    if (this.isPaused) {
-      return;
-    }
+    if (this.isPaused) return;
 
     try {
       const files = await fs.readdir(this.mediaPath);
@@ -54,33 +52,59 @@ export class SlideshowManager {
     }
   }
 
-  getCurrentMedia() {
+  // Get or create client session
+  getClientSession(clientId) {
+    if (!this.clientSessions.has(clientId)) {
+      this.clientSessions.set(clientId, {
+        currentIndex: 0,
+        lastAccessed: Date.now()
+      });
+    }
+    return this.clientSessions.get(clientId);
+  }
+
+  // Clean up old sessions periodically
+  cleanupSessions() {
+    const now = Date.now();
+    const expirationTime = 24 * 60 * 60 * 1000; // 24 hours
+    
+    for (const [clientId, session] of this.clientSessions.entries()) {
+      if (now - session.lastAccessed > expirationTime) {
+        this.clientSessions.delete(clientId);
+      }
+    }
+  }
+
+  getCurrentMedia(clientId) {
     if (this.mediaFiles.length === 0) return null;
-    return this.mediaFiles[this.currentIndex];
+    const session = this.getClientSession(clientId);
+    session.lastAccessed = Date.now();
+    return this.mediaFiles[session.currentIndex];
   }
 
-  nextMedia() {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia();
-    this.currentIndex = (this.currentIndex + 1) % this.mediaFiles.length;
-    return this.getCurrentMedia();
+  nextMedia(clientId) {
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
+    const session = this.getClientSession(clientId);
+    session.currentIndex = (session.currentIndex + 1) % this.mediaFiles.length;
+    session.lastAccessed = Date.now();
+    return this.getCurrentMedia(clientId);
   }
 
-  previousMedia() {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia();
-    this.currentIndex = (this.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
-    return this.getCurrentMedia();
+  previousMedia(clientId) {
+    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
+    const session = this.getClientSession(clientId);
+    session.currentIndex = (session.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
+    session.lastAccessed = Date.now();
+    return this.getCurrentMedia(clientId);
   }
 
   startWatching(interval = 1000) {
-    // Don't start if already paused
-    if (this.isPaused) {
-      return;
-    }
+    if (this.isPaused) return;
 
     this.watchInterval = setInterval(async () => {
-      // Only update if not paused
       if (!this.isPaused) {
         await this.updateMediaList();
+        this.cleanupSessions(); // Cleanup old sessions periodically
       }
     }, interval);
   }
@@ -94,7 +118,7 @@ export class SlideshowManager {
 
   async pause() {
     this.logger.info('Pausing Slideshow Manager');
-    this.isPaused = true;  // Set pause flag
+    this.isPaused = true;
     if (this.watchInterval) {
       clearInterval(this.watchInterval);
       this.watchInterval = null;
@@ -103,8 +127,8 @@ export class SlideshowManager {
 
   async resume() {
     this.logger.info('Resuming Slideshow Manager');
-    this.isPaused = false;  // Clear pause flag
-    await this.updateMediaList();  // Get fresh list
+    this.isPaused = false;
+    await this.updateMediaList();
     this.startWatching(config.slideshow.watchInterval);
   }
 }

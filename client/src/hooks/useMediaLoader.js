@@ -3,12 +3,18 @@ import { config } from '../../../config/config';
 
 export const useMediaLoader = (isScheduleActive = true) => {
   const [media, setMedia] = useState(null);
-  const [loading, setLoading] = useState(false); // Start with false since we won't load if schedule is inactive
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [serverReady, setServerReady] = useState(false);
   const [lastModified, setLastModified] = useState(null);
   const [serverReconnected, setServerReconnected] = useState(false);
   const [initialLoadStartTime, setInitialLoadStartTime] = useState(null);
+  const [clientId] = useState(() => localStorage.getItem('clientId') || Math.random().toString(36).substring(7));
+
+  // Store clientId in localStorage
+  useEffect(() => {
+    localStorage.setItem('clientId', clientId);
+  }, [clientId]);
 
   // Reset all state when schedule becomes inactive
   useEffect(() => {
@@ -23,15 +29,23 @@ export const useMediaLoader = (isScheduleActive = true) => {
     }
   }, [isScheduleActive]);
 
+  const fetchWithClientId = useCallback(async (url) => {
+    const response = await fetch(url, {
+      headers: {
+        'X-Client-Id': clientId
+      }
+    });
+    return response;
+  }, [clientId]);
+
   const checkServer = useCallback(async () => {
-    // Don't check server if schedule is inactive
     if (!isScheduleActive) {
       setServerReady(false);
       return false;
     }
 
     try {
-      const response = await fetch('/api/health');
+      const response = await fetchWithClientId('/api/health');
       const isReady = response.ok;
       
       if (!serverReady && isReady) {
@@ -46,14 +60,13 @@ export const useMediaLoader = (isScheduleActive = true) => {
       setServerReady(false);
       return false;
     }
-  }, [serverReady, isScheduleActive]);
+  }, [serverReady, isScheduleActive, fetchWithClientId]);
 
   const loadMedia = useCallback(async () => {
-    // Don't load media if schedule is inactive
     if (!serverReady || !isScheduleActive) return;
     
     try {
-      const response = await fetch('/api/current-media');
+      const response = await fetchWithClientId('/api/current-media');
       const data = await response.json();
       
       if (data.error) {
@@ -89,14 +102,13 @@ export const useMediaLoader = (isScheduleActive = true) => {
       setMedia(null);
       setLoading(false);
     }
-  }, [serverReady, lastModified, serverReconnected, initialLoadStartTime, isScheduleActive]);
+  }, [serverReady, lastModified, serverReconnected, initialLoadStartTime, isScheduleActive, fetchWithClientId]);
 
   const navigateMedia = useCallback(async (direction) => {
-    // Don't navigate if schedule is inactive
     if (!serverReady || !isScheduleActive) return;
     
     try {
-      const response = await fetch(`/api/${direction}-media`);
+      const response = await fetchWithClientId(`/api/${direction}-media`);
       const data = await response.json();
       
       if (data.error) {
@@ -113,13 +125,12 @@ export const useMediaLoader = (isScheduleActive = true) => {
     } finally {
       setLoading(false);
     }
-  }, [serverReady, isScheduleActive]);
+  }, [serverReady, isScheduleActive, fetchWithClientId]);
 
   useEffect(() => {
     let serverPollInterval;
     let mediaPollInterval;
 
-    // Only start polling if schedule is active
     if (isScheduleActive) {
       const init = async () => {
         const isReady = await checkServer();
@@ -148,7 +159,8 @@ export const useMediaLoader = (isScheduleActive = true) => {
     loading,
     error,
     serverReady,
-    navigateMedia
+    navigateMedia,
+    clientId
   };
 };
 

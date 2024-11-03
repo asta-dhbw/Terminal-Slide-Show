@@ -67,24 +67,35 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', handleClientActivity);
+app.use('/api', (req, res, next) => {
+    if (!req.headers['x-client-id']) {
+      // Generate a random client ID if not provided
+      req.clientId = Math.random().toString(36).substring(7);
+      res.setHeader('X-Client-Id', req.clientId);
+    } else {
+      req.clientId = req.headers['x-client-id'];
+    }
+    next();
+  });
+  
 
 
 // API endpoints
 app.get('/api/current-media', (req, res) => {
-    logger.debug('Getting current media');
-    const media = slideshowManager.getCurrentMedia();
+    logger.debug(`Getting current media for client ${req.clientId}`);
+    const media = slideshowManager.getCurrentMedia(req.clientId);
     res.json(media || { error: 'No media available' });
-});
-
-app.get('/api/next-media', (req, res) => {
-    logger.debug('Navigating to next media');
-    const media = slideshowManager.nextMedia();
+  });
+  
+  app.get('/api/next-media', (req, res) => {
+    logger.debug(`Navigating to next media for client ${req.clientId}`);
+    const media = slideshowManager.nextMedia(req.clientId);
     res.json(media || { error: 'No media available' });
-});
-
-app.get('/api/previous-media', (req, res) => {
-    logger.debug('Navigating to previous media');
-    const media = slideshowManager.previousMedia();
+  });
+  
+  app.get('/api/previous-media', (req, res) => {
+    logger.debug(`Navigating to previous media for client ${req.clientId}`);
+    const media = slideshowManager.previousMedia(req.clientId);
     res.json(media || { error: 'No media available' });
 });
 
