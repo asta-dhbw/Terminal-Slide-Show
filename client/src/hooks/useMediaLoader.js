@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from '../../../config/config';
 
 export const useMediaLoader = (isScheduleActive = true) => {
@@ -9,7 +10,11 @@ export const useMediaLoader = (isScheduleActive = true) => {
   const [lastModified, setLastModified] = useState(null);
   const [serverReconnected, setServerReconnected] = useState(false);
   const [initialLoadStartTime, setInitialLoadStartTime] = useState(null);
-  const [clientId] = useState(() => localStorage.getItem('clientId') || Math.random().toString(36).substring(7));
+  const [clientId] = useState(() => {
+    //if only one use per browser is wanted:  const storedId = localStorage.getItem('clientId');
+    // and combine this settin original instances detect other tabs via storage
+    return uuidv4(); // storedId ||
+  });
 
   // Store clientId in localStorage
   useEffect(() => {
@@ -47,13 +52,13 @@ export const useMediaLoader = (isScheduleActive = true) => {
     try {
       const response = await fetchWithClientId('/api/health');
       const isReady = response.ok;
-      
+
       if (!serverReady && isReady) {
         setServerReconnected(true);
         setLoading(true);
         setInitialLoadStartTime(Date.now());
       }
-      
+
       setServerReady(isReady);
       return isReady;
     } catch {
@@ -64,27 +69,27 @@ export const useMediaLoader = (isScheduleActive = true) => {
 
   const loadMedia = useCallback(async () => {
     if (!serverReady || !isScheduleActive) return;
-    
+
     try {
       const response = await fetchWithClientId('/api/current-media');
       const data = await response.json();
-      
+
       if (data.error) {
         setError(null);
         setMedia(null);
         setLoading(false);
         return;
       }
-  
+
       if (serverReconnected || data.lastModified !== lastModified) {
         setLastModified(data.lastModified);
         setMedia(data);
         setError(null);
-        
+
         if (serverReconnected && initialLoadStartTime) {
           const elapsed = Date.now() - initialLoadStartTime;
           const remainingTime = Math.max(0, config.polling.initLoadDuration - elapsed);
-          
+
           setTimeout(() => {
             setLoading(false);
             setServerReconnected(false);
@@ -106,11 +111,11 @@ export const useMediaLoader = (isScheduleActive = true) => {
 
   const navigateMedia = useCallback(async (direction) => {
     if (!serverReady || !isScheduleActive) return;
-    
+
     try {
       const response = await fetchWithClientId(`/api/${direction}-media`);
       const data = await response.json();
-      
+
       if (data.error) {
         setError('No media available');
         setMedia(null);
