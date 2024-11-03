@@ -1,20 +1,20 @@
 version: '3.8'
+
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - NODE_ENV=production
-      - VITE_BACKEND_URL=http://backend:3000
-    volumes:
-      - ./client:/app/client
-      - frontend_node_modules:/app/node_modules  # Named volume
-    networks:
-      - app-network
-
+      build:
+        context: .
+        dockerfile: Dockerfile.frontend
+      ports:
+        - "5173:5173"
+      environment:
+        - NODE_ENV=production
+        - VITE_BACKEND_URL=http://backend:3000
+      volumes:
+        - ./client:/app/client
+        - /app/node_modules
+      networks:
+        - app-network
   backend:
     build:
       context: .
@@ -24,16 +24,10 @@ services:
     environment:
       - NODE_ENV=production
     volumes:
-      - ./downloads:/app/downloads
-      - backend_node_modules:/app/node_modules  # Named volume
+      - ./downloads:/app/downloads  # Keep this if you need persistent storage for downloads
     networks:
       - app-network
 
 networks:
   app-network:
-    driver: bridge
-
-volumes:
-  frontend_node_modules:
-  backend_node_modules:
     driver: bridge
