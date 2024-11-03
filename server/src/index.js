@@ -23,6 +23,8 @@ async function initialize() {
         await googleDriveService.initialize();
         await googleDriveService.startSync();
         await slideshowManager.initialize();
+
+        googleDriveService.pause(); // Pause the Google Drive service on startup
         slideshowManager.pause(); // Pause the slideshow on startup
 
         // Initialize power manager and register services
