@@ -128,6 +128,21 @@ schedule: {
 }
 ```
 
+## Power Management
+
+The application includes an intelligent power management system that:
+
+- Automatically pauses backend services when no clients are connected
+- Stops polling and file synchronization during inactive periods
+- Resumes services when client activity is detected
+- Configurable timeout in `config.js`:
+
+```javascript
+backendPowerSaving: {
+  timeout: 5 * 60 * 1000  // 5 minutes in milliseconds
+}
+```
+
 ## Auto-start Setup (Raspberry Pi)
 
 1. Create a systemd service file:

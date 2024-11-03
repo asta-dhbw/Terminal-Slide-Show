@@ -1,17 +1,24 @@
 FROM node:18-alpine
-
 WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
 
 # Install dependencies first for better caching
 COPY package*.json ./
 RUN npm install
 
+# If that fails, try with legacy peer deps and force
+RUN npm install --legacy-peer-deps --force || true
+
 # Copy the entire project structure
 COPY . .
 
-# Set the host for Vite
+# Build the frontend
+RUN npm run build
+
+# Set the host for Vite 
 ENV VITE_HOST=0.0.0.0
 
 EXPOSE 5173
-
 CMD ["npm", "run", "dev:client"]
