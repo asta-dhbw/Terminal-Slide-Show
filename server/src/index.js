@@ -21,6 +21,7 @@ const powerManager = new PowerManager({
 async function initialize() {
     try {
         await googleDriveService.initialize();
+        await googleDriveService.startSync();
         await slideshowManager.initialize();
         slideshowManager.pause(); // Pause the slideshow on startup
 
