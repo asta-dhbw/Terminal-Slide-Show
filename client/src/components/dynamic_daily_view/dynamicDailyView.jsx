@@ -171,8 +171,7 @@ const DynamicDailyView = () => {
 
       <div className="content-wrapper">
         <div className="dhbw-logo">
-          {/* <a href="https://www.stuv-ravensburg.de"><img src="/dhbw.png" alt="DHBW Logo" /></a> */}
-        Drecks STUV LOGO VORSCHRIFT VERBOT *EHUST*
+          <a href="https://www.stuv-ravensburg.de"><img src="/slideshow.png" alt="DHBW Logo" /></a>
         </div>
 
         <div className="location-badge">

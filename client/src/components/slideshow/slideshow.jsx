@@ -32,7 +32,7 @@ const Slideshow = () => {
   // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
-
+  
   // Cleanup effect when schedule becomes inactive
   useEffect(() => {
     if (!isScheduleActive) {
