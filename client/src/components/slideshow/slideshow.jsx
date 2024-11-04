@@ -4,6 +4,7 @@ import { useMediaLoader } from '../../hooks/useMediaLoader';
 import { useControlsVisibility } from '../../hooks/useControlsVisibility';
 import { useServerStatus } from '../../hooks/useServerStatus';
 import { useSchedule } from '../../hooks/useSchedule';
+import { isRaspberryPi } from '../../utils/deviceDetection';
 import MediaCanvas from './mediaCanvas';
 import Controls from './controls';
 import Loading from '../loading';
@@ -19,7 +20,9 @@ import { config } from '../../../../config/config';
  * @returns {JSX.Element} The rendered slideshow component
  */
 const Slideshow = () => {
-  const isScheduleActive = useSchedule();
+  const scheduleEnabled = isRaspberryPi();
+  const isScheduleActive = scheduleEnabled ? useSchedule() : true;
+
 
   // Custom hooks for managing media, controls, and server state
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
