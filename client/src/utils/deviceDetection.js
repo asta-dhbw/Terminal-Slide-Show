@@ -3,7 +3,7 @@ export const isRaspberryPi = () => {
 
   // Check user agent for Raspberry Pi specific identifiers
   const userAgent = window.navigator.userAgent.toLowerCase();
-  
+  console.log(userAgent);
   // Common identifiers for Raspberry Pi browsers
   return userAgent.includes('linux armv') || 
          userAgent.includes('raspbian') ||
