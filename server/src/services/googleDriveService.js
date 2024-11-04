@@ -184,10 +184,7 @@ export class GoogleDriveService {
   
  async pause() {
     this.logger.info('Pausing Google Drive service');
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-      this.syncInterval = null;
-    }
+    this.stop();
   }
 
   async resume() {
