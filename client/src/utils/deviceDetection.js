@@ -7,5 +7,6 @@ export const isRaspberryPi = () => {
   // Common identifiers for Raspberry Pi browsers
   return userAgent.includes('linux armv') || 
          userAgent.includes('raspbian') ||
+         userAgent.includes('aarch64') ||
          userAgent.includes('arm64')
 };
