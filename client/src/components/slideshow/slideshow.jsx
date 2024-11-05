@@ -12,28 +12,28 @@ import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
 import { config } from '../../../../config/config';
 
+/**
+ * @component Slideshow
+ * @description A media slideshow component that handles automatic playback, navigation,
+ * loading states, and error handling. Only active when schedule is enabled.
+ * 
+ * @returns {JSX.Element} The rendered slideshow component
+ */
 const Slideshow = () => {
   const scheduleEnabled = isRaspberryPi();
   const isScheduleActive = scheduleEnabled ? useSchedule() : true;
+
+
+  // Custom hooks for managing media, controls, and server state
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
   const showControls = useControlsVisibility();
   const isServerConnected = useServerStatus(isScheduleActive);
+
+  // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
-  
-  // Debug logging for state changes
-  useEffect(() => {
-    console.log('Slideshow State:', {
-      hasMedia: !!media,
-      loading,
-      error,
-      serverReady,
-      isScheduleActive,
-      isServerConnected,
-      paused
-    });
-  }, [media, loading, error, serverReady, isScheduleActive, isServerConnected, paused]);
 
+  // Cleanup effect when schedule becomes inactive
   useEffect(() => {
     if (!isScheduleActive) {
       clearTimeout(autoContinueTimer.current);
@@ -50,11 +50,9 @@ const Slideshow = () => {
     setTimeout(() => setPaused(false), 200);
   };
 
+  // Auto-advance timer effect
   useEffect(() => {
-    if (paused || !media || loading || !isScheduleActive) {
-      clearTimeout(autoContinueTimer.current);
-      return;
-    }
+    if (paused || !media || loading || !isScheduleActive) return;
 
     autoContinueTimer.current = setTimeout(() => {
       navigateMedia('next');
@@ -63,29 +61,60 @@ const Slideshow = () => {
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, navigateMedia, isScheduleActive]);
 
+  // Return black screen when schedule is inactive
   if (!isScheduleActive) {
     return <div className="w-screen h-screen bg-black" />;
   }
 
   return (
     <div className="slideshow-container">
-      {media ? (
-        <AnimatePresence mode="wait">
-          <div key="media-container" className="relative w-full h-full">
-            <MediaCanvas media={media} />
-            {showControls && (
-              <Controls
-                show={true}
-                onPrevious={() => handleNavigate('previous')}
-                onNext={() => handleNavigate('next')}
-                disabled={!serverReady || paused}
-              />
-            )}
-          </div>
-        </AnimatePresence>
-      ) : (
+
+      <AnimatePresence>
+        {media && !loading && (
+          <MediaCanvas media={media} />
+        )}
+        {/* Navigation controls */}
+        <Controls
+          show={showControls && !loading && media}
+          onPrevious={() => handleNavigate('previous')}
+          onNext={() => handleNavigate('next')}
+          disabled={loading || !serverReady || paused}
+        />
+      </AnimatePresence>
+
+      {/* Black screen when schedule inactive */}
+      {!isScheduleActive && (
+        <div className="w-screen h-screen bg-black" />
+      )}
+
+      {/* Dynamic daily view */}
+      {!media && !error && isScheduleActive && (
         <DynamicDailyView />
       )}
+
+      {/* Loading states when schedule active */}
+      {!isServerConnected && isScheduleActive && (
+        <Loading key="loading" isServerConnecting={!isServerConnected} />
+      )}
+
+      {loading && isScheduleActive && (
+        <Loading key="loading" isServerConnecting={false} />
+      )}
+
+
+      {/* Loading overlay */}
+      <AnimatePresence>
+        {(loading || !serverReady) && isScheduleActive && (
+          <Loading isServerConnecting={!serverReady} />
+        )}
+      </AnimatePresence>
+
+      {/* Error toast */}
+      <AnimatePresence>
+        {error && !loading && isScheduleActive && (
+          <ErrorToast message={error} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

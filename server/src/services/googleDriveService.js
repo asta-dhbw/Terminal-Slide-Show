@@ -15,12 +15,15 @@ export class GoogleDriveService {
    * Creates a new GoogleDriveService instance
    * @constructor
    */
-  constructor() {
-    this.logger = new Logger('GoogleDriveService');
-    this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
-    this.syncInterval = config.sync.interval;
-    this.initialized = false;
-  }
+    constructor() {
+      this.logger = new Logger('GoogleDriveService');
+      this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
+      this.syncInterval = null;
+      this.initialized = false;
+      this.isPaused = false;
+    }
+  
+
 
   async initialize() {
     try {
@@ -49,18 +52,33 @@ export class GoogleDriveService {
    * @param {number} [interval=config.sync.interval] - Sync interval in milliseconds
    * @returns {Promise<void>}
    */
-  async startSync(interval = config.sync.interval) {
-    this.syncInterval = setInterval(async () => {
-      try {
-        await this.syncFiles();
-      } catch (error) {
-        this.logger.error('Sync failed:', error);
+    async startSync(interval = config.sync.interval) {
+      // Clear any existing interval first
+      if (this.syncInterval) {
+        clearInterval(this.syncInterval);
+        this.syncInterval = null;
       }
-    }, interval);
-
-    // Initial sync
-    await this.syncFiles();
-  }
+  
+      if (this.isPaused) {
+        this.logger.info('Service is paused, not starting sync');
+        return;
+      }
+  
+      this.syncInterval = setInterval(async () => {
+        if (!this.isPaused) {
+          try {
+            await this.syncFiles();
+          } catch (error) {
+            this.logger.error('Sync failed:', error);
+          }
+        }
+      }, interval);
+  
+      // Initial sync
+      if (!this.isPaused) {
+        await this.syncFiles();
+      }
+    }
 
     /**
    * Synchronizes files between Google Drive and local storage
@@ -181,15 +199,17 @@ export class GoogleDriveService {
       this.syncInterval = null;
     }
   }
-  
- async pause() {
+
+  async pause() {
     this.logger.info('Pausing Google Drive service');
+    this.isPaused = true;
     this.stop();
   }
 
   async resume() {
     this.logger.info('Resuming Google Drive service');
-    await this.startSync(this.syncInterval);
+    this.isPaused = false;
+    await this.startSync(config.sync.interval);
   }
 }
 

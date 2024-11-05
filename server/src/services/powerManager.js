@@ -56,7 +56,11 @@ export class PowerManager {
     this.logger.info('Entering power-saving mode');
     this.isActive = false;
 
+    // Clear any existing timers in services before pausing
     for (const [name, service] of this.services) {
+      if (service.stop) {
+        service.stop();
+      }
       try {
         await service.pause();
         this.logger.info(`Paused service: ${name}`);
