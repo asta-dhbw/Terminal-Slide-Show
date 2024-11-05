@@ -31,17 +31,21 @@ timestamp() {
 # Create logs directory if it doesn't exist
 mkdir -p "$LOG_DIR"
 
-# Start X server with Openbox on virtual terminal 1
-echo "$(timestamp) Starting X server with Openbox..." >> "$LOG_FILE"  
-startx /usr/bin/openbox-session -- vt1 >> "$LOG_FILE" 2>&1 &
+# Function to log to both terminal and file
+log_message() {
+    echo "$(timestamp) $1" | tee -a "$LOG_FILE"
+}
 
+# Start X server with Openbox on virtual terminal 1
+log_message "Starting X server with Openbox..."
+startx /usr/bin/openbox-session -- vt1 2>&1 | tee -a "$LOG_FILE" &
 
 # Wait for X server to start
-echo "$(timestamp) Waiting for X server..." >> "$LOG_FILE"
+log_message "Waiting for X server..."
 sleep 3
 
 # Launch Firefox in kiosk mode with the custom profile
-echo "$(timestamp) Launching Firefox in kiosk mode..." >> "$LOG_FILE"
-DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default http://shape-z.de:5173/ >> "$LOG_FILE" 2>&1
+log_message "Launching Firefox in kiosk mode..."
+DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default http://shape-z.de:5173/ 2>&1 | tee -a "$LOG_FILE"
 
-echo "$(timestamp) Kiosk startup complete" >> "$LOG_FILE"
+log_message "Kiosk startup complete"
