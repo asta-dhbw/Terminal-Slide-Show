@@ -35,7 +35,7 @@ cat > ~/.config/openbox/autostart << EOF
 sleep 2
 
 # Start Firefox in kiosk mode
-firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default "http://shape-z.de:5173/" &
+firefox --profile ~/.mozilla/firefox/kiosk.default "http://shape-z.de:5173/" &
 EOF
 
 # Make autostart executable
