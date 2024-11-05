@@ -36,13 +36,27 @@ log_message() {
     echo "$(timestamp) $1" | tee -a "$LOG_FILE"
 }
 
-# Start X server with Openbox on virtual terminal 1
-log_message "Starting X server with Openbox..."
-startx /usr/bin/openbox-session -- vt1 2>&1 | tee -a "$LOG_FILE" &
+# Function to check if X is running
+check_x_server() {
+    for i in {1..10}; do
+        if xdpyinfo >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
 
-# Wait for X server to start
+# Start X server with Openbox on current VT
+log_message "Starting X server with Openbox..."
+startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE" &
+
+# Wait for X server and check if it's running
 log_message "Waiting for X server..."
-sleep 3
+if ! check_x_server; then
+    log_message "ERROR: X server failed to start properly"
+    exit 1
+fi
 
 # Launch Firefox in kiosk mode with the custom profile
 log_message "Launching Firefox in kiosk mode..."
