@@ -43,18 +43,17 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
-  // Update showingDynamicView when media changes
-  useEffect(() => {
-    setShowingDynamicView(!media);
-  }, [media]);
-
   const handleNavigate = (direction) => {
     if (!isScheduleActive) return;
     setPaused(true);
 
     if (showingDynamicView) {
-      setShowingDynamicView(false);
-      navigateMedia(direction);
+      navigateMedia(direction).then(success => {
+        // Only switch away from DynamicView if we successfully got media
+        if (success) {
+          setShowingDynamicView(false);
+        }
+      });
     } else {
       const shouldShowDynamic = direction === 'next';
       if (shouldShowDynamic) {
