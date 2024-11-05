@@ -27,7 +27,7 @@ timestamp() {
 }
 
 log_message() {
-    echo "$(timestamp) $1" | tee -a "$LOG_FILE"
+    echo -e "$(timestamp) $1" | tee -a "$LOG_FILE"
 }
 
 cleanup_installation() {
@@ -40,6 +40,10 @@ cleanup_installation() {
     systemctl daemon-reload
     log_message "Cleanup complete"
 }
+
+
+# Better formatted log message
+log_message "\n----- Starting Kiosk Installation -----\n"
 
 # Überprüfen ob Script als root läuft
 if [ "$EUID" -ne 0 ]; then
@@ -96,16 +100,6 @@ chmod 600 $KIOSK_HOME/.Xauthority
 chown -R $KIOSK_USER:$KIOSK_USER $KIOSK_HOME
 chmod 700 $KIOSK_HOME
 
-# Konfiguriere sudo für spezifische X-Server Befehle
-log_message "Konfiguriere sudo-Rechte..."
-cat > /etc/sudoers.d/kiosk-x << EOF
-$KIOSK_USER ALL=(root) NOPASSWD: /usr/bin/X
-$KIOSK_USER ALL=(root) NOPASSWD: /usr/bin/pkill Xorg
-$KIOSK_USER ALL=(root) NOPASSWD: /bin/rm -f /tmp/.X*-lock
-$KIOSK_USER ALL=(root) NOPASSWD: /bin/rm -f /tmp/.X11-unix/X*
-EOF
-chmod 440 /etc/sudoers.d/kiosk-x
-
 # Service-Datei erstellen
 log_message "Erstelle systemd Service..."
 cat > "$SERVICE_PATH" << EOF
@@ -113,6 +107,8 @@ cat > "$SERVICE_PATH" << EOF
 Description=Kiosk Mode Service
 After=network.target
 After=systemd-logind.service
+After=getty@tty1.service
+Conflicts=getty@tty1.service
 StartLimitIntervalSec=0
 
 [Service]
@@ -121,12 +117,24 @@ User=$KIOSK_USER
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=$KIOSK_HOME/.Xauthority
 Environment=HOME=$KIOSK_HOME
+WorkingDirectory=$KIOSK_HOME
+
+# Ensure we have a tty for X
+ExecStartPre=/bin/chvt 1
+ExecStartPre=/bin/sh -c 'setfont'
 ExecStart=/bin/bash $KIOSK_SCRIPT_DEST
+
 Restart=always
 RestartSec=10
 TimeoutStartSec=60
 KillMode=mixed
 TimeoutStopSec=30
+
+# TTY Access
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
 
 # Sicherheitseinschränkungen
 NoNewPrivileges=yes
@@ -141,12 +149,34 @@ LockPersonality=yes
 RestrictNamespaces=yes
 RestrictRealtime=yes
 ReadWritePaths=$KIOSK_HOME/logs
+ReadWritePaths=$KIOSK_HOME/.mozilla
+ReadWritePaths=$KIOSK_HOME/.config
+ReadWritePaths=$KIOSK_HOME/.Xauthority
+ReadWritePaths=/tmp/.X11-unix/
+ReadWritePaths=/tmp/.X*-lock
 
 [Install]
 WantedBy=multi-user.target
+DefaultInstance=tty1
 EOF
 
 chmod 644 "$SERVICE_PATH"
+
+# Konfiguriere sudo für spezifische X-Server Befehle
+log_message "Konfiguriere sudo-Rechte..."
+cat > /etc/sudoers.d/kiosk-x << EOF
+$KIOSK_USER ALL=(root) NOPASSWD: /usr/bin/X
+$KIOSK_USER ALL=(root) NOPASSWD: /usr/bin/pkill Xorg
+$KIOSK_USER ALL=(root) NOPASSWD: /bin/rm -f /tmp/.X*-lock
+$KIOSK_USER ALL=(root) NOPASSWD: /bin/rm -f /tmp/.X11-unix/X*
+$KIOSK_USER ALL=(root) NOPASSWD: /bin/chvt 1
+EOF
+chmod 440 /etc/sudoers.d/kiosk-x
+
+# Zusätzliche X11-Berechtigungen für den Kiosk-User
+log_message "Konfiguriere X11-Berechtigungen..."
+usermod -a -G tty $KIOSK_USER
+usermod -a -G video $KIOSK_USER
 
 # systemd neuladen und Service aktivieren
 log_message "Aktiviere systemd Service..."

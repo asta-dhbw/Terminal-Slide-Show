@@ -19,7 +19,7 @@ timestamp() {
 }
 
 log_message() {
-    echo "$(timestamp) $1" | tee -a "$LOG_FILE"
+    echo -e "$(timestamp) $1" | tee -a "$LOG_FILE"
 }
 
 cleanup() {
@@ -155,6 +155,7 @@ disable_mouse_cursor() {
 }
 
 main() {
+    log_message "\n----- Starting Kiosk Mode -----\n"
     cleanup
     create_firefox_profile
     setup_openbox
