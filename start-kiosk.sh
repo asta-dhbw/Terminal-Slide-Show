@@ -155,12 +155,6 @@ disable_mouse_cursor() {
 }
 
 main() {
-    # Install required Python package if missing
-    if ! dpkg -l | grep -q python3-xdg; then
-        log_message "Installing python3-xdg package..."
-        sudo apt-get update && sudo apt-get install -y python3-xdg
-    fi
-    
     cleanup
     create_firefox_profile
     setup_openbox
