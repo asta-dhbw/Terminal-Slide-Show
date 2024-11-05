@@ -118,9 +118,10 @@ const Slideshow = () => {
         )}
       </AnimatePresence>
 
-      {/* Error toast */}
+
+      {/* Only show error toast when not in dynamic view */}
       <AnimatePresence>
-        {error && !loading && isScheduleActive && (
+        {error && !loading && isScheduleActive && !showingDynamicView && (
           <ErrorToast message={error} />
         )}
       </AnimatePresence>
