@@ -4,7 +4,7 @@
 
 # Configuration variables
 KIOSK_URL=${1:-"http://195.90.223.88:5173/"}  # Default URL if none provided
-KIOSK_USER="pi"
+KIOSK_USER="kiosk-user"
 INSTALL_DIR="/usr/bin"
 LOG_DIR="/var/log"
 
@@ -159,5 +159,4 @@ log "Installation complete"
 echo "Kiosk installed with URL: ${KIOSK_URL}"
 echo "To uninstall later, run: sudo ${UNINSTALL_SCRIPT}"
 echo "Rebooting in 5 seconds..."
-sleep 5
-sudo reboot
+echo "Please reboot the system to start the kiosk"
