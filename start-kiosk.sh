@@ -3,6 +3,16 @@
 # Required packages installation commented out - uncomment if needed
 # sudo apt install -y xorg firefox-esr openbox x11-xserver-utils
 
+# Function to reset terminal display properties
+reset_terminal() {
+    tput cnorm  # Make cursor visible
+    tput sgr0   # Reset all terminal attributes
+    tput rmcup  # Restore screen contents
+}
+
+# Set up trap for Ctrl+C
+trap reset_terminal SIGINT
+
 # Create Firefox preferences directory if it doesn't exist
 mkdir -p ~/.mozilla/firefox/kiosk.default
 
@@ -67,5 +77,7 @@ killall firefox firefox-esr 2>/dev/null
 # Start X server with Openbox
 log_message "Starting X server with Openbox..."
 startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE"
+
+reset_terminal
 
 log_message "Kiosk startup complete"
