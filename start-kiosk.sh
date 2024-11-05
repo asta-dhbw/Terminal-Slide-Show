@@ -46,9 +46,12 @@ user_pref("browser.tabs.warnOnClose", false);
 user_pref("browser.startup.page", 1);
 user_pref("browser.startup.homepage_override.mstone", "ignore");
 EOF
+# Disable mouse cursor by hiding it
+disable_mouse_cursor() {
+    xdotool search --onlyvisible --name "Mozilla Firefox" windowfocus
+    xinput set-prop "pointer:X Axis Mapping" 0  # Adjust this if specific device ID
+}
 
-# Hide the mouse cursor
-tput civis
 
 # Start X server with Openbox 
 startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE" &
@@ -59,5 +62,7 @@ sleep 5
 # Launch Firefox in kiosk mode with the custom profile
 DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default  # http://shape-z.de:5173/
 
-reset_terminal
+# Hide mouse cursor
+disable_mouse_cursor
+
 log_message "Kiosk startup complete on display :$DISPLAY_NUM"
