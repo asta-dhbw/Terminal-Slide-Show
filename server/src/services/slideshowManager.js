@@ -15,7 +15,12 @@ export class SlideshowManager {
     this.watchInterval = null;
     this.initialized = false;
     this.isPaused = false;
-    this.clientSessions = new Map(); // Store client-specific indices
+    this.clientSessions = new Map();
+    this.dynamicView = {
+      name: 'dynamic-view',
+      path: null,
+      isDynamicView: true
+    };
   }
 
   async initialize() {
@@ -31,10 +36,10 @@ export class SlideshowManager {
 
   async updateMediaList() {
     if (this.isPaused) return;
-
+  
     try {
       const files = await fs.readdir(this.mediaPath);
-      this.mediaFiles = files
+      const fileMedias = files
         .filter(file => {
           const ext = path.extname(file).toLowerCase();
           return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
@@ -45,7 +50,15 @@ export class SlideshowManager {
           dates: DateParser.parseFileName(file)
         }))
         .filter(file => isValidFile(file.name));
-
+  
+      // Add dynamic view at the middle of the sequence
+      const midPoint = Math.floor(fileMedias.length / 2);
+      this.mediaFiles = [
+        ...fileMedias.slice(0, midPoint),
+        this.dynamicView,
+        ...fileMedias.slice(midPoint)
+      ];
+  
       this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
     } catch (error) {
       this.logger.error('Failed to update media list:', error);

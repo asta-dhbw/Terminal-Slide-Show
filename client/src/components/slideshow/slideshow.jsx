@@ -31,7 +31,6 @@ const Slideshow = () => {
   // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
-  const [showingDynamicView, setShowingDynamicView] = useState(!media);
 
   // Cleanup effect when schedule becomes inactive
   useEffect(() => {
@@ -43,33 +42,12 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
-    // Update showingDynamicView when media changes
-    useEffect(() => {
-      setShowingDynamicView(!media);
-    }, [media]);
-
-  const handleNavigate = (direction) => {
-    if (!isScheduleActive) return;
-    setPaused(true);
-
-    if (showingDynamicView) {
-      navigateMedia(direction).then(success => {
-        // Only switch away from DynamicView if we successfully got media
-        if (success) {
-          setShowingDynamicView(false);
-        }
-      });
-    } else {
-      const shouldShowDynamic = direction === 'next';
-      if (shouldShowDynamic) {
-        setShowingDynamicView(true);
-      } else {
-        navigateMedia(direction);
-      }
-    }
-
-    setTimeout(() => setPaused(false), 200);
-  };
+    const handleNavigate = (direction) => {
+      if (!isScheduleActive) return;
+      setPaused(true);
+      navigateMedia(direction);
+      setTimeout(() => setPaused(false), 200);
+    };
 
   // Auto-advance timer effect
   useEffect(() => {
@@ -80,7 +58,7 @@ const Slideshow = () => {
     }, config.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
-  }, [paused, media, loading, isScheduleActive, showingDynamicView]);
+  }, [paused, media, loading, isScheduleActive]);
 
   // Return black screen when schedule is inactive
   if (!isScheduleActive) {
@@ -99,10 +77,10 @@ const Slideshow = () => {
   return (
     <div className="slideshow-container">
       <AnimatePresence mode="wait">
-        {!loading && (showingDynamicView ? (
+        {!loading && media && (media.isDynamicView ? (
           <DynamicDailyView key="dynamic-view" />
         ) : (
-          media && <MediaCanvas key="media" media={media} />
+          <MediaCanvas key="media" media={media} />
         ))}
       </AnimatePresence>
 
@@ -123,10 +101,9 @@ const Slideshow = () => {
         )}
       </AnimatePresence>
 
-
       {/* Only show error toast when not in dynamic view */}
       <AnimatePresence>
-        {error && !loading && isScheduleActive && !showingDynamicView && (
+        {error && !loading && isScheduleActive && !media?.isDynamicView && (
           <ErrorToast message={error} />
         )}
       </AnimatePresence>
