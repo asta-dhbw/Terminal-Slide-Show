@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wind, Droplets, ArrowUp } from 'lucide-react';
+import { Wind, ArrowUp } from 'lucide-react';
 import '../../styles/animatedWeather.css';
 
 const getWeatherAnimation = (code, isNight) => {

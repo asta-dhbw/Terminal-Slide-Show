@@ -73,7 +73,7 @@ const Slideshow = () => {
 
   // Auto-advance timer effect
   useEffect(() => {
-    if (paused || loading || !isScheduleActive) return;
+    if (paused || !media || loading || !isScheduleActive) return;
 
     autoContinueTimer.current = setTimeout(() => {
       handleNavigate('next');
