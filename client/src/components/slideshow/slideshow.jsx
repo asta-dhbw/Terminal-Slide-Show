@@ -12,28 +12,28 @@ import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
 import { config } from '../../../../config/config';
 
-/**
- * @component Slideshow
- * @description A media slideshow component that handles automatic playback, navigation,
- * loading states, and error handling. Only active when schedule is enabled.
- * 
- * @returns {JSX.Element} The rendered slideshow component
- */
 const Slideshow = () => {
   const scheduleEnabled = isRaspberryPi();
   const isScheduleActive = scheduleEnabled ? useSchedule() : true;
-
-
-  // Custom hooks for managing media, controls, and server state
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
   const showControls = useControlsVisibility();
   const isServerConnected = useServerStatus(isScheduleActive);
-
-  // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
   
-  // Cleanup effect when schedule becomes inactive
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('Slideshow State:', {
+      hasMedia: !!media,
+      loading,
+      error,
+      serverReady,
+      isScheduleActive,
+      isServerConnected,
+      paused
+    });
+  }, [media, loading, error, serverReady, isScheduleActive, isServerConnected, paused]);
+
   useEffect(() => {
     if (!isScheduleActive) {
       clearTimeout(autoContinueTimer.current);
@@ -50,9 +50,11 @@ const Slideshow = () => {
     setTimeout(() => setPaused(false), 200);
   };
 
-  // Auto-advance timer effect
   useEffect(() => {
-    if (paused || !media || loading || !isScheduleActive) return;
+    if (paused || !media || loading || !isScheduleActive) {
+      clearTimeout(autoContinueTimer.current);
+      return;
+    }
 
     autoContinueTimer.current = setTimeout(() => {
       navigateMedia('next');
@@ -61,58 +63,29 @@ const Slideshow = () => {
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, navigateMedia, isScheduleActive]);
 
-  // Return black screen when schedule is inactive
   if (!isScheduleActive) {
     return <div className="w-screen h-screen bg-black" />;
   }
 
-  // Only show loading states if schedule is active
-  if (!isServerConnected && isScheduleActive) {
-    return <Loading key="loading" isServerConnecting={!isServerConnected} />;
-  }
-
-  if (loading && isScheduleActive) {
-    return <Loading key="loading" isServerConnecting={false} />;
-  }
-
-  // Show dynamic daily view when no media is available and not in error state
-  if (!media && !error && isScheduleActive) {
-    return <DynamicDailyView />;
-  }
-
-  if (error && isScheduleActive) {
-    return <ErrorToast message={error} />;
-  }
-
   return (
     <div className="slideshow-container">
-      <AnimatePresence>
-        {media && !loading && (
-          <MediaCanvas media={media} />
-        )}
-      </AnimatePresence>
-
-      {/* Navigation controls */}
-      <Controls
-        show={showControls && !loading && media}
-        onPrevious={() => handleNavigate('previous')}
-        onNext={() => handleNavigate('next')}
-        disabled={loading || !serverReady || paused}
-      />
-
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {(loading || !serverReady) && isScheduleActive && (
-          <Loading isServerConnecting={!serverReady} />
-        )}
-      </AnimatePresence>
-
-      {/* Error toast */}
-      <AnimatePresence>
-        {error && !loading && isScheduleActive && (
-          <ErrorToast message={error} />
-        )}
-      </AnimatePresence>
+      {media ? (
+        <AnimatePresence mode="wait">
+          <div key="media-container" className="relative w-full h-full">
+            <MediaCanvas media={media} />
+            {showControls && (
+              <Controls
+                show={true}
+                onPrevious={() => handleNavigate('previous')}
+                onNext={() => handleNavigate('next')}
+                disabled={!serverReady || paused}
+              />
+            )}
+          </div>
+        </AnimatePresence>
+      ) : (
+        <DynamicDailyView />
+      )}
     </div>
   );
 };
