@@ -1,5 +1,5 @@
 import React from 'react';
-import { Server } from 'lucide-react';
+import {Server} from './assets/icons';
 import { motion } from 'framer-motion';
 import '../styles/loading.css';
 import BBLoader from './loader';
@@ -8,6 +8,7 @@ import BBLoader from './loader';
  * Loading component that displays either a server connection or media loading animation
  * @component
  * @param {Object} props
+ * 
  * @param {boolean} props.isServerConnecting - Flag to determine which loading state to show
  * @returns {JSX.Element} Animated loading overlay with status message
  */

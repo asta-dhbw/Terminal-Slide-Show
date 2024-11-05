@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sun, Moon, Quote, Coffee, Wind, MapPin, Clock, Cloud, Droplets, CloudSnow, Info } from 'lucide-react';
+import { Calendar, Quote, Coffee, MapPin, Clock, Info } from 'lucide-react';
 import '../../styles/dynamicDailyView.css';
 import AnimatedWeather from './animatedWeather';
 import { config } from '../../../../config/config';

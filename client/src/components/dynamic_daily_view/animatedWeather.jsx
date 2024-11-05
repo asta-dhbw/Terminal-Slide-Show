@@ -7,7 +7,6 @@ const getWeatherAnimation = (code, isNight) => {
     if (code <= 1) return <MoonAnimation />;
     if (code <= 3) return <NightlyPartlyCloudyAnimation />;
   }
-
   if (code <= 1) return <SunnyAnimation />;
   if (code <= 3) return <PartlyCloudyAnimation />;
   if (code <= 49) return <RainyAnimation />;
@@ -16,7 +15,6 @@ const getWeatherAnimation = (code, isNight) => {
   if (code <= 99) return <CloudyAnimation />;
   return isNight ? <MoonAnimation /> : <SunnyAnimation />;
 };
-
 
 const MoonAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
@@ -123,20 +121,54 @@ const CloudyAnimation = () => (
         <stop offset="0%" style={{ stopColor: "#E0E0E0", stopOpacity: 1 }} />
         <stop offset="100%" style={{ stopColor: "#B0B0B0", stopOpacity: 1 }} />
       </linearGradient>
+      <filter id="cloud-shadow">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+        <feOffset dx="0" dy="1" result="offsetblur" />
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.3" />
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
     </defs>
-    <path
-      d="M25,60 A20,20 0 0,1 65,60 A20,20 0 0,1 45,80 L30,80 A15,15 0 0,1 25,60"
-      fill="url(#cloud-gradient)"
-      className="cloudy-cloud"
-    />
+    
+    {/* Main cloud body */}
+    <g className="cloud-group" filter="url(#cloud-shadow)">
+      {/* Center puff */}
+      <circle cx="50" cy="50" r="18" fill="url(#cloud-gradient)" />
+      
+      {/* Left puffs */}
+      <circle cx="35" cy="50" r="15" fill="url(#cloud-gradient)" />
+      <circle cx="25" cy="53" r="12" fill="url(#cloud-gradient)" />
+      
+      {/* Right puffs */}
+      <circle cx="65" cy="50" r="15" fill="url(#cloud-gradient)" />
+      <circle cx="75" cy="53" r="12" fill="url(#cloud-gradient)" />
+      
+      {/* Top puffs */}
+      <circle cx="43" cy="40" r="14" fill="url(#cloud-gradient)" />
+      <circle cx="57" cy="40" r="14" fill="url(#cloud-gradient)" />
+      
+      {/* Bottom fill */}
+      <path
+        d="M25,53 Q37,60 50,60 Q63,60 75,53 Q75,65 50,65 Q25,65 25,53"
+        fill="url(#cloud-gradient)"
+      />
+    </g>
+
     <style>{`
-      .cloudy-cloud {
-        animation: float 3s ease-in-out infinite;
-        filter: drop-shadow(0 0 10px #B0B0B0);
+      .cloud-group {
+        animation: float 6s ease-in-out infinite;
       }
+      
       @keyframes float {
-        0%, 100% { transform: translateX(0); }
-        50% { transform: translateX(5px); }
+        0% { transform: translate(0, 0) scale(1); }
+        25% { transform: translate(2px, -2px) scale(1.02); }
+        50% { transform: translate(0, 0) scale(1); }
+        75% { transform: translate(-2px, -2px) scale(0.98); }
+        100% { transform: translate(0, 0) scale(1); }
       }
     `}</style>
   </svg>
