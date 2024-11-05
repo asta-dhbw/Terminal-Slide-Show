@@ -31,11 +31,8 @@ EOF
 # Create Openbox autostart file
 mkdir -p ~/.config/openbox
 cat > ~/.config/openbox/autostart << EOF
-# Wait a moment for the X server to be fully ready
-sleep 2
-
 # Start Firefox in kiosk mode
-firefox --profile ~/.mozilla/firefox/kiosk.default "http://shape-z.de:5173/" &
+firefox --profile ~/.mozilla/firefox/kiosk.default &
 EOF
 
 # Make autostart executable
