@@ -60,7 +60,7 @@ startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE" &
 sleep 5
 
 # Launch Firefox in kiosk mode with the custom profile
-DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default  # http://shape-z.de:5173/
+DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default  http://shape-z.de:5173/
 
 # Hide mouse cursor
 disable_mouse_cursor
