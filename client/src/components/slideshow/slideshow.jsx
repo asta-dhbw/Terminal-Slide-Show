@@ -23,7 +23,6 @@ const Slideshow = () => {
   const scheduleEnabled = isRaspberryPi();
   const isScheduleActive = scheduleEnabled ? useSchedule() : true;
 
-
   // Custom hooks for managing media, controls, and server state
   const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
   const showControls = useControlsVisibility();
@@ -32,6 +31,7 @@ const Slideshow = () => {
   // State for managing playback
   const [paused, setPaused] = useState(false);
   const autoContinueTimer = useRef(null);
+  const [showingDynamicView, setShowingDynamicView] = useState(!media);
 
   // Cleanup effect when schedule becomes inactive
   useEffect(() => {
@@ -43,59 +43,74 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
+  // Update showingDynamicView when media changes
+  useEffect(() => {
+    setShowingDynamicView(!media);
+  }, [media]);
+
   const handleNavigate = (direction) => {
     if (!isScheduleActive) return;
     setPaused(true);
-    navigateMedia(direction);
+
+    if (showingDynamicView) {
+      setShowingDynamicView(false);
+      navigateMedia(direction);
+    } else {
+      const shouldShowDynamic = direction === 'next';
+      if (shouldShowDynamic) {
+        setShowingDynamicView(true);
+      } else {
+        navigateMedia(direction);
+      }
+    }
+
     setTimeout(() => setPaused(false), 200);
   };
 
   // Auto-advance timer effect
   useEffect(() => {
-    if (paused || !media || loading || !isScheduleActive) return;
+    if (paused || loading || !isScheduleActive) return;
 
     autoContinueTimer.current = setTimeout(() => {
-      navigateMedia('next');
+      handleNavigate('next');
     }, config.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
-  }, [paused, media, loading, navigateMedia, isScheduleActive]);
+  }, [paused, media, loading, isScheduleActive, showingDynamicView]);
 
-    // Return black screen when schedule is inactive
-    if (!isScheduleActive) {
-      return <div className="w-screen h-screen bg-black" />;
-    }
-  
-    // Only show loading states if schedule is active
-    if (!isServerConnected && isScheduleActive) {
-      return <Loading key="loading" isServerConnecting={!isServerConnected} />;
-    }
-  
-    if (loading && isScheduleActive) {
-      return <Loading key="loading" isServerConnecting={false} />;
-    }
-  
-    // Show dynamic daily view when no media is available and not in error state
-    if (!media && !error && isScheduleActive) {
-      return <DynamicDailyView />;
-    }
+  // Return black screen when schedule is inactive
+  if (!isScheduleActive) {
+    return <div className="w-screen h-screen bg-black" />;
+  }
+
+  // Only show loading states if schedule is active
+  if (!isServerConnected && isScheduleActive) {
+    return <Loading key="loading" isServerConnecting={!isServerConnected} />;
+  }
+
+  if (loading && isScheduleActive) {
+    return <Loading key="loading" isServerConnecting={false} />;
+  }
 
   return (
     <div className="slideshow-container">
-     
-      <AnimatePresence>
-        {media && !loading && (
-          <MediaCanvas media={media} />
-        )}
+      <AnimatePresence mode="wait">
+        {!loading && (showingDynamicView ? (
+          <DynamicDailyView key="dynamic-view" />
+        ) : (
+          media && <MediaCanvas key="media" media={media} />
+        ))}
       </AnimatePresence>
 
-      {/* Navigation controls */}
-      <Controls
-        show={showControls && !loading && media}
-        onPrevious={() => handleNavigate('previous')}
-        onNext={() => handleNavigate('next')}
-        disabled={loading || !serverReady || paused}
-      />
+      {/* Navigation controls - only show when media is available */}
+      {media && (
+        <Controls
+          show={showControls}
+          onPrevious={() => handleNavigate('previous')}
+          onNext={() => handleNavigate('next')}
+          disabled={loading || !serverReady || paused}
+        />
+      )}
 
       {/* Loading overlay */}
       <AnimatePresence>
