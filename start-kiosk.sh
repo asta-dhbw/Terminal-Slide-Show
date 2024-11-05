@@ -18,6 +18,19 @@ user_pref("browser.startup.page", 1);
 user_pref("browser.startup.homepage_override.mstone", "ignore");
 EOF
 
+# Create Openbox autostart file
+mkdir -p ~/.config/openbox
+cat > ~/.config/openbox/autostart << EOF
+# Wait a moment for the X server to be fully ready
+sleep 2
+
+# Start Firefox in kiosk mode
+firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default "http://shape-z.de:5173/" &
+EOF
+
+# Make autostart executable
+chmod +x ~/.config/openbox/autostart
+
 # Get directory where script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -47,19 +60,12 @@ check_x_server() {
     return 1
 }
 
-# Start X server with Openbox on current VT
+# Kill any existing Firefox processes
+log_message "Cleaning up any existing Firefox processes..."
+killall firefox firefox-esr 2>/dev/null
+
+# Start X server with Openbox
 log_message "Starting X server with Openbox..."
-startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE" &
-
-# Wait for X server and check if it's running
-log_message "Waiting for X server..."
-if ! check_x_server; then
-    log_message "ERROR: X server failed to start properly"
-    exit 1
-fi
-
-# Launch Firefox in kiosk mode with the custom profile
-log_message "Launching Firefox in kiosk mode..."
-DISPLAY=:0 firefox --kiosk --profile ~/.mozilla/firefox/kiosk.default http://shape-z.de:5173/ 2>&1 | tee -a "$LOG_FILE"
+startx /usr/bin/openbox-session 2>&1 | tee -a "$LOG_FILE"
 
 log_message "Kiosk startup complete"
