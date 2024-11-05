@@ -50,7 +50,7 @@ export const useMediaLoader = (isScheduleActive = true) => {
     }
 
     try {
-      const response = await fetchWithClientId('/api/health');
+      const response = await fetchWithClientId('/api/server-status');
       const isReady = response.ok;
 
       if (!serverReady && isReady) {

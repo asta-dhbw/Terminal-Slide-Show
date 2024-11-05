@@ -61,46 +61,41 @@ const Slideshow = () => {
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, navigateMedia, isScheduleActive]);
 
-  // Return black screen when schedule is inactive
-  if (!isScheduleActive) {
-    return <div className="w-screen h-screen bg-black" />;
-  }
+    // Return black screen when schedule is inactive
+    if (!isScheduleActive) {
+      return <div className="w-screen h-screen bg-black" />;
+    }
+  
+    // Only show loading states if schedule is active
+    if (!isServerConnected && isScheduleActive) {
+      return <Loading key="loading" isServerConnecting={!isServerConnected} />;
+    }
+  
+    if (loading && isScheduleActive) {
+      return <Loading key="loading" isServerConnecting={false} />;
+    }
+  
+    // Show dynamic daily view when no media is available and not in error state
+    if (!media && !error && isScheduleActive) {
+      return <DynamicDailyView />;
+    }
 
   return (
     <div className="slideshow-container">
-
+     
       <AnimatePresence>
         {media && !loading && (
           <MediaCanvas media={media} />
         )}
-        {/* Navigation controls */}
-        <Controls
-          show={showControls && !loading && media}
-          onPrevious={() => handleNavigate('previous')}
-          onNext={() => handleNavigate('next')}
-          disabled={loading || !serverReady || paused}
-        />
       </AnimatePresence>
 
-      {/* Black screen when schedule inactive */}
-      {!isScheduleActive && (
-        <div className="w-screen h-screen bg-black" />
-      )}
-
-      {/* Dynamic daily view */}
-      {!media && !error && isScheduleActive && (
-        <DynamicDailyView />
-      )}
-
-      {/* Loading states when schedule active */}
-      {!isServerConnected && isScheduleActive && (
-        <Loading key="loading" isServerConnecting={!isServerConnected} />
-      )}
-
-      {loading && isScheduleActive && (
-        <Loading key="loading" isServerConnecting={false} />
-      )}
-
+      {/* Navigation controls */}
+      <Controls
+        show={showControls && !loading && media}
+        onPrevious={() => handleNavigate('previous')}
+        onNext={() => handleNavigate('next')}
+        disabled={loading || !serverReady || paused}
+      />
 
       {/* Loading overlay */}
       <AnimatePresence>
