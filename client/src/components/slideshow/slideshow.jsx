@@ -42,12 +42,12 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
-    const handleNavigate = (direction) => {
-      if (!isScheduleActive) return;
-      setPaused(true);
-      navigateMedia(direction);
-      setTimeout(() => setPaused(false), 200);
-    };
+  const handleNavigate = (direction) => {
+    if (!isScheduleActive) return;
+    setPaused(true);
+    navigateMedia(direction);
+    setTimeout(() => setPaused(false), 200);
+  };
 
   // Auto-advance timer effect
   useEffect(() => {
@@ -77,11 +77,15 @@ const Slideshow = () => {
   return (
     <div className="slideshow-container">
       <AnimatePresence mode="wait">
-        {!loading && media && (media.isDynamicView ? (
+        {!loading && (media ? (
+          media.isDynamicView ? (
+            <DynamicDailyView key="dynamic-view" />
+          ) : (
+            <MediaCanvas key="media" media={media} />
+          )
+        ) : isScheduleActive ? (
           <DynamicDailyView key="dynamic-view" />
-        ) : (
-          <MediaCanvas key="media" media={media} />
-        ))}
+        ) : null)}
       </AnimatePresence>
 
       {/* Navigation controls - only show when media is available */}
