@@ -178,60 +178,8 @@ disable_mouse_cursor() {
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
 
-show_spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    local msg="$2"
-    
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf "\r[%c] %s" "$spinstr" "$msg"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-    done
-    printf "\r"
-}
-
-check_internet() {
-    log_info "Checking internet connectivity..."
-    
-    local PING_HOSTS=("8.8.8.8" "1.1.1.1")
-    local DNS_TEST="google.com"
-    local retry_count=0
-    local max_retries=3
-
-    while [ $retry_count -lt $max_retries ]; do
-        # Try multiple hosts
-        for host in "${PING_HOSTS[@]}"; do
-            if ping -c 1 -W 2 "$host" >/dev/null 2>&1; then
-                if nslookup "$DNS_TEST" >/dev/null 2>&1; then
-                    log_info "Internet connection successful"
-                    return 0
-                fi
-            fi
-        done
-        
-        retry_count=$((retry_count + 1))
-        log_warn "Internet check attempt $retry_count failed. Retrying..."
-        sleep 2
-    done
-
-    log_error "Internet connectivity check failed after $max_retries attempts"
-    return 1
-}
-
-
 main() {
     cleanup
-
-    # Wait for internet connection
-    if ! check_internet; then
-        log_error "No internet connection available. Exiting."
-        exit 1
-    fi
-
-
     create_firefox_profile
     setup_openbox
     
