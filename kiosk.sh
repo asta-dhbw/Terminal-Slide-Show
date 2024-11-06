@@ -94,6 +94,36 @@ user_pref("dom.allow_scripts_to_close_windows", false);
 user_pref("security.fileuri.strict_origin_policy", true);
 user_pref("ui.key.menuAccessKeyFocuses", false);
 user_pref("browser.casting.enabled", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("browser.rights.override", true);
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.privatebrowsing.vpnpromourl", "");
+user_pref("browser.vpn_promo.enabled", false);
+user_pref("privacy.firstparty.isolate", true);
+user_pref("browser.tabs.allowTabDetach", false);
+user_pref("browser.tabs.closeWindowWithLastTab", false);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.tabs.warnOnCloseOtherTabs", false);
+user_pref("browser.tabs.warnOnOpen", false);
+user_pref("browser.tabs.loadInBackground", false);
+user_pref("browser.tabs.opentabfor.middleclick", false);
+user_pref("browser.tabs.loadDivertedInBackground", false);
+user_pref("browser.tabs.tabmanager.enabled", false);
+user_pref("toolkit.tabbox.switchByScrolling", false);
+user_pref("browser.link.open_newwindow.override.external", 1);
+user_pref("browser.tabs.inTitlebar", 0);
+user_pref("browser.tabs.autoHide", true);
+user_pref("browser.hidenavbar", true);
+user_pref("browser.toolbars.bookmarks.visibility", "never");
+user_pref("browser.gesture.swipe.left", "");
+user_pref("browser.gesture.swipe.right", "");
+user_pref("browser.customizemode.tip0.shown", true);
+user_pref("browser.download.autohideButton", false);
+user_pref("browser.tabs.firefox-view", false);
+user_pref("browser.tabs.firefox-view-next", false);
+user_pref("browser.engagement.downloads-button.has-used", true);
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
@@ -147,7 +177,7 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
 
-    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --no-remote --browser --private-window --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
