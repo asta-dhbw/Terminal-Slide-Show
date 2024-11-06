@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# Source the logger
+source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
+
+
 # Required packages installation commented out - uncomment if needed
-# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter python3-xdg
+# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
 
 # Get directory where script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -12,34 +16,27 @@ PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
-mkdir -p "$LOG_DIR"
-
-timestamp() {
-    date "+%Y-%m-%d %H:%M:%S"
-}
-
-log_message() {
-    echo "$(timestamp) $1" | tee -a "$LOG_FILE"
-}
+# Initialize logging with custom settings
+init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
 
 cleanup() {
-    log_message "Performing cleanup..."
+    log_info "Performing cleanup..."
     
     # Kill processes
-    pkill -f firefox
+    pkill -f firefox-esr
     pkill -f openbox
     pkill -f unclutter
     
     # Clean up X server
     for lock in /tmp/.X${DISPLAY_NUM#:}-lock /tmp/.X11-unix/X${DISPLAY_NUM#:}; do
         if [ -e "$lock" ]; then
-            log_message "Removing X lock file: $lock"
-            sudo rm -f "$lock"
+            log_info "Removing X lock file: $lock"
+            rm -f "$lock" # sudo rm -f "$lock"
         fi
     done
     
     # Kill any remaining X server
-    sudo pkill Xorg
+    pkill Xorg # sudo pkill Xorg
     
     reset_terminal
     
@@ -56,34 +53,55 @@ reset_terminal() {
 trap cleanup SIGINT SIGTERM EXIT
 
 create_firefox_profile() {
-    log_message "Creating fresh Firefox profile..."
+    log_info "Creating fresh Firefox profile..."
     rm -rf "$PROFILE_PATH"
     mkdir -p "$PROFILE_PATH"
 
     cat > "$PROFILE_PATH/prefs.js" << EOF
-user_pref("browser.rights.3.shown", true);
 user_pref("browser.startup.homepage", "$TARGET_URL");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.sessionstore.enabled", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
-user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.sessionstore.", 0);
 user_pref("browser.startup.page", 1);
-user_pref("browser.startup.homepage_override.mstone", "ignore");
-user_pref("browser.sessionstore.max_resumed_crashes", 0);
-user_pref("browser.sessionstore.max_tabs_undo", 0);
-user_pref("browser.sessionstore.max_windows_undo", 0);
 user_pref("browser.cache.disk.enable", false);
 user_pref("browser.cache.memory.enable", true);
 user_pref("browser.cache.memory.capacity", 524288);
-user_pref("browser.privatebrowsing.autostart", true);
+user_pref("browser.rights.3.shown", true);
 user_pref("browser.startup.homepage_override.enabled", false);
+user_pref("browser.download.enabled", false);
+user_pref("browser.contentblocking.category", "strict");
+user_pref("dom.event.contextmenu.enabled", false);
+user_pref("browser.urlbar.enabled", false);
+user_pref("browser.link.open_newwindow.restriction", 0);
+user_pref("browser.link.open_newwindow", 1);
+user_pref("xpinstall.enabled", false);
+user_pref("extensions.enable", false);
+user_pref("browser.fullscreen.autohide", false);
+user_pref("full-screen-api.enabled", true);
+user_pref("full-screen-api.warning.enabled", false);
+user_pref("full-screen-api.warning.timeout", 0);
+user_pref("browser.tabs.createFileDropIndicator", false);
+user_pref("browser.tabs.closeWindowWithLastTab", false);
+user_pref("browser.keywordList.enabled", false);
+user_pref("dom.disable_window_move_resize", true);
+user_pref("dom.disable_window_flip", true);
+user_pref("dom.disable_window_open_feature.location", true);
+user_pref("dom.disable_window_open_feature.menubar", true);
+user_pref("dom.disable_window_open_feature.toolbar", true);
+user_pref("dom.disable_window_print", true);
+user_pref("dom.disable_window_status", true);
+user_pref("dom.allow_scripts_to_close_windows", false);
+user_pref("security.fileuri.strict_origin_policy", true);
+user_pref("ui.key.menuAccessKeyFocuses", false);
+user_pref("browser.casting.enabled", false);
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
 }
 
 setup_openbox() {
-    log_message "Setting up Openbox configuration..."
+    log_info "Setting up Openbox configuration..."
     mkdir -p "$HOME/.config/openbox"
     
     # Create minimal Openbox config
@@ -94,6 +112,8 @@ setup_openbox() {
     <application class="*">
       <decor>no</decor>
       <focus>yes</focus>
+      <fullscreen>yes</fullscreen>
+      <maximized>true</maximized>
     </application>
   </applications>
 </openbox_config>
@@ -101,7 +121,7 @@ EOF
 }
 
 start_x_server() {
-    log_message "Starting X server..."
+    log_info "Starting X server..."
     
     # Ensure no X server is running
     cleanup
@@ -114,34 +134,34 @@ start_x_server() {
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
         if xdpyinfo -display $DISPLAY_NUM >/dev/null 2>&1; then
-            log_message "X server started successfully on $DISPLAY_NUM"
+            log_info "X server started successfully on $DISPLAY_NUM"
             return 0
         fi
         attempt=$((attempt + 1))
         sleep 1
     done
     
-    log_message "Failed to start X server after $max_attempts attempts"
+    log_error "Failed to start X server after $max_attempts attempts"
     return 1
 }
 
 launch_firefox() {
-    log_message "Launching Firefox..."
+    log_info "Launching Firefox ESR..."
     
-    DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox to start
     local max_attempts=20
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
-        if pgrep -x "firefox" > /dev/null; then
-            log_message "Firefox process started"
-            sleep 2  # Give Firefox time to create window
+        if pgrep -x "firefox-esr" > /dev/null; then
+            log_info "Firefox ESR process started"
+            sleep 2
             if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
-                log_message "Firefox window detected"
+                log_info "Firefox ESR window detected"
                 return 0
             else
-                log_message "Firefox process running but window not detected"
+                log_info "Firefox ESR process running but window not detected"
                 return 0
             fi
         fi
@@ -149,22 +169,93 @@ launch_firefox() {
         sleep 1
     done
     
-    log_message "Failed to start Firefox after $max_attempts attempts"
+    log_error "Failed to start Firefox ESR after $max_attempts attempts"
     return 1
 }
 
 disable_mouse_cursor() {
-    log_message "Disabling mouse cursor..."
+    log_info "Disabling mouse cursor..."
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
 
+show_spinner() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    local msg="$2"
+    
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf "\r[%c] %s" "$spinstr" "$msg"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+    done
+    printf "\r"
+}
+
+check_internet() {
+    local CHECK_INTERVAL=${INTERNET_CHECK_INTERVAL:-10}  # 5 min default between checks
+    local PING_HOSTS=("8.8.8.8" "1.1.1.1")      # Multiple DNS providers
+    local DNS_TEST="google.com"                  # DNS resolution test
+    local MIN_SPEED=${MIN_BANDWIDTH:-1}          # Minimum speed in Mbps
+    local last_status=0                          # Track previous check status
+    
+    log_info "Starting continuous internet monitoring..."
+    
+    (
+        while true; do
+            # Try multiple hosts
+            local connection_ok=false
+            for host in "${PING_HOSTS[@]}"; do
+                if ping -c 1 -W 1 "$host" >/dev/null 2>&1; then
+                    if nslookup "$DNS_TEST" >/dev/null 2>&1; then
+                        if [ "$CHECK_BANDWIDTH" = "true" ]; then
+                            speed=$(curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python - --simple 2>/dev/null | grep "Download" | awk '{print $2}')
+                            if (( $(echo "$speed >= $MIN_SPEED" | bc -l) )); then
+                                connection_ok=true
+                                break
+                            fi
+                            log_warning "Bandwidth below minimum threshold: ${speed}Mbps"
+                        else
+                            connection_ok=true
+                            break
+                        fi
+                    fi
+                fi
+            done
+            
+            # Log status changes
+            if [ "$connection_ok" = true ] && [ "$last_status" -ne 0 ]; then
+                log_info "Internet connection restored"
+                last_status=0
+            elif [ "$connection_ok" = false ] && [ "$last_status" -eq 0 ]; then
+                log_error "Internet connection lost"
+                last_status=1
+            fi
+            
+            sleep "$CHECK_INTERVAL"
+        done
+    ) & 
+    
+    show_spinner $! "Checking internet connectivity..."
+}
+
+
 main() {
     cleanup
+
+    # Wait for internet connection
+    if ! check_internet; then
+        log_error "No internet connection available. Exiting."
+        exit 1
+    fi
+
+
     create_firefox_profile
     setup_openbox
     
     if ! start_x_server; then
-        log_message "Failed to start X server. Exiting."
+        log_error "Failed to start X server. Exiting."
         exit 1
     fi
     
@@ -173,7 +264,7 @@ main() {
     disable_mouse_cursor
     
     if ! launch_firefox; then
-        log_message "Failed to launch Firefox. Exiting."
+        log_error "Failed to launch Firefox. Exiting."
         cleanup
         exit 1
     fi
@@ -181,9 +272,9 @@ main() {
     # Monitor and restart if needed
     while true; do
         if ! pgrep -x "firefox" > /dev/null; then
-            log_message "Firefox process died, restarting..."
+            log_warn "Firefox process died, restarting..."
             launch_firefox || {
-                log_message "Failed to restart Firefox. Cleaning up..."
+                log_error "Failed to restart Firefox. Cleaning up..."
                 cleanup
                 exit 1
             }
