@@ -213,7 +213,7 @@ check_internet() {
         done
         
         retry_count=$((retry_count + 1))
-        log_warning "Internet check attempt $retry_count failed. Retrying..."
+        log_warn "Internet check attempt $retry_count failed. Retrying..."
         sleep 2
     done
 
