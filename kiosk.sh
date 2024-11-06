@@ -194,50 +194,31 @@ show_spinner() {
 }
 
 check_internet() {
-    local CHECK_INTERVAL=${INTERNET_CHECK_INTERVAL:-10}  # 5 min default between checks
-    local PING_HOSTS=("8.8.8.8" "1.1.1.1")      # Multiple DNS providers
-    local DNS_TEST="google.com"                  # DNS resolution test
-    local MIN_SPEED=${MIN_BANDWIDTH:-1}          # Minimum speed in Mbps
-    local last_status=0                          # Track previous check status
+    log_info "Checking internet connectivity..."
     
-    log_info "Starting continuous internet monitoring..."
-    
-    (
-        while true; do
-            # Try multiple hosts
-            local connection_ok=false
-            for host in "${PING_HOSTS[@]}"; do
-                if ping -c 1 -W 1 "$host" >/dev/null 2>&1; then
-                    if nslookup "$DNS_TEST" >/dev/null 2>&1; then
-                        if [ "$CHECK_BANDWIDTH" = "true" ]; then
-                            speed=$(curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python - --simple 2>/dev/null | grep "Download" | awk '{print $2}')
-                            if (( $(echo "$speed >= $MIN_SPEED" | bc -l) )); then
-                                connection_ok=true
-                                break
-                            fi
-                            log_warning "Bandwidth below minimum threshold: ${speed}Mbps"
-                        else
-                            connection_ok=true
-                            break
-                        fi
-                    fi
+    local PING_HOSTS=("8.8.8.8" "1.1.1.1")
+    local DNS_TEST="google.com"
+    local retry_count=0
+    local max_retries=3
+
+    while [ $retry_count -lt $max_retries ]; do
+        # Try multiple hosts
+        for host in "${PING_HOSTS[@]}"; do
+            if ping -c 1 -W 2 "$host" >/dev/null 2>&1; then
+                if nslookup "$DNS_TEST" >/dev/null 2>&1; then
+                    log_info "Internet connection successful"
+                    return 0
                 fi
-            done
-            
-            # Log status changes
-            if [ "$connection_ok" = true ] && [ "$last_status" -ne 0 ]; then
-                log_info "Internet connection restored"
-                last_status=0
-            elif [ "$connection_ok" = false ] && [ "$last_status" -eq 0 ]; then
-                log_error "Internet connection lost"
-                last_status=1
             fi
-            
-            sleep "$CHECK_INTERVAL"
         done
-    ) & 
-    
-    show_spinner $! "Checking internet connectivity..."
+        
+        retry_count=$((retry_count + 1))
+        log_warning "Internet check attempt $retry_count failed. Retrying..."
+        sleep 2
+    done
+
+    log_error "Internet connectivity check failed after $max_retries attempts"
+    return 1
 }
 
 
