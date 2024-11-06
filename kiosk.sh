@@ -24,6 +24,7 @@ cleanup() {
     
     # Kill processes
     pkill -f firefox-esr
+    pkill -f firefox
     pkill -f openbox
     pkill -f unclutter
     
@@ -148,7 +149,7 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
     
-    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox to start
     local max_attempts=20
