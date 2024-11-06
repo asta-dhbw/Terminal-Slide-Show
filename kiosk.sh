@@ -23,8 +23,9 @@ cleanup() {
     log_info "Performing cleanup..."
     
     # Kill processes
-    pkill -f firefox-esr
-    pkill -f firefox
+    pkill -9 -f firefox-esr
+    pkill -9 -f firefox
+    pkill -9 -f 'Mozilla Firefox'
     pkill -f openbox
     pkill -f unclutter
     
@@ -149,6 +150,14 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
     
+    # Add explicit process check before launching
+    if pgrep -x "firefox-esr" > /dev/null; then
+        log_info "Firefox ESR already running, killing existing instance..."
+        pkill -x "firefox-esr"
+        sleep 2
+    }
+    
+    # Launch with modified flags
     DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox to start
@@ -160,9 +169,6 @@ launch_firefox() {
             sleep 2
             if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
                 log_info "Firefox ESR window detected"
-                return 0
-            else
-                log_info "Firefox ESR process running but window not detected"
                 return 0
             fi
         fi
