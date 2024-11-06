@@ -64,13 +64,11 @@ user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.sessionstore.enabled", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("browser.sessionstore.", 0);
-user_pref("browser.startup.page", 1);
+user_pref("browser.startup.page", 0);
 user_pref("browser.cache.disk.enable", false);
 user_pref("browser.cache.memory.enable", true);
 user_pref("browser.cache.memory.capacity", 524288);
 user_pref("browser.rights.3.shown", true);
-user_pref("browser.startup.homepage_override.enabled", false);
-user_pref("browser.download.enabled", false);
 user_pref("browser.contentblocking.category", "strict");
 user_pref("dom.event.contextmenu.enabled", false);
 user_pref("browser.urlbar.enabled", false);
@@ -151,20 +149,13 @@ launch_firefox() {
 
     DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
     
-    # Wait for Firefox to start
-    local max_attempts=20
+    # Wait for Firefox process to start
+    local max_attempts=10
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
         if pgrep -x "firefox-esr" > /dev/null; then
             log_info "Firefox ESR process started"
-            sleep 2
-            if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
-                log_info "Firefox ESR window detected"
-                return 0
-            else
-                log_info "Firefox ESR process running but window not detected"
-                return 0
-            fi
+            return 0
         fi
         attempt=$((attempt + 1))
         sleep 1
@@ -180,7 +171,6 @@ disable_mouse_cursor() {
 }
 
 main() {
-    cleanup
     create_firefox_profile
     setup_openbox
     
@@ -201,7 +191,7 @@ main() {
     
     # Monitor and restart if needed
     while true; do
-        if ! pgrep -x "firefox" > /dev/null; then
+        if ! pgrep -x "firefox-esr" > /dev/null; then
             log_warn "Firefox process died, restarting..."
             launch_firefox || {
                 log_error "Failed to restart Firefox. Cleaning up..."
