@@ -58,6 +58,11 @@ export class SlideshowManager {
         this.dynamicView,
         ...fileMedias.slice(midPoint)
       ];
+
+      // Ensure dynamic view is added if no media files are found
+      if (this.mediaFiles.length === 0) {
+        this.mediaFiles.push(this.dynamicView);
+      }
   
       this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
     } catch (error) {
