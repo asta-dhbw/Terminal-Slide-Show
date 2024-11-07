@@ -1,6 +1,6 @@
 export const config = {
   info: {
-    location: 'Friedrichshafen',
+    location: 'LOCATION',
   },
   apiKeys: {
     NASA_API_KEY: 'APIKEY' // https://api.nasa.gov/

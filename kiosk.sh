@@ -6,15 +6,9 @@
 # Source the logger
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 
-CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/config/config.js"
-if [ -f "$CONFIG_FILE" ]; then
-    TARGET_URL=$(grep -A 1 "kiosk: {" "$CONFIG_FILE" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
-fi
-# Use config URL if available, otherwise use default
-TARGET_URL="${TARGET_URL:-https://www.google.com}"
-
 # Get directory where script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TARGET_URL="https://www.google.com" 
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
 PROFILE_NAME="kiosk.default"

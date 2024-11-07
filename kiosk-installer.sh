@@ -14,10 +14,15 @@ if [ -f "$CONFIG_FILE" ]; then
     # Extract values using grep and sed
     KIOSK_USER=$(grep -A 2 "kiosk: {" "$CONFIG_FILE" | grep "user:" | sed "s/.*user: '\([^']*\)'.*/\1/")
     KIOSK_PASSWORD=$(grep -A 3 "kiosk: {" "$CONFIG_FILE" | grep "password:" | sed "s/.*password: '\([^']*\)'.*/\1/")
+    TARGET_URL=$(grep -A 1 "kiosk: {" "$CONFIG_FILE" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
+
 fi
+
 # Use config values if available, otherwise use defaults
 USER="${KIOSK_USER:-kiosk}"
 PASSWORD="${KIOSK_PASSWORD:-!SECURE@PASSWORD!}"
+TARGET_URL="${TARGET_URL:-https://www.google.com}"
+
 
 # Get the directory where the installer script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -71,11 +76,17 @@ log_info "Adding user to groups: netdev, video, audio"
 sudo usermod -aG netdev,video,audio "$USER"
 
 
-# Step 3: Copy kiosk.sh from installer directory to user's home
+# Step 3: Copy and modify kiosk.sh from installer directory to user's home
 if [ -f "$SCRIPT_DIR/kiosk.sh" ]; then
     log_info "Copying kiosk.sh to user's home directory"
     sudo cp "$SCRIPT_DIR/kiosk.sh" "/home/$USER/"
     sudo cp "$SCRIPT_DIR/logger.sh" "/home/$USER/"
+    
+    # Update TARGET_URL in kiosk.sh
+    log_info "Updating TARGET_URL in kiosk.sh to: $TARGET_URL"
+    sudo sed -i "s|^TARGET_URL=.*|TARGET_URL=\"$TARGET_URL\"|" "/home/$USER/kiosk.sh"
+    
+    # Set correct permissions
     sudo chown "$USER:$USER" "/home/$USER/kiosk.sh"
     sudo chown "$USER:$USER" "/home/$USER/logger.sh"
     sudo chmod +x "/home/$USER/kiosk.sh"
