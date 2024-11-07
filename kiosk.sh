@@ -12,7 +12,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
 TARGET_URL="http://shape-z.de:5173/"
-PROFILE_NAME="kiosk.default"
+PROFILE_NAME="kiosk.default-esr"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
@@ -177,7 +177,7 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
 
-    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
