@@ -11,8 +11,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
-TARGET_URL="https://www.google.de/" # URL to open in kiosk mode
-PROFILE_NAME="kiosk.default-esr"
+TARGET_URL="http://195.90.223.88:5173/" # URL to open in kiosk mode
+PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
@@ -59,71 +59,22 @@ create_firefox_profile() {
     mkdir -p "$PROFILE_PATH"
 
     cat > "$PROFILE_PATH/prefs.js" << EOF
+user_pref("browser.rights.3.shown", true);
 user_pref("browser.startup.homepage", "$TARGET_URL");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.sessionstore.enabled", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
-user_pref("browser.sessionstore.", 0);
-user_pref("browser.startup.page", 0);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.startup.page", 1);
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("browser.sessionstore.max_resumed_crashes", 0);
+user_pref("browser.sessionstore.max_tabs_undo", 0);
+user_pref("browser.sessionstore.max_windows_undo", 0);
 user_pref("browser.cache.disk.enable", false);
 user_pref("browser.cache.memory.enable", true);
 user_pref("browser.cache.memory.capacity", 524288);
-user_pref("browser.rights.3.shown", true);
-user_pref("browser.contentblocking.category", "strict");
-user_pref("dom.event.contextmenu.enabled", false);
-user_pref("browser.urlbar.enabled", false);
-user_pref("browser.link.open_newwindow.restriction", 0);
-user_pref("browser.link.open_newwindow", 1);
-user_pref("xpinstall.enabled", false);
-user_pref("extensions.enable", false);
-user_pref("browser.fullscreen.autohide", false);
-user_pref("full-screen-api.enabled", true);
-user_pref("full-screen-api.warning.enabled", false);
-user_pref("full-screen-api.warning.timeout", 0);
-user_pref("browser.tabs.createFileDropIndicator", false);
-user_pref("browser.tabs.closeWindowWithLastTab", false);
-user_pref("browser.keywordList.enabled", false);
-user_pref("dom.disable_window_move_resize", true);
-user_pref("dom.disable_window_flip", true);
-user_pref("dom.disable_window_open_feature.location", true);
-user_pref("dom.disable_window_open_feature.menubar", true);
-user_pref("dom.disable_window_open_feature.toolbar", true);
-user_pref("dom.disable_window_print", true);
-user_pref("dom.disable_window_status", true);
-user_pref("dom.allow_scripts_to_close_windows", false);
-user_pref("security.fileuri.strict_origin_policy", true);
-user_pref("ui.key.menuAccessKeyFocuses", false);
-user_pref("browser.casting.enabled", false);
-user_pref("datareporting.policy.dataSubmissionEnabled", false);
-user_pref("datareporting.healthreport.uploadEnabled", false);
-user_pref("toolkit.telemetry.enabled", false);
-user_pref("browser.rights.override", true);
-user_pref("browser.aboutwelcome.enabled", false);
-user_pref("browser.privatebrowsing.vpnpromourl", "");
-user_pref("browser.vpn_promo.enabled", false);
-user_pref("privacy.firstparty.isolate", true);
-user_pref("browser.tabs.allowTabDetach", false);
-user_pref("browser.tabs.closeWindowWithLastTab", false);
-user_pref("browser.tabs.warnOnClose", false);
-user_pref("browser.tabs.warnOnCloseOtherTabs", false);
-user_pref("browser.tabs.warnOnOpen", false);
-user_pref("browser.tabs.loadInBackground", false);
-user_pref("browser.tabs.opentabfor.middleclick", false);
-user_pref("browser.tabs.loadDivertedInBackground", false);
-user_pref("browser.tabs.tabmanager.enabled", false);
-user_pref("toolkit.tabbox.switchByScrolling", false);
-user_pref("browser.link.open_newwindow.override.external", 1);
-user_pref("browser.tabs.inTitlebar", 0);
-user_pref("browser.tabs.autoHide", true);
-user_pref("browser.hidenavbar", true);
-user_pref("browser.toolbars.bookmarks.visibility", "never");
-user_pref("browser.gesture.swipe.left", "");
-user_pref("browser.gesture.swipe.right", "");
-user_pref("browser.customizemode.tip0.shown", true);
-user_pref("browser.download.autohideButton", false);
-user_pref("browser.tabs.firefox-view", false);
-user_pref("browser.tabs.firefox-view-next", false);
-user_pref("browser.engagement.downloads-button.has-used", true);
+user_pref("browser.privatebrowsing.autostart", true);
+user_pref("browser.startup.homepage_override.enabled", false);
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
@@ -137,21 +88,12 @@ setup_openbox() {
     cat > "$HOME/.config/openbox/rc.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <openbox_config xmlns="http://openbox.org/3.4/rc">
-    <application class="Firefox-esr">
+  <applications>
+    <application class="*">
       <decor>no</decor>
-      <shade>no</shade>
-      <position force="yes">
-        <x>0</x>
-        <y>0</y>
-      </position>
       <focus>yes</focus>
-      <desktop>all</desktop>
-      <layer>above</layer>
-      <skip_pager>yes</skip_pager>
-      <skip_taskbar>yes</skip_taskbar>
-      <fullscreen>yes</fullscreen>
-      <maximized>true</maximized>
     </application>
+  </applications>
 </openbox_config>
 EOF
 }
@@ -184,21 +126,22 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
 
-    DISPLAY=$DISPLAY_NUM firefox-esr \
-        --kiosk \
-        --profile "$PROFILE_PATH" \
-        --no-remote \
-        --window-size=$(xdpyinfo | grep dimensions | awk '{print $2}') \
-        --browser.tabs.drawInTitlebar=false \
-        "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
-        if pgrep -x "firefox-esr" > /dev/null; then
-            log_info "Firefox ESR process started"
-            return 0
+        if pgrep -x "firefox" > /dev/null; then
+            log_message "Firefox process started"
+            sleep 2  # Give Firefox time to create window
+            if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
+                log_message "Firefox window detected"
+                return 0
+            else
+                log_message "Firefox process running but window not detected"
+                return 0
+            fi
         fi
         attempt=$((attempt + 1))
         sleep 1
@@ -214,6 +157,7 @@ disable_mouse_cursor() {
 }
 
 main() {
+    cleanup
     create_firefox_profile
     setup_openbox
     
@@ -234,7 +178,7 @@ main() {
     
     # Monitor and restart if needed
     while true; do
-        if ! pgrep -x "firefox-esr" > /dev/null; then
+        if ! pgrep -x "firefox" > /dev/null; then
             log_warn "Firefox process died, restarting..."
             launch_firefox || {
                 log_error "Failed to restart Firefox. Cleaning up..."
