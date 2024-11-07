@@ -177,7 +177,7 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
 
-    DISPLAY=$DISPLAY_NUM firefox-esr --kiosk --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr --browser --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
