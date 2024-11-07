@@ -9,9 +9,9 @@ A modern, lightweight digital signage solution built with Node.js that automatic
 - 📅 Scheduling support with vacation periods
 - ⌚ Configurable display times and days
 - 🎯 Date-based content targeting
-- 📱 Touch and swipe support
+- 📱 Touch and swipe support (with react-swipeable)
 - 🖥️ Fullscreen mode
-- 🎨 Smooth transitions and animations
+- 🎨 Smooth transitions and animations (using framer-motion)
 
 ## Prerequisites
 
@@ -145,32 +145,36 @@ backendPowerSaving: {
 
 ## Auto-start Setup (Raspberry Pi)
 
-1. Create a systemd service file:
-```bash
-sudo nano /etc/systemd/system/slideshow.service
+The application comes with scripts to set up kiosk mode on Raspberry Pi running Debian Bookworm:
+
+Install required packages and setup kiosk user:
+```sh
+chmod +x kiosk-installer.sh
+sudo ./kiosk-installer.sh
 ```
 
-2. Add the following content:
-```ini
-[Unit]
-Description=Terminal Slide Show
-After=network.target
+The installer will:
 
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/pi/terminal-slide-show
-ExecStart=/usr/bin/npm start
-Restart=always
+- Create a dedicated kiosk user
+- Configure auto-login
+- Set up Firefox ESR in kiosk mode
+- Configure Openbox window manager
+- Set up auto-start of the application
 
-[Install]
-WantedBy=multi-user.target
-```
 
-3. Enable and start the service:
-```bash
-sudo systemctl enable slideshow
-sudo systemctl start slideshow
+The kiosk setup includes:
+
+- Full-screen mode
+- Disabled browser UI elements
+- Hidden cursor
+- Disabled keyboard shortcuts
+- Security hardening
+- Auto-recovery on crashes
+- Reboot your system:
+
+Reboot your system:
+```sh
+sudo reboot
 ```
 
 ## Supported Media Types
