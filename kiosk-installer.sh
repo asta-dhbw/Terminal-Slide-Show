@@ -105,29 +105,25 @@ fi
 TTY_CONFIG_DIR="/etc/systemd/system/getty@tty1.service.d"
 TTY_CONFIG_FILE="$TTY_CONFIG_DIR/autologin.conf"
 
-# Only configure TTY autologin if the directory already exists
-if [ -d "$TTY_CONFIG_DIR" ]; then
-    log_debug "Configuring TTY autologin"
+log_debug "Configuring TTY autologin"
+sudo mkdir -p "$TTY_CONFIG_DIR"
 
-    # Create or update TTY autologin configuration
-    cat << EOF | sudo tee "$TTY_CONFIG_FILE" > /dev/null
+# Create or update TTY autologin configuration
+cat << EOF | sudo tee "$TTY_CONFIG_FILE" > /dev/null
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
 
-    if [ $? -ne 0 ]; then
-        log_error "Failed to configure TTY autologin"
-        exit 1
-    fi
-
-    # Reload systemd daemon and restart getty service
-    log_debug "Reloading systemd configuration"
-    sudo systemctl daemon-reload
-    sudo systemctl restart getty@tty1.service
-    
-    log_info "TTY autologin configuration completed successfully"
+if [ $? -ne 0 ]; then
+    log_error "Failed to configure TTY autologin"
+    exit 1
 fi
+
+# Reload systemd daemon and restart getty service
+log_debug "Reloading systemd configuration"
+sudo systemctl daemon-reload
+sudo systemctl restart getty@tty1.service
 
 log_info "Autologin configuration completed successfully"
 

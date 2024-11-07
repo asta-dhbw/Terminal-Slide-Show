@@ -137,14 +137,21 @@ setup_openbox() {
     cat > "$HOME/.config/openbox/rc.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <openbox_config xmlns="http://openbox.org/3.4/rc">
-  <applications>
-    <application class="*">
+    <application class="Firefox-esr">
       <decor>no</decor>
+      <shade>no</shade>
+      <position force="yes">
+        <x>0</x>
+        <y>0</y>
+      </position>
       <focus>yes</focus>
+      <desktop>all</desktop>
+      <layer>above</layer>
+      <skip_pager>yes</skip_pager>
+      <skip_taskbar>yes</skip_taskbar>
       <fullscreen>yes</fullscreen>
       <maximized>true</maximized>
     </application>
-  </applications>
 </openbox_config>
 EOF
 }
@@ -177,7 +184,13 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ESR..."
 
-    DISPLAY=$DISPLAY_NUM firefox-esr --browser --profile "$PROFILE_PATH" "$TARGET_URL" &
+    DISPLAY=$DISPLAY_NUM firefox-esr \
+        --kiosk \
+        --profile "$PROFILE_PATH" \
+        --no-remote \
+        --window-size=$(xdpyinfo | grep dimensions | awk '{print $2}') \
+        --browser.tabs.drawInTitlebar=false \
+        "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
