@@ -1,15 +1,20 @@
 export const config = {
   info: {
-    location: 'LOCATION',
+    location: 'Friedrichshafen',
   },
   apiKeys: {
-    NASA_API_KEY: 'API' // https://api.nasa.gov/
+    NASA_API_KEY: 'APIKEY' // https://api.nasa.gov/
   },
   google: {
     serviceAccountPath: './config/service-account.json', // Path to Google Drive service account file
     folderId: 'ID', // Google Drive folder ID
     scopes: ['https://www.googleapis.com/auth/drive.readonly'], // Google Drive API scopes
     apiVersion: 'v3' // Google Drive API version
+  },
+  kiosk: {
+    targetUrl: 'https://www.google.de/', // Default URL for kiosk mode
+    user: 'kiosk',                           // Default kiosk user
+    password: '!SECURE@PASSWORD!'            // Default kiosk password
   },
   backendPowerSaving: {
     timeout: 5 * 60 * 1000 // standard 5 minutes in milliseconds

@@ -267,10 +267,11 @@
 
 .dhbw-logo {
   position: absolute;
-  bottom: 70px;
-  right: 10px;
-  padding: 0.75rem;
-  border-radius: 1rem;
+  /* Change from fixed pixel value to viewport-based units with a minimum */
+  bottom: max(30px, 7vh); /* This ensures it stays at least 70px from bottom but scales with viewport height */
+  right: clamp(10px, 1vw, 10px);
+  padding: clamp(0.75rem, 0.75vw, 1.5rem);
+  border-radius: clamp(1rem, 1vw, 2rem);
   transition: all 0.3s ease;
   z-index: 20;
 }
@@ -287,7 +288,7 @@
 }
 
 .dhbw-logo img {
-  height: 120px;
+  height: clamp(120px, min(12vh, 240px), 240px); /* This prevents the logo from getting too large */
   width: auto;
   transition: all 0.3s ease;
 }

@@ -9,7 +9,7 @@ git config pull.ff false
 git config merge.commit no-edit
 
 # Modified fetch and pull command
-git fetch && git stash && git pull --no-edit
+git stash && git pull --no-edit && chmod +x docker.sh
 
 # Build/rebuild containers defined in docker-compose.yml without using cache
 docker compose build --no-cache

@@ -8,9 +8,16 @@
 # Source the logger
 [ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
+CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/config/config.js"
 
-USER="kiosk"
-PASSWORD='!SECURE@PASSWORD!'
+if [ -f "$CONFIG_FILE" ]; then
+    # Extract values using grep and sed
+    KIOSK_USER=$(grep -A 2 "kiosk: {" "$CONFIG_FILE" | grep "user:" | sed "s/.*user: '\([^']*\)'.*/\1/")
+    KIOSK_PASSWORD=$(grep -A 3 "kiosk: {" "$CONFIG_FILE" | grep "password:" | sed "s/.*password: '\([^']*\)'.*/\1/")
+fi
+# Use config values if available, otherwise use defaults
+USER="${KIOSK_USER:-kiosk}"
+PASSWORD="${KIOSK_PASSWORD:-!SECURE@PASSWORD!}"
 
 # Get the directory where the installer script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

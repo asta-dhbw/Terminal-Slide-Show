@@ -1,23 +1,33 @@
 #!/bin/bash
 
+# Required packages installation commented out - uncomment if needed
+# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
+
 # Source the logger
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 
-
-# Required packages installation commented out - uncomment if needed
-# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
+CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/config/config.js"
+if [ -f "$CONFIG_FILE" ]; then
+    TARGET_URL=$(grep -A 1 "kiosk: {" "$CONFIG_FILE" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
+fi
+# Use config URL if available, otherwise use default
+TARGET_URL="${TARGET_URL:-https://www.google.com}"
 
 # Get directory where script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
-TARGET_URL="http://195.90.223.88:5173/" # URL to open in kiosk mode
 PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
+# clear console
+clear
+# Trap signals and cleanup
+trap cleanup SIGINT SIGTERM EXIT
 # Initialize logging with custom settings
 init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
+
 
 cleanup() {
     log_info "Performing cleanup..."
@@ -50,8 +60,6 @@ reset_terminal() {
     tput sgr0
     tput rmcup
 }
-
-trap cleanup SIGINT SIGTERM EXIT
 
 create_firefox_profile() {
     log_info "Creating fresh Firefox profile..."
@@ -156,8 +164,41 @@ disable_mouse_cursor() {
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
 
+# Spinning animation function
+spinner() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c] Attempting to connect to internet..." "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\r"
+    done
+    printf "\r"
+}
+
+# Check internet connectivity
+check_connection() {
+    ping -c 1 8.8.8.8 >/dev/null 2>&1
+    return $?
+}
+
+
 main() {
     cleanup
+
+    while ! check_connection; do
+        # Start checking in background
+        (sleep 1) &
+        # Show spinner while checking
+        spinner $!
+    done
+
+    log_info "🌐 Internet connection established"
+    log_info "Starting kiosk mode..."
+
     create_firefox_profile
     setup_openbox
     
