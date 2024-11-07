@@ -11,7 +11,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
-TARGET_URL="http://shape-z.de:5173/"
+TARGET_URL="https://www.google.de/" # URL to open in kiosk mode
 PROFILE_NAME="kiosk.default-esr"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
