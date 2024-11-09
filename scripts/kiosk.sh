@@ -8,9 +8,24 @@
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 
 # Get directory where script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_project_dir() {
+    local dir="$SCRIPT_DIR"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/package.json" ]]; then
+            echo "$dir"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
+}
+
+PROJECT_DIR="$(find_project_dir)"
+
 TARGET_URL="https://www.google.com" 
-LOG_DIR="$SCRIPT_DIR/logs"
+LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk.log"
 PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
@@ -19,6 +34,7 @@ DISPLAY_NUM=":0"
 # clear console
 clear
 # Trap signals and cleanup
+# TODO: This trapper currently traps for every signal, including SIGKILL
 trap cleanup SIGINT SIGTERM EXIT
 # Initialize logging with custom settings
 init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
@@ -162,7 +178,7 @@ main() {
     cleanup
 
     # Run network manager and capture status
-    ./network_manager.sh
+    "$SCRIPT_DIR/network_manager.sh"
     network_status=$?
 
     if [ $network_status -ne 0 ]; then

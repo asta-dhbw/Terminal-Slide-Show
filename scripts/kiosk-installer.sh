@@ -8,7 +8,26 @@
 # Source the logger
 [ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
-CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/config/config.js"
+
+# Get directory where script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_project_dir() {
+    local dir="$SCRIPT_DIR"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/package.json" ]]; then
+            echo "$dir"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
+}
+
+PROJECT_DIR="$(find_project_dir)"
+
+
+CONFIG_FILE="$PROJECT_DIR/config/config.js"
 
 if [ -f "$CONFIG_FILE" ]; then
     # Extract values using grep and sed
@@ -25,8 +44,7 @@ TARGET_URL="${TARGET_URL:-https://www.google.com}"
 
 
 # Get the directory where the installer script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/logs"
+LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/kiosk_installer.log"
 
 # Initialize logging with custom settings

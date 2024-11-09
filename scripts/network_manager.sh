@@ -4,12 +4,24 @@
 [ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/logs"
-LOG_FILE="$LOG_DIR/network_manager.log"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/logs"
+
+find_project_dir() {
+    local dir="$SCRIPT_DIR"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/package.json" ]]; then
+            echo "$dir"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
+}
+
+PROJECT_DIR="$(find_project_dir)"
+
+LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/network_manager.log"
 init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
 
