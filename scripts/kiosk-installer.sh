@@ -6,27 +6,11 @@
 # The script should be run as root or with sudo privileges.
 
 # Source the logger
-[ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
-source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
 # Get directory where script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-find_project_dir() {
-    local dir="$SCRIPT_DIR"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/package.json" ]]; then
-            echo "$dir"
-            return
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
-}
-
+SCRIPT_DIR="$(get_script_dir)"
 PROJECT_DIR="$(find_project_dir)"
-
-
 CONFIG_FILE="$PROJECT_DIR/config/config.js"
 
 if [ -f "$CONFIG_FILE" ]; then
@@ -43,12 +27,9 @@ PASSWORD="${KIOSK_PASSWORD:-!SECURE@PASSWORD!}"
 TARGET_URL="${TARGET_URL:-https://www.google.com}"
 
 
-# Get the directory where the installer script is located
-LOG_DIR="$PROJECT_DIR/logs"
-LOG_FILE="$LOG_DIR/kiosk_installer.log"
-
 # Initialize logging with custom settings
-init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
+init_project_logging "kiosk_installer"
+
 
 # Step 1: Check and install required packages
 log_info "Checking and installing required packages..."
@@ -99,7 +80,8 @@ if [ -f "$SCRIPT_DIR/kiosk.sh" ]; then
     log_info "Copying kiosk.sh to user's home directory"
     sudo cp "$SCRIPT_DIR/kiosk.sh" "/home/$USER/"
     sudo cp "$SCRIPT_DIR/logger.sh" "/home/$USER/"
-    sudo cp "$SCRIPT_DIR/network_manager.sh" "/home/$USER/"
+    sudo cp "$SCRIPT_DIR/network-manager.sh" "/home/$USER/"
+    sudo cp "$SCRIPT_DIR/project-utils.sh" "/home/$USER/"
     
     # Update TARGET_URL in kiosk.sh
     log_info "Updating TARGET_URL in kiosk.sh to: $TARGET_URL"
@@ -108,9 +90,10 @@ if [ -f "$SCRIPT_DIR/kiosk.sh" ]; then
     # Set correct permissions
     sudo chown "$USER:$USER" "/home/$USER/kiosk.sh"
     sudo chown "$USER:$USER" "/home/$USER/logger.sh"
-    sudo chown "$USER:$USER" "/home/$USER/network_manager.sh"
+    sudo chown "$USER:$USER" "/home/$USER/network-manager.sh"
+    sudo chown "$USER:$USER" "/home/$USER/project-utils.sh"
     sudo chmod +x "/home/$USER/kiosk.sh"
-    sudo chmod +x "/home/$USER/network_manager.sh"
+    sudo chmod +x "/home/$USER/network-manager.sh"
 else
     log_error "Error: kiosk.sh not found in $SCRIPT_DIR"
     exit 1

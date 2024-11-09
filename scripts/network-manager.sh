@@ -1,29 +1,7 @@
 #!/bin/bash
 # Wireless network reconnection script - connects to visible networks by signal strength
 
-[ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
-source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
-
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-find_project_dir() {
-    local dir="$SCRIPT_DIR"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/package.json" ]]; then
-            echo "$dir"
-            return
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
-}
-
-PROJECT_DIR="$(find_project_dir)"
-
-LOG_DIR="$PROJECT_DIR/logs"
-LOG_FILE="$LOG_DIR/network_manager.log"
-init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
 spinner() {
     local message="${1:-Loading...}"
@@ -84,7 +62,7 @@ reconnect_wifi() {
     # Forget and reconnect to current network
     if [ ! -z "$current_ssid" ]; then
         local current_signal=$(get_signal_strength "$current_ssid")
-        log_debug "🔄 Reconnecting to $current_ssid (Signal: $current_signal%)"
+        log_info "🔄 Reconnecting to $current_ssid (Signal: $current_signal%)"
         # Turn off WiFi radio
         nmcli radio wifi off
         sleep 2
@@ -102,7 +80,7 @@ reconnect_wifi() {
     fi
 
     # If no current SSID or it's not visible, try visible networks
-    log_debug "🔍 Searching for visible networks..."
+    log_info "🔍 Searching for visible networks..."
     # Get list of known connections (configurations)
     local known_networks=$(nmcli -g name connection show)
     # Get list of currently visible networks sorted by signal strength
@@ -156,11 +134,11 @@ connect_ethernet() {
     fi
 
     while IFS= read -r device; do
-        log_debug "🔍 Checking ethernet device: $device"
+        log_info "🔍 Checking ethernet device: $device"
         
         # Skip virtual devices
         if [[ "$device" == *"veth"* ]]; then
-            log_debug "⏭️ Skipping virtual device: $device"
+            log_info "⏭️ Skipping virtual device: $device"
             continue
         fi
 
@@ -172,7 +150,7 @@ connect_ethernet() {
 
         # Enable device if disabled
         if nmcli dev status | grep "^$device" | grep -q "unavailable"; then
-            log_debug "🔄 Enabling Ethernet device $device"
+            log_info "🔄 Enabling Ethernet device $device"
             nmcli dev set "$device" managed yes
             sleep 2
         fi
@@ -186,7 +164,7 @@ connect_ethernet() {
                 return 0
             fi
         fi
-        log_debug "⚠️ Failed to connect using $device"
+        log_info "⚠️ Failed to connect using $device"
     done <<< "$ethernet_devices"
     
     log_warn "❌ Failed to connect via any Ethernet device"
@@ -194,6 +172,8 @@ connect_ethernet() {
 }
 
 
+# Initialize logging
+init_project_logging "network_manager" 
 
 # Main loop
 attempt=1

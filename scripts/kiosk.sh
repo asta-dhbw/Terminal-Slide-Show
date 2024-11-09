@@ -4,40 +4,20 @@
 # sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
 
 # Source the logger
-[ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
-source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
 # Get directory where script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-find_project_dir() {
-    local dir="$SCRIPT_DIR"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/package.json" ]]; then
-            echo "$dir"
-            return
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
-}
-
-PROJECT_DIR="$(find_project_dir)"
+SCRIPT_DIR="$(get_script_dir)"
 
 TARGET_URL="https://www.google.com" 
-LOG_DIR="$PROJECT_DIR/logs"
-LOG_FILE="$LOG_DIR/kiosk.log"
 PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
-# clear console
-clear
 # Trap signals and cleanup
 # TODO: This trapper currently traps for every signal, including SIGKILL
-trap cleanup SIGINT SIGTERM EXIT
+# trap cleanup SIGINT SIGTERM EXIT
 # Initialize logging with custom settings
-init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
 
 
 cleanup() {
@@ -175,10 +155,14 @@ disable_mouse_cursor() {
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
 main() {
+    clear
+    # Initialize logging
+    init_project_logging "kiosk"
+
     cleanup
 
     # Run network manager and capture status
-    "$SCRIPT_DIR/network_manager.sh"
+    "$SCRIPT_DIR/network-manager.sh"
     network_status=$?
 
     if [ $network_status -ne 0 ]; then

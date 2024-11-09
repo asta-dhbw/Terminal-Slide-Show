@@ -1,43 +1,14 @@
 #!/bin/bash
 
-
 # sudo apt-get install fbi mpv exiftool
 
-# Determine the script's directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-find_project_dir() {
-    local dir="$SCRIPT_DIR"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/package.json" ]]; then
-            echo "$dir"
-            return
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
-}
-
-PROJECT_DIR="$(find_project_dir)"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
 # Configuration
+PROJECT_DIR="$(find_project_dir)"
 MEDIA_DIR="${PROJECT_DIR}/downloads"
-LOG_DIR="${PROJECT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/terminal_slideshow.log"
 DISPLAY_TIME=5  # seconds between images
 FADE_TIME=1     # seconds for transitions
-
-# Initialize logging
-setup_logging() {
-    mkdir -p "$LOG_DIR"
-    exec 1> >(tee -a "$LOG_FILE")
-    exec 2> >(tee -a "$LOG_FILE" >&2)
-    log "Initializing terminal slideshow"
-}
-
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
 
 check_dependencies() {
     # Package to command name mapping 
@@ -79,15 +50,15 @@ check_dependencies() {
     done
 
     if [ ${#missing[@]} -ne 0 ]; then
-        log "ERROR: Missing required packages: ${missing[*]}"
+        log_error "ERROR: Missing required packages: ${missing[*]}"
         # Detect package manager and provide appropriate install command
         if command -v pacman >/dev/null 2>&1; then
-            log "Install them with: sudo pacman -S ${missing[*]}"
-            log "For perl-image-exiftool: yay -S perl-image-exiftool"
+            log_info "Install them with: sudo pacman -S ${missing[*]}"
+            log_info "For perl-image-exiftool: yay -S perl-image-exiftool"
         elif command -v apt-get >/dev/null 2>&1; then
-            log "Install them with: sudo apt-get install ${missing[*]}"
+            log_info "Install them with: sudo apt-get install ${missing[*]}"
         else
-            log "Please install the missing packages using your system's package manager"
+            log_info "Please install the missing packages using your system's package manager"
         fi
         exit 1
     fi
@@ -102,6 +73,7 @@ check_dependencies() {
         export PATH="/usr/share/perl5/vendor_perl/bin:$PATH"
     fi
 }
+
 # Find an unused virtual terminal
 find_unused_tty() {
     current_tty=$(fgconsole)
@@ -132,7 +104,7 @@ display_media() {
             mpv --vo=drm --quiet --loop --no-audio "$file"
             ;;
         *)
-            log "ERROR: Unknown media type: $type"
+            log_error "ERROR: Unknown media type: $type"
             return 1
             ;;
     esac
@@ -158,7 +130,7 @@ get_media_type() {
 
 # Clean up processes on exit
 cleanup() {
-    log "Cleaning up..."
+    log_info "Cleaning up..."
     pkill -f fbi
     pkill -f mpv
     chvt 1  # Switch back to main console
@@ -170,7 +142,7 @@ cleanup() {
 run_slideshow() {
     local tty
     tty=$(find_unused_tty) || {
-        log "ERROR: No available virtual terminal found"
+        log_info "ERROR: No available virtual terminal found"
         exit 1
     }
 
@@ -187,7 +159,7 @@ run_slideshow() {
         done < <(find "$MEDIA_DIR" -type f -print0)
 
         if [ ${#files[@]} -eq 0 ]; then
-            log "No media files found in $MEDIA_DIR"
+            log_info "No media files found in $MEDIA_DIR"
             sleep 5
             continue
         fi
@@ -204,7 +176,7 @@ run_slideshow() {
                 continue
             fi
 
-            log "Displaying: $file"
+            log_info "Displaying: $file"
             display_media "$file" "$media_type" "$tty"
             
             # Check for user input (q to quit)
@@ -218,15 +190,14 @@ run_slideshow() {
 
 # Main entry point
 main() {
-    setup_logging
+    init_project_logging "terminal_slideshow"
     check_dependencies
 
     # Create required directories
     mkdir -p "$MEDIA_DIR" "$LOG_DIR"
 
     # Set up signal handlers
-    # TODO: This trapper currently traps for every signal, including SIGKILL
-    # trap cleanup SIGINT SIGTERM
+    setup_signal_traps cleanup
 
     # Start slideshow
     run_slideshow
