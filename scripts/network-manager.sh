@@ -1,17 +1,7 @@
 #!/bin/bash
 # Wireless network reconnection script - connects to visible networks by signal strength
 
-[ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
-source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/logs"
-LOG_FILE="$LOG_DIR/network_manager.log"
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/logs"
-LOG_FILE="$LOG_DIR/network_manager.log"
-init_logging "$LOG_DIR" "$LOG_FILE" "DEBUG"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
 spinner() {
     local message="${1:-Loading...}"
@@ -72,7 +62,7 @@ reconnect_wifi() {
     # Forget and reconnect to current network
     if [ ! -z "$current_ssid" ]; then
         local current_signal=$(get_signal_strength "$current_ssid")
-        log_debug "🔄 Reconnecting to $current_ssid (Signal: $current_signal%)"
+        log_info "🔄 Reconnecting to $current_ssid (Signal: $current_signal%)"
         # Turn off WiFi radio
         nmcli radio wifi off
         sleep 2
@@ -90,7 +80,7 @@ reconnect_wifi() {
     fi
 
     # If no current SSID or it's not visible, try visible networks
-    log_debug "🔍 Searching for visible networks..."
+    log_info "🔍 Searching for visible networks..."
     # Get list of known connections (configurations)
     local known_networks=$(nmcli -g name connection show)
     # Get list of currently visible networks sorted by signal strength
@@ -114,6 +104,77 @@ reconnect_wifi() {
     return 1
 }
 
+check_ethernet() {
+    local device=$1
+    
+    # First check if device exists and is in "connected" state
+    if ! nmcli dev status | grep "^$device" | grep -q "connected"; then
+        return 1
+    fi
+
+    # Then verify we have an IP address that's not link-local
+    local ip=$(ip addr show dev "$device" | grep "inet " | grep -v "169.254" | awk '{print $2}')
+    if [ -z "$ip" ]; then
+        return 1
+    fi
+
+    # Finally check internet connectivity through this device
+    timeout 3 ping -I "$device" -c 1 8.8.8.8 >/dev/null 2>&1
+    return $?
+}
+
+connect_ethernet() {
+    log_info "🔌 Checking Ethernet connection..."
+    
+    local ethernet_devices=$(nmcli -t -f DEVICE,TYPE dev status | grep ":ethernet$" | cut -d: -f1)
+    
+    if [ -z "$ethernet_devices" ]; then
+        log_warn "❌ No Ethernet devices found"
+        return 1
+    fi
+
+    while IFS= read -r device; do
+        log_info "🔍 Checking ethernet device: $device"
+        
+        # Skip virtual devices
+        if [[ "$device" == *"veth"* ]]; then
+            log_info "⏭️ Skipping virtual device: $device"
+            continue
+        fi
+
+        # Check if device is already connected with internet access
+        if check_ethernet "$device"; then
+            log_info "✅ Connected to internet via $device"
+            return 0
+        fi
+
+        # Enable device if disabled
+        if nmcli dev status | grep "^$device" | grep -q "unavailable"; then
+            log_info "🔄 Enabling Ethernet device $device"
+            nmcli dev set "$device" managed yes
+            sleep 2
+        fi
+
+        # Try to connect
+        log_info "🔄 Attempting Ethernet connection on $device"
+        if nmcli dev connect "$device" 2>/dev/null; then
+            sleep 3
+            if check_ethernet "$device"; then
+                log_info "✅ Connected to internet via $device"
+                return 0
+            fi
+        fi
+        log_info "⚠️ Failed to connect using $device"
+    done <<< "$ethernet_devices"
+    
+    log_warn "❌ Failed to connect via any Ethernet device"
+    return 1
+}
+
+
+# Initialize logging
+init_project_logging "network_manager" 
+
 # Main loop
 attempt=1
 
@@ -124,6 +185,15 @@ while ! check_connection; do
     
     if ! check_connection; then
         log_warn "❌ No connection detected"
+        
+        # Try Ethernet first
+        if connect_ethernet; then
+            log_info "🌐 Internet connection established via Ethernet"
+            exit 0
+        fi
+        
+        # Fall back to WiFi if Ethernet fails
+        log_info "📡 Falling back to WiFi..."
         reconnect_wifi
         sleep 5 # Wait for connection to establish
         attempt=$((attempt + 1))

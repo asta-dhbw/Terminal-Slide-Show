@@ -1,8 +1,24 @@
 #!/bin/bash
 
 # Default values
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_project_dir() {
+    local dir="$SCRIPT_DIR"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/package.json" ]]; then
+            echo "$dir"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
+}
+
+PROJECT_DIR="$(find_project_dir)"
+
 LOG_LEVEL=${LOG_LEVEL:-"INFO"}  # Can be ERROR, WARN, INFO, DEBUG
-LOG_DIR=${LOG_DIR:-"./logs"}    # Default log directory
+LOG_DIR=${LOG_DIR:-"$PROJECT_DIR/logs"}   # Default log directory
 LOG_FILE=${LOG_FILE:-"$LOG_DIR/application.log"}
 
 # Log levels
