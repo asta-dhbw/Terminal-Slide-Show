@@ -114,6 +114,75 @@ reconnect_wifi() {
     return 1
 }
 
+check_ethernet() {
+    local device=$1
+    
+    # First check if device exists and is in "connected" state
+    if ! nmcli dev status | grep "^$device" | grep -q "connected"; then
+        return 1
+    fi
+
+    # Then verify we have an IP address that's not link-local
+    local ip=$(ip addr show dev "$device" | grep "inet " | grep -v "169.254" | awk '{print $2}')
+    if [ -z "$ip" ]; then
+        return 1
+    fi
+
+    # Finally check internet connectivity through this device
+    timeout 3 ping -I "$device" -c 1 8.8.8.8 >/dev/null 2>&1
+    return $?
+}
+
+connect_ethernet() {
+    log_info "🔌 Checking Ethernet connection..."
+    
+    local ethernet_devices=$(nmcli -t -f DEVICE,TYPE dev status | grep ":ethernet$" | cut -d: -f1)
+    
+    if [ -z "$ethernet_devices" ]; then
+        log_warn "❌ No Ethernet devices found"
+        return 1
+    fi
+
+    while IFS= read -r device; do
+        log_debug "🔍 Checking ethernet device: $device"
+        
+        # Skip virtual devices
+        if [[ "$device" == *"veth"* ]]; then
+            log_debug "⏭️ Skipping virtual device: $device"
+            continue
+        fi
+
+        # Check if device is already connected with internet access
+        if check_ethernet "$device"; then
+            log_info "✅ Connected to internet via $device"
+            return 0
+        fi
+
+        # Enable device if disabled
+        if nmcli dev status | grep "^$device" | grep -q "unavailable"; then
+            log_debug "🔄 Enabling Ethernet device $device"
+            nmcli dev set "$device" managed yes
+            sleep 2
+        fi
+
+        # Try to connect
+        log_info "🔄 Attempting Ethernet connection on $device"
+        if nmcli dev connect "$device" 2>/dev/null; then
+            sleep 3
+            if check_ethernet "$device"; then
+                log_info "✅ Connected to internet via $device"
+                return 0
+            fi
+        fi
+        log_debug "⚠️ Failed to connect using $device"
+    done <<< "$ethernet_devices"
+    
+    log_warn "❌ Failed to connect via any Ethernet device"
+    return 1
+}
+
+
+
 # Main loop
 attempt=1
 
@@ -124,6 +193,15 @@ while ! check_connection; do
     
     if ! check_connection; then
         log_warn "❌ No connection detected"
+        
+        # Try Ethernet first
+        if connect_ethernet; then
+            log_info "🌐 Internet connection established via Ethernet"
+            exit 0
+        fi
+        
+        # Fall back to WiFi if Ethernet fails
+        log_info "📡 Falling back to WiFi..."
         reconnect_wifi
         sleep 5 # Wait for connection to establish
         attempt=$((attempt + 1))
