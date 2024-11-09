@@ -81,6 +81,7 @@ if [ -f "$SCRIPT_DIR/kiosk.sh" ]; then
     log_info "Copying kiosk.sh to user's home directory"
     sudo cp "$SCRIPT_DIR/kiosk.sh" "/home/$USER/"
     sudo cp "$SCRIPT_DIR/logger.sh" "/home/$USER/"
+    sudo cp "$SCRIPT_DIR/network_manager.sh" "/home/$USER/"
     
     # Update TARGET_URL in kiosk.sh
     log_info "Updating TARGET_URL in kiosk.sh to: $TARGET_URL"
@@ -89,7 +90,9 @@ if [ -f "$SCRIPT_DIR/kiosk.sh" ]; then
     # Set correct permissions
     sudo chown "$USER:$USER" "/home/$USER/kiosk.sh"
     sudo chown "$USER:$USER" "/home/$USER/logger.sh"
+    sudo chown "$USER:$USER" "/home/$USER/network_manager.sh"
     sudo chmod +x "/home/$USER/kiosk.sh"
+    sudo chmod +x "/home/$USER/network_manager.sh"
 else
     log_error "Error: kiosk.sh not found in $SCRIPT_DIR"
     exit 1

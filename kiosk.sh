@@ -4,6 +4,7 @@
 # sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
 
 # Source the logger
+[ ! -f "$(dirname "${BASH_SOURCE[0]}")/logger.sh" ] && { echo "logger.sh not found"; exit 1; }
 source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
 
 # Get directory where script is located
@@ -157,40 +158,19 @@ disable_mouse_cursor() {
     log_info "Disabling mouse cursor..."
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
-
-# Spinning animation function
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf " [%c] Attempting to connect to internet..." "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\r"
-    done
-    printf "\r"
-}
-
-# Check internet connectivity
-check_connection() {
-    ping -c 1 8.8.8.8 >/dev/null 2>&1
-    return $?
-}
-
-
 main() {
     cleanup
 
-    while ! check_connection; do
-        # Start checking in background
-        (sleep 1) &
-        # Show spinner while checking
-        spinner $!
-    done
+    # Run network manager and capture status
+    ./network_manager.sh
+    network_status=$?
 
-    log_info "🌐 Internet connection established"
+    if [ $network_status -ne 0 ]; then
+        log_error "Network setup failed with status $network_status"
+        exit 1
+    fi
+
+    log_info "Network setup completed successfully"
     log_info "Starting kiosk mode..."
 
     create_firefox_profile
