@@ -49,6 +49,7 @@
     "fs-extra": "^11.2.0",
     "googleapis": "^144.0.0",
     "lucide-react": "^0.454.0",
+    "node-fetch": "^3.3.2",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.3.1",
@@ -63,7 +64,7 @@
     "vite": "^5.0.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.9.5",
-    "@esbuild/linux-x64": "^0.24.0"
+    "@esbuild/linux-x64": "^0.24.0",
+    "@rollup/rollup-linux-x64-gnu": "^4.9.5"
   }
 }

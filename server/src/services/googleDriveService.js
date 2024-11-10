@@ -11,34 +11,28 @@ import { isValidFile } from '../utils/fileValidator.js';
  * @description Handles authentication, file listing, downloading, and sync with Google Drive
  */
 export class GoogleDriveService {
-    /**
-   * Creates a new GoogleDriveService instance
-   * @constructor
-   */
     constructor() {
-      this.logger = new Logger('GoogleDriveService');
-      this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
-      this.syncInterval = null;
-      this.initialized = false;
-      this.isPaused = false;
+        this.logger = new Logger('GoogleDriveService');
+        this.downloadPath = path.join(process.cwd(), config.paths.downloadPath);
+        this.syncInterval = null;
+        this.initialized = false;
+        this.isPaused = false;
     }
   
-
-
     async initialize() {
       try {
-          const auth = new google.auth.GoogleAuth({
-              keyFile: config.google.serviceAccountPath,
-              scopes: [config.google.scopes]
-          });
-  
-          this.drive = google.drive({ version: config.google.apiVersion, auth });
+          if (config.google.useServiceAccount) {
+              // Service account authentication
+              const auth = new google.auth.GoogleAuth({
+                  keyFile: config.google.serviceAccountPath,
+                  scopes: [config.google.scopes]
+              });
+              this.drive = google.drive({ version: config.google.apiVersion, auth });
+          } else {
+              // For public access, we don't need to initialize the drive client
+              this.drive = null;
+          }
           
-          // Test connection
-          await this.drive.files.list({
-              pageSize: 1,
-          });
-  
           await fs.ensureDir(this.downloadPath);
           this.logger.info('Google Drive service initialized successfully');
           this.initialized = true;
@@ -114,7 +108,7 @@ export class GoogleDriveService {
                       await this.downloadFile(file.id, localPath);
                       this.logger.info(`Downloaded: ${file.name}`);
                   } catch (downloadError) {
-                      this.logger.warn(`Failed to download ${file.name}, skipping: ${downloadError.message}`);
+                      this.logger.warn(`Failed to download ${file.name}: ${downloadError.message}`);
                       continue;
                   }
               }
@@ -157,6 +151,20 @@ export class GoogleDriveService {
     return validFiles;
   }
 
+  getMimeType(fileName) {
+    const ext = path.extname(fileName).toLowerCase();
+    const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
+        '.ogg': 'video/ogg'
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
+}
+
     /**
    * Fetches files from a specific Google Drive folder
    * @async
@@ -164,29 +172,47 @@ export class GoogleDriveService {
    * @throws {Error} If fetching files fails
    * @returns {Promise<Array<Object>>} Array of file objects
    */
-  async fetchFilesFromDrive(folderId = config.google.folderId) {
-    try {
-      const response = await this.drive.files.list({
-        q: `'${folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType, parents)',
-        spaces: 'drive'
-      });
-
-      const files = response.data.files;
-
-      // Recursively fetch files from subfolders
-      for (const file of files) {
-        if (file.mimeType === 'application/vnd.google-apps.folder') {
-          const subfolderFiles = await this.fetchFilesFromDrive(file.id);
-          files.push(...subfolderFiles);
-        }
+    async fetchFilesFromDrive(folderId = config.google.folderId) {
+      try {
+          if (config.google.useServiceAccount && this.drive) {
+              // Use service account authentication
+              const response = await this.drive.files.list({
+                  q: `'${folderId}' in parents and trashed = false`,
+                  fields: 'files(id, name, mimeType, parents)',
+                  spaces: 'drive'
+              });
+              return response.data.files;
+          } else {
+              // Improved public access method
+              const folderUrl = `https://drive.google.com/drive/folders/${folderId}?usp=sharing`;
+              const response = await fetch(folderUrl);
+              if (!response.ok) {
+                  throw new Error(`Failed to fetch folder: ${response.statusText}`);
+              }
+              
+              const html = await response.text();
+              const files = [];
+              
+              // Enhanced regex to capture file IDs and names
+              const filePattern = /\/file\/d\/([a-zA-Z0-9_-]+).*?"([^"]+\.(jpg|jpeg|png|gif|mp4|webm|ogg))"/gi;
+              let match;
+              
+              while ((match = filePattern.exec(html)) !== null) {
+                  const [, fileId, fileName] = match;
+                  files.push({
+                      id: fileId,
+                      name: fileName,
+                      mimeType: this.getMimeType(fileName),
+                      webContentLink: `https://drive.google.com/uc?id=${fileId}&export=download`
+                  });
+              }
+              
+              return files;
+          }
+      } catch (error) {
+          this.logger.error('Failed to fetch files from Google Drive:', error);
+          throw error;
       }
-
-      return files;
-    } catch (error) {
-      this.logger.error('Failed to fetch files from Google Drive:', error);
-      throw error;
-    }
   }
 
     /**
@@ -197,24 +223,52 @@ export class GoogleDriveService {
    * @throws {Error} If download fails
    * @returns {Promise<void>}
    */
-  async downloadFile(fileId, localPath) {
-    try {
-      const response = await this.drive.files.get(
-        { fileId, alt: 'media' },
-        { responseType: 'stream' }
-      );
-
-      const dest = fs.createWriteStream(localPath);
-      response.data.pipe(dest);
-
-      return new Promise((resolve, reject) => {
-        dest.on('finish', resolve);
-        dest.on('error', reject);
-      });
-    } catch (error) {
-      this.logger.error(`Failed to download file ${fileId}:`, error);
-      throw error;
-    }
+    async downloadFile(fileId, localPath) {
+      const MAX_RETRIES = 3;
+      let attempt = 0;
+  
+      while (attempt < MAX_RETRIES) {
+          try {
+              if (config.google.useServiceAccount && this.drive) {
+                  // Use service account authentication
+                  const response = await this.drive.files.get(
+                      { fileId, alt: 'media' },
+                      { responseType: 'stream' }
+                  );
+                  const dest = fs.createWriteStream(localPath);
+                  response.data.pipe(dest);
+  
+                  return new Promise((resolve, reject) => {
+                      dest.on('finish', resolve);
+                      dest.on('error', reject);
+                  });
+              } else {
+                  // Enhanced public download method
+                  const downloadUrl = `https://drive.google.com/uc?id=${fileId}&export=download`;
+                  const response = await fetch(downloadUrl, {
+                      headers: {
+                          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                      }
+                  });
+  
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+  
+                  const buffer = await response.arrayBuffer();
+                  await fs.writeFile(localPath, Buffer.from(buffer));
+                  return;
+              }
+          } catch (error) {
+              attempt++;
+              this.logger.warn(`Download attempt ${attempt} failed for file ${fileId}: ${error.message}`);
+              if (attempt === MAX_RETRIES) {
+                  throw error;
+              }
+              // Exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          }
+      }
   }
 
   stop() {
@@ -237,28 +291,3 @@ export class GoogleDriveService {
   }
 }
 
-
-//TODO Allow downloading public files without requiring authentication/service account
-
-// import fs from 'fs';
-// import https from 'https';
-// async function downloadPublicFile(fileId, localPath) {
-//   // Google Drive direct download link format
-//   const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-  
-//   return new Promise((resolve, reject) => {
-//     const file = fs.createWriteStream(localPath);
-    
-//     https.get(downloadUrl, (response) => {
-//       response.pipe(file);
-      
-//       file.on('finish', () => {
-//         file.close();
-//         resolve();
-//       });
-//     }).on('error', (err) => {
-//       fs.unlink(localPath);
-//       reject(err);
-//     });
-//   });
-// }
