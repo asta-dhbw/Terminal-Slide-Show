@@ -1,12 +1,14 @@
 export const config = {
   info: {
-    location: 'LOCATION',
+    location: 'LOCATION' // Location of the display,
   },
   apiKeys: {
     NASA_API_KEY: 'APIKEY' // https://api.nasa.gov/
   },
   google: {
+    useServiceAccount: true, // Set to false to use public folder access
     serviceAccountPath: './config/service-account.json', // Path to Google Drive service account file
+    apiKey: 'APIKEY', // Google Drive API key
     folderId: 'ID', // Google Drive folder ID
     scopes: ['https://www.googleapis.com/auth/drive.readonly'], // Google Drive API scopes
     apiVersion: 'v3' // Google Drive API version
