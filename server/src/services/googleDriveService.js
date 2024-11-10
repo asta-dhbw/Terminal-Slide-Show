@@ -20,27 +20,30 @@ export class GoogleDriveService {
     }
   
     async initialize() {
-      try {
-          if (config.google.useServiceAccount) {
-              // Service account authentication
-              const auth = new google.auth.GoogleAuth({
-                  keyFile: config.google.serviceAccountPath,
-                  scopes: [config.google.scopes]
-              });
-              this.drive = google.drive({ version: config.google.apiVersion, auth });
-          } else {
-              // For public access, we don't need to initialize the drive client
-              this.drive = null;
-          }
-          
-          await fs.ensureDir(this.downloadPath);
-          this.logger.info('Google Drive service initialized successfully');
-          this.initialized = true;
-      } catch (error) {
-          this.logger.error('Failed to initialize Google Drive service:', error);
-          throw new Error(`Drive initialization failed: ${error.message}`);
-      }
-  }
+        try {
+            if (config.google.useServiceAccount) {
+                // Service account authentication
+                const auth = new google.auth.GoogleAuth({
+                    keyFile: config.google.serviceAccountPath,
+                    scopes: [config.google.scopes]
+                });
+                this.drive = google.drive({ version: config.google.apiVersion, auth });
+            } else {
+                // API Key authentication - fixed setup
+                this.drive = google.drive({ 
+                    version: config.google.apiVersion,
+                    auth: config.google.apiKey
+                });
+            }
+            
+            await fs.ensureDir(this.downloadPath);
+            this.logger.info('Google Drive service initialized successfully');
+            this.initialized = true;
+        } catch (error) {
+            this.logger.error('Failed to initialize Google Drive service:', error);
+            throw new Error(`Drive initialization failed: ${error.message}`);
+        }
+    }
 
   isInitialized() {
     return this.initialized;
@@ -174,39 +177,14 @@ export class GoogleDriveService {
    */
     async fetchFilesFromDrive(folderId = config.google.folderId) {
         try {
-            if (config.google.useServiceAccount && this.drive) {
-                // Use service account authentication
-                const response = await this.drive.files.list({
-                    q: `'${folderId}' in parents and trashed = false`,
-                    fields: 'files(id, name, mimeType, parents)',
-                    spaces: 'drive'
-                });
-                return response.data.files;
-            } else {
-              // Use Drive API-Key authentication
-                const apiUrl = `https://www.googleapis.com/drive/v3/files`;
-                const params = new URLSearchParams({
-                    q: `'${folderId}' in parents and trashed = false`,
-                    key: config.google.apiKey,
-                    fields: 'files(id,name,mimeType)',
-                    pageSize: 1000,
-                    supportsAllDrives: true,
-                    includeItemsFromAllDrives: true
-                });
-    
-                const response = await fetch(`${apiUrl}?${params}`);
-                if (!response.ok) {
-                    throw new Error(`Drive API error: ${response.statusText}`);
-                }
-    
-                const data = await response.json();
-                return data.files.map(file => ({
-                    id: file.id,
-                    name: file.name,
-                    mimeType: file.mimeType,
-                    webContentLink: `https://drive.google.com/uc?id=${file.id}&export=download`
-                }));
-            }
+            const response = await this.drive.files.list({
+                q: `'${folderId}' in parents and trashed = false`,
+                fields: 'files(id, name, mimeType, parents)',
+                spaces: 'drive',
+                supportsAllDrives: true,
+                includeItemsFromAllDrives: true
+            });
+            return response.data.files;
         } catch (error) {
             this.logger.error('Failed to fetch files from Google Drive:', error);
             throw error;
@@ -227,41 +205,17 @@ export class GoogleDriveService {
     
         while (attempt < MAX_RETRIES) {
             try {
-                if (config.google.useServiceAccount && this.drive) {
-                    // Service account authentication - keep existing code
-                    const response = await this.drive.files.get(
-                        { fileId, alt: 'media' },
-                        { responseType: 'stream' }
-                    );
-                    const dest = fs.createWriteStream(localPath);
-                    response.data.pipe(dest);
+                const response = await this.drive.files.get(
+                    { fileId, alt: 'media' },
+                    { responseType: 'stream' }
+                );
+                const dest = fs.createWriteStream(localPath);
+                response.data.pipe(dest);
     
-                    return new Promise((resolve, reject) => {
-                        dest.on('finish', resolve);
-                        dest.on('error', reject);
-                    });
-                } else {
-                    // Public download using Drive API
-                    const apiUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
-                    const params = new URLSearchParams({
-                        key: config.google.apiKey,
-                        alt: 'media'
-                    });
-    
-                    const response = await fetch(`${apiUrl}?${params}`, {
-                        headers: {
-                            'Accept': '*/*'
-                        }
-                    });
-    
-                    if (!response.ok) {
-                        throw new Error(`Drive API error: ${response.status} ${response.statusText}`);
-                    }
-    
-                    const buffer = await response.arrayBuffer();
-                    await fs.writeFile(localPath, Buffer.from(buffer));
-                    return;
-                }
+                return new Promise((resolve, reject) => {
+                    dest.on('finish', resolve);
+                    dest.on('error', reject);
+                });
             } catch (error) {
                 attempt++;
                 this.logger.warn(`Download attempt ${attempt} failed for file ${fileId}: ${error.message}`);
