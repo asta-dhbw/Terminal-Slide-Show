@@ -42,8 +42,28 @@ terminal-slide-show/
 
 ## Setup Instructions
 
-### 1. Google Cloud Project Setup
+### 1. Google Drive Authentication
 
+You have two options for authenticating with Google Drive:
+
+#### Option A: Using API Key (Simpler, for personal use)
+1. Create a new project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable the Google Drive API
+3. Create API credentials:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "API Key"
+   - Copy the API key
+4. Add the API key to `config.js`:
+   ```javascript
+   google: {
+     useServiceAccount: false,
+     apiKey: 'YOUR_API_KEY',
+     folderId: 'YOUR_FOLDER_ID'
+   }
+   ```
+5. Make your Google Drive folder publicly accessible (with link)
+
+#### Option B: Using Service Account (More secure, recommended for production)
 1. Create a new project in [Google Cloud Console](https://console.cloud.google.com/)
 2. Enable the Google Drive API
 3. Create a Service Account:
@@ -53,6 +73,14 @@ terminal-slide-show/
    - Create and download JSON key
 4. Place the downloaded JSON key in `config/service-account.json`
 5. Share your Google Drive folder with the service account email
+6. Configure `config.js`:
+   ```javascript
+   google: {
+     useServiceAccount: true,
+     serviceAccountPath: './config/service-account.json',
+     folderId: 'YOUR_FOLDER_ID'
+   }
+   ```
 
 ### 2. Project Installation
 
