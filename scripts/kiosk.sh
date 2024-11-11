@@ -132,13 +132,13 @@ launch_firefox() {
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
         if pgrep -x "firefox" > /dev/null; then
-            log_message "Firefox process started"
+            log_info "Firefox process started"
             sleep 2  # Give Firefox time to create window
             if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
-                log_message "Firefox window detected"
+                log_info "Firefox window detected"
                 return 0
             else
-                log_message "Firefox process running but window not detected"
+                log_info "Firefox process running but window not detected"
                 return 0
             fi
         fi
