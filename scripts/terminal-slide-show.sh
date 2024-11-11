@@ -17,7 +17,6 @@ check_dependencies() {
     declare -A pkg_to_cmd=(
         ["fbi"]="fbi"
         ["mpv"]="mpv"
-        ["perl-image-exiftool"]="exiftool"
     )
     local missing=()
     
@@ -30,14 +29,6 @@ check_dependencies() {
         fi
         # Try with expanded PATH
         if [ -x "/usr/bin/$cmd" ] || [ -x "/usr/local/bin/$cmd" ] || [ -x "/opt/bin/$cmd" ]; then
-            return 0
-        fi
-        # Special check for Perl scripts
-        if [ -f "/usr/bin/site_perl/$cmd" ] || [ -f "/usr/share/perl5/vendor_perl/bin/$cmd" ]; then
-            return 0
-        fi
-        # Check if it's installed but not in PATH
-        if pacman -Ql "perl-image-exiftool" 2>/dev/null | grep -q "/$cmd$"; then
             return 0
         fi
         return 1
