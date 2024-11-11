@@ -185,7 +185,7 @@ The installer will:
 
 - Create a dedicated kiosk user
 - Configure auto-login
-- Set up Firefox ESR in kiosk mode
+- Set up Firefox in kiosk mode
 - Configure Openbox window manager
 - Set up auto-start of the application
 

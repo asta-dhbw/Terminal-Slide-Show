@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Required packages installation commented out - uncomment if needed
-# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
+# sudo apt install -y xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
 
 # Source the logger
 source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
@@ -14,17 +14,10 @@ PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
-# Trap signals and cleanup
-# TODO: This trapper currently traps for every signal, including SIGKILL
-# trap cleanup SIGINT SIGTERM EXIT
-# Initialize logging with custom settings
-
-
 cleanup() {
     log_info "Performing cleanup..."
     
     # Kill processes
-    pkill -f firefox-esr
     pkill -f firefox
     pkill -f openbox
     pkill -f unclutter
@@ -123,7 +116,7 @@ start_x_server() {
 }
 
 launch_firefox() {
-    log_info "Launching Firefox ESR..."
+    log_info "Launching Firefox ..."
 
     DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
@@ -146,7 +139,7 @@ launch_firefox() {
         sleep 1
     done
     
-    log_error "Failed to start Firefox ESR after $max_attempts attempts"
+    log_error "Failed to start Firefox after $max_attempts attempts"
     return 1
 }
 

@@ -101,9 +101,9 @@ log_info "Checking and installing required packages..."
 
 # Modify package installation based on mode
 if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
-    PACKAGES="xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
+    PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
 else
-    PACKAGES="fbi mpv"
+    PACKAGES="mpv"
 fi
 
 failed_packages=()
