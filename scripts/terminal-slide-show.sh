@@ -7,8 +7,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 # Configuration
 PROJECT_DIR="$(find_project_dir)"
 MEDIA_DIR="${PROJECT_DIR}/downloads"
-DISPLAY_TIME=5  # seconds between images
-FADE_TIME=1     # seconds for transitions
+
+DISPLAY_TIME=5      # seconds between images
+FADE_TIME=0.8     # seconds for transitions
+PRELOAD_TIME=0.5  # seconds to preload next image
 
 check_dependencies() {
     # Package to command name mapping 
@@ -98,10 +100,13 @@ display_media() {
 
     case "$type" in
         image)
-            fbi -a -t "$DISPLAY_TIME" --blend "$FADE_TIME" -noverbose -vt "$tty" "$file"
+            pkill -f fbi >/dev/null 2>&1
+            fbi -a -1 -t "$DISPLAY_TIME" --blend "$FADE_TIME" -noverbose -vt "$tty" "$file" &
+            sleep "$DISPLAY_TIME"
             ;;
         video)
-            mpv --vo=drm --quiet --loop --no-audio "$file"
+            pkill -f mpv >/dev/null 2>&1
+            mpv --vo=drm --quiet --no-audio "$file"
             ;;
         *)
             log_error "ERROR: Unknown media type: $type"
