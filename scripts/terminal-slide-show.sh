@@ -40,20 +40,51 @@ run_npm_commands() {
     }
 
     log_info "Starting development server..."
-    npm run dev:server & # Run in background
+    npm run dev & # Run in background
 }
 
 run_slideshow() {
     log_info "Starting slideshow..."
+    monitor_backend &
     mpv --image-display-duration=5 --loop-playlist=inf --fullscreen --no-audio "$MEDIA_DIR"/*
 }
 
 cleanup() {
     log_info "Cleaning up..."
     pkill -f mpv
-    pkill -f "npm run dev:server" # Kill dev server
-    tput cnorm  # Show cursor
+    pkill -f "npm run dev:server"
+    pkill -f "monitor_backend"
+    tput cnorm
     exit 0
+}
+
+check_backend_health() {
+    local endpoint="http://127.0.0.1:3000/api/server-status"
+    local status_code
+    
+    # Get HTTP status code using curl's -w option and silence other output
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint")
+    
+    # Debug output
+    echo "Status code: $status_code"
+    
+    # Check for 2xx status codes
+    if [ "$status_code" -ge 200 ] && [ "$status_code" -lt 300 ]; then
+        return 0
+    fi
+    return 1
+}
+
+monitor_backend() {
+    while true; do
+        if ! check_backend_health; then
+            log_error "Backend health check failed"
+        else
+            log_info "Backend health check passed"
+        fi
+
+        sleep 30 # Check every 30 seconds (fixed sleep value)
+    done
 }
 
 main() {
