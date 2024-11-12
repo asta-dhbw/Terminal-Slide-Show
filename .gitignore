@@ -3,6 +3,7 @@ cache/
 downloads/
 config/*.json
 .env
+black.svg
 
 # Logs
 logs
