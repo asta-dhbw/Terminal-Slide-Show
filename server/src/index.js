@@ -1,5 +1,7 @@
 import express from 'express';
+import fs from 'fs/promises';
 import path from 'path';
+import fetch from 'node-fetch';
 import { GoogleDriveService } from './services/googleDriveService.js';
 import { SlideshowManager } from './services/slideshowManager.js';
 import { PowerManager } from './services/powerManager.js';
@@ -50,7 +52,39 @@ app.use(express.static(path.join(process.cwd(), 'client', 'public')));
 // 2. Serve the client dist folder (for production)
 app.use(express.static(path.join(process.cwd(), 'dist')));
 // 3. Serve media files
-app.use('/media', express.static(path.join(process.cwd(), config.paths.downloadPath)));
+app.use('/media', (req, res, next) => {
+    // Cache for 1 day by default
+    res.set({
+        'Cache-Control': 'public, max-age=86400',
+        'ETag': true
+    });
+    next();
+}, express.static(path.join(process.cwd(), config.paths.downloadPath)));
+
+// conditional requests for media files
+app.use('/media', (req, res, next) => {
+  const filePath = path.join(process.cwd(), config.paths.downloadPath, req.url);
+  
+  // Generate ETag from file stats
+  fs.stat(filePath, (err, stats) => {
+    if (err) return next();
+    
+    const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
+    res.set('ETag', etag);
+
+    // Check if client's cached version matches
+    if (req.headers['if-none-match'] === etag) {
+      return res.sendStatus(304); // Not Modified
+    }
+
+    res.set({
+      'Cache-Control': 'public, max-age=86400',
+      'Last-Modified': stats.mtime.toUTCString()
+    });
+    
+    next();
+  });
+}, express.static(path.join(process.cwd(), config.paths.downloadPath)));
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -68,34 +102,38 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/api', handleClientActivity);
-app.use('/api', (req, res, next) => {
-    if (!req.headers['x-client-id']) {
-      // Generate a random client ID if not provided
-      req.clientId = Math.random().toString(36).substring(7);
-      res.setHeader('X-Client-Id', req.clientId);
-    } else {
-      req.clientId = req.headers['x-client-id'];
-    }
-    next();
-  });
-  
-
+app.get('/dynamic-view', (req, res) => {
+    logger.debug('Serving dynamic view');
+    res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
 
 // API endpoints
+app.use('/api', handleClientActivity);
+
+app.use('/api', (req, res, next) => {
+    if (!req.headers['x-client-id']) {
+        // Generate a random client ID if not provided
+        req.clientId = Math.random().toString(36).substring(7);
+        res.setHeader('X-Client-Id', req.clientId);
+    } else {
+        req.clientId = req.headers['x-client-id'];
+    }
+    next();
+});
+
 app.get('/api/current-media', (req, res) => {
     logger.debug(`Getting current media for client ${req.clientId}`);
     const media = slideshowManager.getCurrentMedia(req.clientId);
     res.json(media || { error: 'No media available' });
-  });
-  
-  app.get('/api/next-media', (req, res) => {
+});
+
+app.get('/api/next-media', (req, res) => {
     logger.debug(`Navigating to next media for client ${req.clientId}`);
     const media = slideshowManager.nextMedia(req.clientId);
     res.json(media || { error: 'No media available' });
-  });
-  
-  app.get('/api/previous-media', (req, res) => {
+});
+
+app.get('/api/previous-media', (req, res) => {
     logger.debug(`Navigating to previous media for client ${req.clientId}`);
     const media = slideshowManager.previousMedia(req.clientId);
     res.json(media || { error: 'No media available' });
@@ -118,10 +156,106 @@ app.get('/api/server-status', (req, res) => {
     }
 });
 
-// Add this route before the wildcard route
-app.get('/dynamic-view', (req, res) => {
-    logger.debug('Serving dynamic view');
-    res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+// NASA APOD endpoint
+app.get('/api/nasa-apod', async (req, res) => {
+    logger.debug('Fetching NASA APOD');
+    try {
+        // Add cache headers
+        res.set({
+            'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+            'ETag': true
+        });
+
+        // Check if client has cached version
+        const nasaResponse = await fetch(
+            `https://api.nasa.gov/planetary/apod?api_key=${config.apiKeys.NASA_API_KEY}`
+        );
+        const data = await nasaResponse.json();
+        
+        // Generate ETag based on data
+        const etag = `W/"${Buffer.from(JSON.stringify(data)).length}"`;
+        res.set('ETag', etag);
+
+        // Return 304 if client has current version
+        if (req.headers['if-none-match'] === etag) {
+            return res.sendStatus(304);
+        }
+
+        res.json(data);
+    } catch (error) {
+        logger.error('Failed to fetch NASA APOD:', error);
+        res.status(500).json({ error: 'Failed to fetch NASA image' });
+    }
+});
+
+// Weather endpoint
+app.get('/api/weather', async (req, res) => {
+    const location = req.query.location;
+    logger.debug(`Fetching weather for location: ${location}`);
+
+    try {
+        // Get coordinates first
+        const geoResponse = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1`
+        );
+        const geoData = await geoResponse.json();
+
+        if (!geoData.results?.[0]) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+
+        const { latitude, longitude } = geoData.results[0];
+
+        // Get weather data
+        const weatherResponse = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=kmh&timezone=auto`
+        );
+        const weatherData = await weatherResponse.json();
+
+        res.json(weatherData);
+    } catch (error) {
+        logger.error('Failed to fetch weather:', error);
+        res.status(500).json({ error: 'Failed to fetch weather data' });
+    }
+});
+
+// Add these new endpoints
+app.get('/api/quotes', async (req, res) => {
+    logger.debug('Fetching random quote');
+    try {
+        const quotesData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'quotes.json'), 'utf8');
+        const quotes = JSON.parse(quotesData).quotes;
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        res.json(randomQuote);
+    } catch (error) {
+        logger.error('Failed to fetch quote:', error);
+        res.status(500).json({ error: 'Failed to fetch quote' });
+    }
+});
+
+app.get('/api/facts', async (req, res) => {
+    logger.debug('Fetching random fact');
+    try {
+        const factsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'facts.json'), 'utf8');
+        const facts = JSON.parse(factsData);
+        const randomFact = facts[Math.floor(Math.random() * facts.length)];
+        res.json(randomFact);
+    } catch (error) {
+        logger.error('Failed to fetch fact:', error);
+        res.status(500).json({ error: 'Failed to fetch fact' });
+    }
+});
+
+app.get('/api/greetings', async (req, res) => {
+    logger.debug('Fetching greetings');
+    try {
+        const greetingsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'greetings.json'), 'utf8');
+        const greetings = JSON.parse(greetingsData);
+        res.json(greetings);
+    } catch (error) {
+        logger.error('Failed to fetch greetings:', error);
+        res.status(500).json({ error: 'Failed to fetch greetings' });
+    }
 });
 
 // Serve index.html for all other routes (SPA support)

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Quote, Coffee, MapPin, Clock, Info } from 'lucide-react';
 import '../../styles/dynamicDailyView.css';
 import AnimatedWeather from './animatedWeather';
-import { config } from '../../../../config/config';
+import { frontendConfig } from '../../../../config/frontend.config.js';
 
 const DynamicDailyView = () => {
   const [time, setTime] = useState(new Date());
@@ -18,44 +18,38 @@ const DynamicDailyView = () => {
 
   const isNight = time.getHours() >= 18 || time.getHours() < 6;
 
-  const fetchQuotes = async () => {
-    try {
-      const response = await fetch('src/data/quotes.json');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      const quotesArray = data.quotes;
-      const randomIndex = Math.floor(Math.random() * quotesArray.length);
-      setQuote(quotesArray[randomIndex]);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load quote. Please try again later. ' + err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const fetchQuotes = async () => {
+  try {
+    const response = await fetch('/api/quotes');
+    const quote = await response.json();
+    setQuote(quote);
+    setError(null);
+  } catch (err) {
+    setError('Failed to load quote');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  const fetchFacts = async () => {
-    try {
-      const response = await fetch('src/data/facts.json');
-      const data = await response.json();
-      const randomIndex = Math.floor(Math.random() * data.length);
-      setFact(data[randomIndex]);
-    } catch (err) {
-      console.error('Failed to fetch facts:', err);
-    }
-  };
+const fetchFacts = async () => {
+  try {
+    const response = await fetch('/api/facts');
+    const fact = await response.json();
+    setFact(fact);
+  } catch (err) {
+    console.error('Failed to fetch facts:', err);
+  }
+};
 
-  const fetchGreetings = async () => {
-    try {
-      const response = await fetch('src/data/greetings.json');
-      const data = await response.json();
-      setGreetings(data);
-    } catch (err) {
-      console.error('Failed to fetch greetings:', err);
-    }
-  };
+const fetchGreetings = async () => {
+  try {
+    const response = await fetch('/api/greetings');
+    const greetings = await response.json();
+    setGreetings(greetings);
+  } catch (err) {
+    console.error('Failed to fetch greetings:', err);
+  }
+};
 
   const getGreetings = (hour) => {
     for (const range in greetings) {
@@ -69,34 +63,19 @@ const DynamicDailyView = () => {
 
   const fetchNasaImage = async () => {
     try {
-      const response = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${config.apiKeys.NASA_API_KEY}`);
+      const response = await fetch('/api/nasa-apod');
       const data = await response.json();
       setNasaImage(data);
     } catch (err) {
       console.error('Failed to fetch NASA image:', err);
     }
   };
-
+  
   const fetchWeather = async () => {
     try {
-      const geoResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(config.info.location)}&count=1`
-      );
-      const geoData = await geoResponse.json();
-
-      if (!geoData.results?.[0]) {
-        throw new Error('Location not found');
-      }
-
-      const { latitude, longitude } = geoData.results[0];
-
-      const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=kmh&timezone=auto`
-      );
-      const weatherData = await weatherResponse.json();
-      console.log('Fetched weather:', weatherData);
-
-      setWeather(weatherData.current_weather);
+      const response = await fetch(`/api/weather?location=${encodeURIComponent(frontendConfig.info.location)}`);
+      const data = await response.json();
+      setWeather(data.current_weather);
     } catch (err) {
       console.error('Failed to fetch weather:', err);
       setError('Failed to load weather data');
@@ -171,12 +150,12 @@ const DynamicDailyView = () => {
 
       <div className="content-wrapper">
         <div className="dhbw-logo">
-          <a href="https://www.stuv-ravensburg.de"><img src="/slideshow.png" alt="DHBW Logo" /></a>
+          <img src="/slideshow.png" alt="DHBW Logo" />
         </div>
 
         <div className="location-badge">
           <MapPin className="text-blue-300" />
-          <span>{config.info.location}</span>
+          <span>{frontendConfig.info.location}</span>
         </div>
 
         <div className="main-content">

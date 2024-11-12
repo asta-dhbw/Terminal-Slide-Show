@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { config } from '../../../config/config';
+import { frontendConfig } from '../../../config/frontend.config.js';
 
 /**
  * Custom hook to monitor server connection status with periodic polling
  * @param {boolean} isScheduleActive - Whether the schedule is currently active
- * @param {number} [pollingInterval=config.polling.serverStatusInterval] - Interval in ms between status checks
+ * @param {number} [pollingInterval=frontendConfig.polling.serverStatusInterval] - Interval in ms between status checks
  * @returns {boolean} Current server connection status
  */
-export const useServerStatus = (isScheduleActive = true, pollingInterval = config.polling.serverStatusInterval) => {
+export const useServerStatus = (isScheduleActive = true, pollingInterval = frontendConfig.polling.serverStatusInterval) => {
   const [isServerConnected, setIsServerConnected] = useState(false);
 
   useEffect(() => {

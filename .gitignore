@@ -1,7 +1,8 @@
 #ViteApp
 cache/
 downloads/
-config/config.js
+config/*.json
+.env
 
 # Logs
 logs

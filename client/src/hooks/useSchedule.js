@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { config } from '../../../config/config';
+import { frontendConfig } from '../../../config/frontend.config.js';
 
 /**
  * Custom hook to manage schedule-based activation states
@@ -10,7 +10,7 @@ export const useSchedule = () => {
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
-    if (!config.schedule.enabled) {
+    if (!frontendConfig.schedule.enabled) {
       setIsActive(true);
       return;
     }
@@ -21,9 +21,9 @@ export const useSchedule = () => {
      * @returns {boolean} True if date is in vacation period
      */
     const isDateInVacationPeriod = (date) => {
-      if (!config.schedule.vacationPeriods?.length) return false;
+      if (!frontendConfig.schedule.vacationPeriods?.length) return false;
 
-      return config.schedule.vacationPeriods.some(period => {
+      return frontendConfig.schedule.vacationPeriods.some(period => {
         const [startDay, startMonth, startYear] = period.start.split('.').map(Number);
         const [endDay, endMonth, endYear] = period.end.split('.').map(Number);
 
@@ -33,6 +33,11 @@ export const useSchedule = () => {
         return date >= startDate && date <= endDate;
       });
     };
+
+    const convertToCustomDayNumber = (javascriptDay) => {
+      return javascriptDay === 0 ? 7 : javascriptDay;
+    };
+  
 
     /**
      * Evaluates current schedule state based on time and configuration
@@ -46,16 +51,17 @@ export const useSchedule = () => {
         return;
       }
 
-      const currentDay = now.getDay();
-
-      if (!config.schedule.days.includes(currentDay)) {
-        setIsActive(false);
-        return;
+      const jsDay = now.getDay();
+      const currentDay = convertToCustomDayNumber(jsDay);
+  
+      if (!frontendConfig.schedule.days.includes(currentDay)) {
+          setIsActive(false);
+          return;
       }
 
       // Parse schedule times
-      const [onHour, onMinute] = config.schedule.onTime.split(':').map(Number);
-      const [offHour, offMinute] = config.schedule.offTime.split(':').map(Number);
+      const [onHour, onMinute] = frontendConfig.schedule.onTime.split(':').map(Number);
+      const [offHour, offMinute] = frontendConfig.schedule.offTime.split(':').map(Number);
 
       // Convert current time to minutes for easier comparison
       const currentMinutes = now.getHours() * 60 + now.getMinutes();

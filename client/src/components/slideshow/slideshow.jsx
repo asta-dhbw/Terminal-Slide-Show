@@ -10,7 +10,7 @@ import Controls from './controls';
 import Loading from '../loading';
 import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
-import { config } from '../../../../config/config';
+import { frontendConfig } from '../../../../config/frontend.config.js';
 
 /**
  * @component Slideshow
@@ -55,7 +55,7 @@ const Slideshow = () => {
 
     autoContinueTimer.current = setTimeout(() => {
       handleNavigate('next');
-    }, config.slideshow.defaultSlideDuration);
+    }, frontendConfig.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, isScheduleActive]);

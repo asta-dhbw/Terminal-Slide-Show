@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { config } from '../../../../config/config.js';
+import { frontendConfig } from '../../../../config/frontend.config.js';
 
 /**
  * Constants for animation and styling
@@ -25,7 +25,7 @@ const getMediaType = (filename) => {
   if (!filename) return 'image';
   const extension = filename.toLowerCase().split('.').pop();
   if (extension === 'gif') return 'gif';
-  if (config.mediaTypes.videoTypes.some(type => type.includes(extension))) return 'video';
+  if (frontendConfig.mediaTypes.videoTypes.some(type => type.includes(extension))) return 'video';
   return 'image';
 };
 
@@ -40,7 +40,7 @@ const VideoPlayer = React.memo(({ media }) => {
   const videoRef = useRef(null);
 
   const handleVideoEnd = useCallback(() => {
-    if (!config.mediaTypes.loop && videoRef.current) {
+    if (!frontendConfig.mediaTypes.loop && videoRef.current) {
       videoRef.current.currentTime = videoRef.current.duration;
     }
   }, []);
@@ -60,9 +60,9 @@ const VideoPlayer = React.memo(({ media }) => {
       ref={videoRef}
       className="w-full h-full object-contain"
       playsInline
-      muted={config.mediaTypes.muted}
-      autoPlay={config.mediaTypes.autoplay}
-      loop={config.mediaTypes.loop}
+      muted={frontendConfig.mediaTypes.muted}
+      autoPlay={frontendConfig.mediaTypes.autoplay}
+      loop={frontendConfig.mediaTypes.loop}
       onEnded={handleVideoEnd}
       src={`${MEDIA_PATH}/${media.name}`}
     />
