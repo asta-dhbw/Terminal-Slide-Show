@@ -6,14 +6,6 @@
 # Source the logger
 source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
 
-# Get directory where script is located
-SCRIPT_DIR="$(get_script_dir)"
-
-TARGET_URL="https://www.google.com" 
-PROFILE_NAME="kiosk.default"
-PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
-DISPLAY_NUM=":0"
-
 cleanup() {
     log_info "Performing cleanup..."
     
@@ -147,7 +139,16 @@ disable_mouse_cursor() {
     log_info "Disabling mouse cursor..."
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
+
 main() {
+    # Get directory where script is located
+    SCRIPT_DIR="$(get_script_dir)"
+
+    TARGET_URL="https://www.google.com" 
+    PROFILE_NAME="kiosk.default"
+    PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
+    DISPLAY_NUM=":0"
+
     clear
     # Initialize logging
     init_project_logging "kiosk"

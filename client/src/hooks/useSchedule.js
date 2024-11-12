@@ -34,6 +34,11 @@ export const useSchedule = () => {
       });
     };
 
+    const convertToCustomDayNumber = (javascriptDay) => {
+      return javascriptDay === 0 ? 7 : javascriptDay;
+    };
+  
+
     /**
      * Evaluates current schedule state based on time and configuration
      * @function
@@ -46,11 +51,12 @@ export const useSchedule = () => {
         return;
       }
 
-      const currentDay = now.getDay();
-
+      const jsDay = now.getDay();
+      const currentDay = convertToCustomDayNumber(jsDay);
+  
       if (!config.schedule.days.includes(currentDay)) {
-        setIsActive(false);
-        return;
+          setIsActive(false);
+          return;
       }
 
       // Parse schedule times
