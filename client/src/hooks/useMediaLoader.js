@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../../../config/config';
+import { frontendConfig } from '../../../config/frontend.config.js';
 
 export const useMediaLoader = (isScheduleActive = true) => {
   const [media, setMedia] = useState(null);
@@ -88,7 +88,7 @@ export const useMediaLoader = (isScheduleActive = true) => {
 
         if (serverReconnected && initialLoadStartTime) {
           const elapsed = Date.now() - initialLoadStartTime;
-          const remainingTime = Math.max(0, config.polling.initLoadDuration - elapsed);
+          const remainingTime = Math.max(0, frontendConfig.polling.initLoadDuration - elapsed);
 
           setTimeout(() => {
             setLoading(false);
@@ -145,12 +145,12 @@ export const useMediaLoader = (isScheduleActive = true) => {
       };
       init();
 
-      serverPollInterval = setInterval(checkServer, config.polling.mediaLoaderInterval);
+      serverPollInterval = setInterval(checkServer, frontendConfig.polling.mediaLoaderInterval);
       mediaPollInterval = setInterval(() => {
         if (serverReady) {
           loadMedia();
         }
-      }, config.polling.mediaLoaderInterval);
+      }, frontendConfig.polling.mediaLoaderInterval);
     }
 
     return () => {

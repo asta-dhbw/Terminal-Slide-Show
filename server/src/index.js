@@ -1,5 +1,7 @@
 import express from 'express';
+import fs from 'fs/promises';
 import path from 'path';
+import fetch from 'node-fetch';
 import { GoogleDriveService } from './services/googleDriveService.js';
 import { SlideshowManager } from './services/slideshowManager.js';
 import { PowerManager } from './services/powerManager.js';
@@ -122,6 +124,91 @@ app.get('/api/server-status', (req, res) => {
 app.get('/dynamic-view', (req, res) => {
     logger.debug('Serving dynamic view');
     res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
+
+// NASA APOD endpoint
+app.get('/api/nasa-apod', async (req, res) => {
+    logger.debug('Fetching NASA APOD');
+    try {
+        const response = await fetch(
+            `https://api.nasa.gov/planetary/apod?api_key=${config.apiKeys.NASA_API_KEY}`
+        );
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        logger.error('Failed to fetch NASA APOD:', error);
+        res.status(500).json({ error: 'Failed to fetch NASA image' });
+    }
+});
+
+// Weather endpoint
+app.get('/api/weather', async (req, res) => {
+    const location = req.query.location;
+    logger.debug(`Fetching weather for location: ${location}`);
+
+    try {
+        // Get coordinates first
+        const geoResponse = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1`
+        );
+        const geoData = await geoResponse.json();
+
+        if (!geoData.results?.[0]) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+
+        const { latitude, longitude } = geoData.results[0];
+
+        // Get weather data
+        const weatherResponse = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=kmh&timezone=auto`
+        );
+        const weatherData = await weatherResponse.json();
+        
+        res.json(weatherData);
+    } catch (error) {
+        logger.error('Failed to fetch weather:', error);
+        res.status(500).json({ error: 'Failed to fetch weather data' });
+    }
+});
+
+// Add these new endpoints
+app.get('/api/quotes', async (req, res) => {
+    logger.debug('Fetching random quote');
+    try {
+        const quotesData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'quotes.json'), 'utf8');
+        const quotes = JSON.parse(quotesData).quotes;
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        res.json(randomQuote);
+    } catch (error) {
+        logger.error('Failed to fetch quote:', error);
+        res.status(500).json({ error: 'Failed to fetch quote' });
+    }
+});
+
+app.get('/api/facts', async (req, res) => {
+    logger.debug('Fetching random fact');
+    try {
+        const factsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'facts.json'), 'utf8');
+        const facts = JSON.parse(factsData);
+        const randomFact = facts[Math.floor(Math.random() * facts.length)];
+        res.json(randomFact);
+    } catch (error) {
+        logger.error('Failed to fetch fact:', error);
+        res.status(500).json({ error: 'Failed to fetch fact' });
+    }
+});
+
+app.get('/api/greetings', async (req, res) => {
+    logger.debug('Fetching greetings');
+    try {
+        const greetingsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'greetings.json'), 'utf8');
+        const greetings = JSON.parse(greetingsData);
+        res.json(greetings);
+    } catch (error) {
+        logger.error('Failed to fetch greetings:', error);
+        res.status(500).json({ error: 'Failed to fetch greetings' });
+    }
 });
 
 // Serve index.html for all other routes (SPA support)
