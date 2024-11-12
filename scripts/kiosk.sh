@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Required packages installation commented out - uncomment if needed
-# sudo apt install -y xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
+# sudo apt install -y xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
 
 # Source the logger
 source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
@@ -14,17 +14,10 @@ PROFILE_NAME="kiosk.default"
 PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
 DISPLAY_NUM=":0"
 
-# Trap signals and cleanup
-# TODO: This trapper currently traps for every signal, including SIGKILL
-# trap cleanup SIGINT SIGTERM EXIT
-# Initialize logging with custom settings
-
-
 cleanup() {
     log_info "Performing cleanup..."
     
     # Kill processes
-    pkill -f firefox-esr
     pkill -f firefox
     pkill -f openbox
     pkill -f unclutter
@@ -123,7 +116,7 @@ start_x_server() {
 }
 
 launch_firefox() {
-    log_info "Launching Firefox ESR..."
+    log_info "Launching Firefox ..."
 
     DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
@@ -132,13 +125,13 @@ launch_firefox() {
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
         if pgrep -x "firefox" > /dev/null; then
-            log_message "Firefox process started"
+            log_info "Firefox process started"
             sleep 2  # Give Firefox time to create window
             if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
-                log_message "Firefox window detected"
+                log_info "Firefox window detected"
                 return 0
             else
-                log_message "Firefox process running but window not detected"
+                log_info "Firefox process running but window not detected"
                 return 0
             fi
         fi
@@ -146,7 +139,7 @@ launch_firefox() {
         sleep 1
     done
     
-    log_error "Failed to start Firefox ESR after $max_attempts attempts"
+    log_error "Failed to start Firefox after $max_attempts attempts"
     return 1
 }
 
