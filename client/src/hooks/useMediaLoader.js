@@ -88,7 +88,7 @@ export const useMediaLoader = (isScheduleActive = true) => {
 
         if (serverReconnected && initialLoadStartTime) {
           const elapsed = Date.now() - initialLoadStartTime;
-          const remainingTime = Math.max(0, frontendConfig.polling.initLoadDuration - elapsed);
+          const remainingTime = Math.max(0, frontendConfig.slideshow.initLoadDuration - elapsed);
 
           setTimeout(() => {
             setLoading(false);

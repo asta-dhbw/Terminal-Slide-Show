@@ -26,6 +26,10 @@ export const config = {
     scopes: ['https://www.googleapis.com/auth/drive.readonly'], // Google Drive API scopes
     apiVersion: 'v3' // Google Drive API version
   },
+  sync: {
+    interval: 1000, // Default sync interval in milliseconds
+    retryAttempts: 3, // Number of retry attempts for failed syncs
+},
   kiosk: {
     targetUrl: process.env.KIOSK_URL, // Target URL for the kiosk
     user: process.env.KIOSK_USER || 'kiosk',                         

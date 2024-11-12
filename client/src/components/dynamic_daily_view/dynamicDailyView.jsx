@@ -150,7 +150,7 @@ const fetchGreetings = async () => {
 
       <div className="content-wrapper">
         <div className="dhbw-logo">
-          <a href="https://www.stuv-ravensburg.de"><img src="/slideshow.png" alt="DHBW Logo" /></a>
+          <img src="/slideshow.png" alt="DHBW Logo" />
         </div>
 
         <div className="location-badge">

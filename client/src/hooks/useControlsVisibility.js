@@ -3,10 +3,10 @@ import { frontendConfig } from '../../../config/frontend.config.js';
 
 /**
  * Custom hook that manages visibility of controls based on user activity
- * @param {number} [timeout=frontendConfig.sync.controlsInterval] - Time in ms before controls auto-hide
+ * @param {number} [timeout=frontendConfig.slideshow.controlsInterval] - Time in ms before controls auto-hide
  * @returns {boolean} Current visibility state of controls
  */
-export const useControlsVisibility = (timeout = frontendConfig.sync.controlsInterval) => {
+export const useControlsVisibility = (timeout = frontendConfig.slideshow.controlsInterval) => {
   const [showControls, setShowControls] = useState(true);
 
   /**

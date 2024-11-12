@@ -3,20 +3,15 @@ export const frontendConfig = {
     info: {
         location: "Friedrichshafen",
     },
-    sync: {
-        interval: 1000, // Default sync interval in milliseconds
-        controlsInterval: 3000, // Interval for showing/hiding controls in milliseconds
-        retryAttempts: 3, // Number of retry attempts for failed syncs
-        retryDelay: 1 * 60 * 1000, // Delay between retry attempts in milliseconds
-    },
     slideshow: {
         watchInterval: 1000, // Interval for watching media files in downloadPath in milliseconds
-        defaultSlideDuration: 5000, // Default slide duration in milliseconds
+        defaultSlideDuration: 15000, // Default slide duration in milliseconds
+        controlsInterval: 3000, // Interval for showing/hiding controls in milliseconds
+        initLoadDuration: 2000 // Initial load duration in milliseconds
     },
     polling: {
-        serverStatusInterval: 5000, // Interval for polling server status in milliseconds
-        mediaLoaderInterval: 5000, // Interval for polling media loader in milliseconds
-        initLoadDuration: 2000 // Initial load duration in milliseconds
+        serverStatusInterval: 10000, // Interval for polling server status in milliseconds
+        mediaLoaderInterval: 10000, // Interval for polling media loader in milliseconds
     },
     schedule: {
         enabled: true, // Enable or disable the schedule feature
