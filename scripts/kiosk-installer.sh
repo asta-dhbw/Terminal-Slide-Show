@@ -103,7 +103,7 @@ log_info "Checking and installing required packages..."
 if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
     PACKAGES="xorg firefox-esr openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
 else
-    PACKAGES="fbi mpv"
+    PACKAGES="mpv"
 fi
 
 failed_packages=()
@@ -145,11 +145,21 @@ fi
 # Step 2: Add the kiosk user to groups needed for network access
 log_info "Adding user to groups: netdev, video, audio"
 sudo usermod -aG netdev,video,audio "$USER"
-
 if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
     kiosk_script="kiosk.sh"
 elif [ "$SELECTED_MODE" = "$MODE_TERMINAL" ]; then
     kiosk_script="terminal-slide-show.sh"
+    
+    # Copy additional files needed for terminal mode
+    log_info "Copying server folder, package.json and config folder"
+    sudo cp -r "$SCRIPT_DIR/server" "/home/$USER/"
+    sudo cp "$SCRIPT_DIR/package.json" "/home/$USER/"
+    sudo cp -r "$SCRIPT_DIR/config" "/home/$USER/"
+    
+    # Set permissions for additional files
+    sudo chown -R "$USER:$USER" "/home/$USER/server"
+    sudo chown "$USER:$USER" "/home/$USER/package.json"
+    sudo chown -R "$USER:$USER" "/home/$USER/config"
 else
     log_error "Invalid mode selected: $SELECTED_MODE"
     exit 1
