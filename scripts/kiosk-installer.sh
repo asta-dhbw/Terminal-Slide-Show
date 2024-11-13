@@ -53,49 +53,25 @@ load_config() {
 # Mode selection menu
 # -----------------------------------------------------------------------------
 select_mode() {
-    local selected=0
-    local -r options=("Web Browser Kiosk" "Terminal Only")
-    
-    # Clear screen and hide cursor
     clear
-    tput civis
-
+    echo "Select kiosk mode:"
+    echo "0) Web Browser Kiosk"
+    echo "1) Terminal Only"
+    echo ""
+    
     while true; do
-        # Clear screen each time
-        tput cup 0 0
-        
-        echo "Select kiosk mode (use arrow keys and press Enter):"
-        echo ""
-        
-        # Display options with better visual indicators
-        for i in "${!options[@]}"; do
-            if [ $i -eq $selected ]; then
-                echo -e "\033[7m → ${options[$i]} \033[0m"  # Highlighted
-            else
-                echo "   ${options[$i]}"
-            fi
-        done
-        
-        # Read key input
-        read -rsn1 key
-        
-        case "$key" in
-            $'\x1B')
-                read -rsn2 key
-                case "$key" in
-                    '[A') # Up
-                        ((selected > 0)) && ((selected--))
-                        ;;
-                    '[B') # Down
-                        ((selected < ${#options[@]}-1)) && ((selected++))
-                        ;;
-                esac
-                ;;
-            '')  # Enter
-                clear
-                tput cnorm  # Show cursor
-                SELECTED_MODE=$([ $selected -eq 0 ] && echo "$MODE_WEB" || echo "$MODE_TERMINAL")
+        read -p "Enter selection (0 or 1): " selection
+        case "$selection" in
+            0)
+                SELECTED_MODE="$MODE_WEB"
                 return 0
+                ;;
+            1)
+                SELECTED_MODE="$MODE_TERMINAL"
+                return 0
+                ;;
+            *)
+                echo "Invalid selection. Please enter 0 or 1."
                 ;;
         esac
     done
