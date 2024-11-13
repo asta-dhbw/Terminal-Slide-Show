@@ -66,12 +66,12 @@ select_mode() {
         echo "Select kiosk mode:"
         echo ""
         
-        # Display options with highlighting
+        # Display options with arrow indicator
         for i in "${!options[@]}"; do
             if [ $i -eq $selected ]; then
-                echo -e "\e[7m> ${options[$i]}\e[0m"  # Highlighted
+                echo -e "→ ${options[$i]}"  # Show arrow for selected item
             else
-                echo "  ${options[$i]}"
+                echo "  ${options[$i]}"     # Two spaces for alignment
             fi
         done
 
