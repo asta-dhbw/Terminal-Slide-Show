@@ -5,9 +5,9 @@
   "description": "non-GUI slideshow that fetches new files from Google Drive, allowing you to update the slideshow remotely.",
   "type": "module",
   "scripts": {
-    "dev:client": "vite client",
-    "dev:server": "node server/src/index.js",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:frontend": "vite client",
+    "dev:backend": "node server/src/index.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "vite build client",
     "preview": "vite preview"
   },

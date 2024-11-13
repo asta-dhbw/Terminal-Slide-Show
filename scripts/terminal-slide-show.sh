@@ -163,12 +163,23 @@ is_operating_hours() {
 
 # Monitor and manage display state based on schedule
 check_display_state() {
+    # Do initial state check and MPV start
+    if is_operating_hours; then
+        log_info "Within operating hours - starting with images"
+        CURRENT_STATE="on"
+        start_mpv
+    else
+        log_info "Outside operating hours - starting with black screen"
+        CURRENT_STATE="off"
+        start_mpv_black
+    fi
+
+    # Then continue with periodic checks
     while true; do
         if is_operating_hours; then
             if [ "$CURRENT_STATE" = "off" ]; then
                 log_info "Entering operating hours - starting slideshow"
                 CURRENT_STATE="on"
-                # Kill existing MPV instance and start fresh
                 if [ -n "$MPV_PID" ]; then
                     kill $MPV_PID 2>/dev/null
                 fi
@@ -178,14 +189,13 @@ check_display_state() {
             if [ "$CURRENT_STATE" = "on" ]; then
                 log_info "Outside operating hours - displaying black screen"
                 CURRENT_STATE="off"
-                # Kill existing MPV instance and start with black screen
                 if [ -n "$MPV_PID" ]; then
                     kill $MPV_PID 2>/dev/null
                 fi
                 start_mpv_black
             fi
         fi
-        sleep 60  # Check every minute
+        sleep 60
     done
 }
 
@@ -294,10 +304,10 @@ start_mpv_black() {
         
         # Start MPV with just the black image
         mpv --input-ipc-server="$MPV_SOCKET" \
+            --force-window=yes \
             --fullscreen \
             --no-audio \
             --image-display-duration=inf \
-            --force-window=yes \
             --loop-file=inf \
             "$black_image" >/dev/null 2>&1 &
             
@@ -381,22 +391,57 @@ update_playlist() {
     send_mpv_command '{ "command": ["playlist-play-index", "0"] }'
 }
 
+create_placeholder_image() {
+    local placeholder="${MEDIA_DIR}/placeholder.svg"
+    
+    # Create directory if it doesn't exist
+    mkdir -p "$MEDIA_DIR"
+    
+    # Create a simple placeholder SVG if directory is empty
+    cat > "$placeholder" << 'EOF'
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#2d2d2d"/>
+    <text x="50%" y="50%" font-family="Arial" font-size="48" fill="white" text-anchor="middle">
+        Waiting for content...
+    </text>
+</svg>
+EOF
+
+    echo "$placeholder"
+}
+
 # Start MPV instance with media playlist
 start_mpv() {
     # Remove socket if it exists
     rm -f "$MPV_SOCKET"
     
-    # Start MPV with more robust options
-    mpv --input-ipc-server="$MPV_SOCKET" \
-        --image-display-duration=5 \
-        --loop-playlist=inf \
-        --fullscreen \
-        --no-audio \
-        --force-window=yes \
-        --idle=yes \
-        --loop-playlist=inf \
-        --reset-on-next-file=all \
-        "$MEDIA_DIR"/* &
+    # Check if media directory is empty
+    if [ -z "$(ls -A "$MEDIA_DIR" 2>/dev/null)" ]; then
+        log_info "Media directory empty, creating placeholder"
+        local placeholder=$(create_placeholder_image)
+        
+        # Start MPV with placeholder
+        mpv --input-ipc-server="$MPV_SOCKET" \
+            --force-window=yes \
+            --image-display-duration=inf \
+            --fullscreen \
+            --no-audio \
+            --idle=yes \
+            --loop-file=inf \
+            "$placeholder" &
+    else
+        # Start MPV with media files
+        mpv --input-ipc-server="$MPV_SOCKET" \
+            --force-window=yes \
+            --image-display-duration=5 \
+            --loop-playlist=inf \
+            --fullscreen \
+            --no-audio \
+            --idle=yes \
+            --loop-playlist=inf \
+            --reset-on-next-file=all \
+            "$MEDIA_DIR"/* &
+    fi
     
     MPV_PID=$!
     
@@ -413,9 +458,11 @@ start_mpv() {
         exit 1
     fi
     
-    # Initial playlist load
-    sleep 1
-    update_playlist
+    # Initial playlist load only if directory not empty
+    if [ -n "$(ls -A "$MEDIA_DIR" 2>/dev/null)" ]; then
+        sleep 1
+        update_playlist
+    fi
 }
 
 
@@ -456,26 +503,7 @@ run_npm_commands() {
     }
 
     log_info "Starting development server..."
-    npm run dev & # Run in background
-}
-
-# Initialize and run slideshow management
-run_slideshow() {
-    log_info "Starting slideshow management..."
-    monitor_backend &
-    
-    # Check initial state before starting MPV
-    if is_operating_hours; then
-        log_info "Within operating hours - starting with images"
-        CURRENT_STATE="on"
-        start_mpv
-    else
-        log_info "Outside operating hours - starting with black screen"
-        CURRENT_STATE="off"
-        start_mpv_black
-    fi
-    
-    monitor_files &
+    npm run dev:backend & # Run in background
 }
 
 # Cleanup processes on exit
@@ -548,21 +576,18 @@ main() {
     export DEFAULT_DOWNLOAD_PATH="$default_media_path" 
 
     init_project_logging "terminal_slideshow"
-    
-    # Load configuration
     parse_config
-
     MEDIA_DIR="${project_dir}/${DOWNLOAD_PATH}"
+    
 
     # Run network manager and capture status
-    "$scrip_dir/network-manager.sh"
-    network_status=$?
-    if [ $network_status -ne 0 ]; then
-        log_error "Network setup failed with status $network_status"
-        exit 1
-    fi
+    # "$scrip_dir/network-manager.sh"
+    # network_status=$?
+    # if [ $network_status -ne 0 ]; then
+    #     log_error "Network setup failed with status $network_status"
+    #     exit 1
+    # fi
     log_info "Network setup completed successfully"
-    
     log_info "Starting kiosk mode..."
     check_dependencies
     
@@ -575,11 +600,14 @@ main() {
     # Run npm commands before slideshow
     run_npm_commands
     
+    # Start backend monitor
+    monitor_backend &
+
+        # Start file monitor
+    monitor_files &
+
     # Start display state monitor
-    check_display_state &
-    
-    # Start slideshow
-    run_slideshow
+    check_display_state
     
     # Wait for cleanup
     wait
