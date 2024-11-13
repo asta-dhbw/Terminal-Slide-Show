@@ -26,6 +26,16 @@ readonly MODE_TERMINAL="terminal"
 readonly WEB_PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
 readonly TERMINAL_PACKAGES="mpv socat inotify-tools nodejs jq npm curl"
 
+# -----------------------------------------------------------------------------
+# Check for root privileges
+# -----------------------------------------------------------------------------
+check_sudo() {
+    if [ "$EUID" -ne 0 ]; then
+        log_error "Error: This script requires root privileges."
+        log_info "Please run with: sudo $0"
+        exit 1
+    fi
+}
 
 # -----------------------------------------------------------------------------
 # Configuration management
@@ -274,6 +284,8 @@ main() {
     local script_dir="$(get_script_dir)"
     local project_dir="$(find_project_dir)"
     init_project_logging "kiosk_installer"
+    
+    check_sudo
 
     # Load configuration
     load_config "$project_dir/config/.env"
