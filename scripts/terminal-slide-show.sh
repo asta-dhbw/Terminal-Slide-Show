@@ -256,30 +256,6 @@ check_dependencies() {
 # Display management
 # -----------------------------------------------------------------------------
 
-# Set up display environment variables
-setup_display_environment() {
-    # Set default GPU context
-    MPV_GPU_CONTEXT="drm"
-    export MPV_GPU_CONTEXT
-
-    # Set XDG_RUNTIME_DIR if not set
-    if [ -z "$XDG_RUNTIME_DIR" ]; then
-        export XDG_RUNTIME_DIR="/run/user/$UID"
-        mkdir -p "$XDG_RUNTIME_DIR"
-        chmod 0700 "$XDG_RUNTIME_DIR"
-    fi
-
-    # Check if we're running in Wayland or X11
-    if [ -n "$WAYLAND_DISPLAY" ]; then
-        MPV_GPU_CONTEXT="wayland"
-    elif [ -n "$DISPLAY" ]; then
-        MPV_GPU_CONTEXT="x11"
-    fi
-    
-    # Export for child processes
-    export MPV_GPU_CONTEXT
-}
-
 # Create black screen SVG for off-hours display
 create_black_image() {
     local black_image="${PROJECT_DIR}/black.svg"
@@ -593,8 +569,6 @@ main() {
     local media_dir
     local project_dir="$(find_project_dir)"
     local scrip_dir="$(get_script_dir)"
-
-    setup_display_environment
 
     config_file="${project_dir}/config/config.js"
     media_dir="${project_dir}/${default_media_path}"
