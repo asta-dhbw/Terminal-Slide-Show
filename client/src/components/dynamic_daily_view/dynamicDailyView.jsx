@@ -84,7 +84,7 @@ const DynamicDailyView = () => {
   const fetchFacts = () => fetchWithCache('/api/facts', 'facts', setFact);
   const fetchGreetings = () => fetchWithCache('/api/greetings', 'greetings', setGreetings);
   const fetchNasaImage = () => fetchWithCache('/api/nasa-apod', 'nasa', setNasaImage);
-  
+
   const fetchWeather = () => {
     fetchWithCache(
       `/api/weather?location=${encodeURIComponent(frontendConfig.info.location)}`,

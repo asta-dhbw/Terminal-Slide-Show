@@ -12,18 +12,18 @@ class WebSocketManager {
     this.logger = new Logger('WebSocketManager');
     /** @private @type {WebSocketServer|null} WebSocket server instance */
     this.server = null;
-     /** @private @type {Map<WebSocket, Object>} Map of connected clients and their metadata */
+    /** @private @type {Map<WebSocket, Object>} Map of connected clients and their metadata */
     this.clients = new Map();
-        /** @private @type {number} Interval for checking client heartbeats in ms */
-    this.heartbeatInterval = config.websocket.heartbeatInterval; 
+    /** @private @type {number} Interval for checking client heartbeats in ms */
+    this.heartbeatInterval = config.websocket.heartbeatInterval;
   }
-  
-    /**
-   * Initializes the WebSocket server
-   * @param {http.Server} server - HTTP/HTTPS server to attach WebSocket to
-   */
+
+  /**
+ * Initializes the WebSocket server
+ * @param {http.Server} server - HTTP/HTTPS server to attach WebSocket to
+ */
   initialize(server) {
-    this.server = new WebSocketServer({ 
+    this.server = new WebSocketServer({
       noServer: true,
       clientTracking: true
     });
@@ -38,19 +38,19 @@ class WebSocketManager {
 
     // Start heartbeat checking
     setInterval(() => this.checkHeartbeats(), this.heartbeatInterval);
-    
+
     this.logger.info('WebSocket server initialized');
   }
 
-    /**
-   * Handles new WebSocket connections
-   * @private
-   * @param {WebSocket} ws - WebSocket connection
-   * @param {http.IncomingMessage} req - HTTP request that initiated the connection
-   */
+  /**
+ * Handles new WebSocket connections
+ * @private
+ * @param {WebSocket} ws - WebSocket connection
+ * @param {http.IncomingMessage} req - HTTP request that initiated the connection
+ */
   handleConnection(ws, req) {
     const clientId = Math.random().toString(36).substring(7);
-    
+
     this.clients.set(ws, {
       id: clientId,
       lastPing: Date.now(),
@@ -105,10 +105,10 @@ class WebSocketManager {
     });
   }
 
-    /**
-   * Checks client heartbeats and removes stale connections
-   * @private 
-   */
+  /**
+ * Checks client heartbeats and removes stale connections
+ * @private 
+ */
   checkHeartbeats() {
     const now = Date.now();
     for (const [ws, client] of this.clients) {
@@ -122,10 +122,10 @@ class WebSocketManager {
     }
   }
 
-    /**
-   * Broadcasts media list updates to all connected clients
-   * @param {MediaFile[]} mediaList - Updated list of media files
-   */
+  /**
+ * Broadcasts media list updates to all connected clients
+ * @param {MediaFile[]} mediaList - Updated list of media files
+ */
   broadcastUpdate(mediaList) {
     if (!this.server || this.clients.size === 0) return;
 
@@ -156,10 +156,10 @@ class WebSocketManager {
     }
   }
 
-    /**
-   * Gets the number of currently connected clients
-   * @returns {number} Number of connected clients
-   */
+  /**
+ * Gets the number of currently connected clients
+ * @returns {number} Number of connected clients
+ */
   getConnectedClients() {
     return this.clients.size;
   }

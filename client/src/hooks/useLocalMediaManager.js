@@ -40,7 +40,7 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   const wsRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
-  
+
   const MAX_RECONNECT_ATTEMPTS = frontendConfig.websocket.maxReconnectAttempts;
   const RECONNECT_INTERVAL = frontendConfig.websocket.reconnectInterval;
 
@@ -61,10 +61,10 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     }
   }, []);
 
-    /**
-   * Establishes WebSocket connection with reconnection logic
-   * @returns {void}
-   */
+  /**
+ * Establishes WebSocket connection with reconnection logic
+ * @returns {void}
+ */
   const connect = useCallback(() => {
     // Only attempt connection if server is connected and schedule is active
     if (!isScheduleActive || !isServerConnected || wsRef.current?.readyState === WebSocket.OPEN) {
@@ -148,11 +148,11 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     ws.addEventListener('close', () => clearInterval(pingInterval));
   }, [isScheduleActive, isServerConnected, fetchMediaFallback]);
 
-     /**
-   * Navigates between media items
-   * @param {'next'|'previous'} direction - Navigation direction
-   * @returns {void}
-   */
+  /**
+* Navigates between media items
+* @param {'next'|'previous'} direction - Navigation direction
+* @returns {void}
+*/
   const navigateMedia = useCallback((direction) => {
     if (allMedia.length === 0) return null;
 
@@ -166,17 +166,17 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     });
   }, [allMedia.length]);
 
-    /**
-   * Gets current media item
-   * @returns {Object|null} Current media item or null if none available
-   */
+  /**
+ * Gets current media item
+ * @returns {Object|null} Current media item or null if none available
+ */
   const getCurrentMedia = useCallback(() => {
     return allMedia[currentIndex] || null;
   }, [allMedia, currentIndex]);
 
 
-   // Initial setup and cleanup
-   useEffect(() => {
+  // Initial setup and cleanup
+  useEffect(() => {
     if (isScheduleActive && isServerConnected) {
       // Initial media fetch via HTTP
       fetchMediaFallback();

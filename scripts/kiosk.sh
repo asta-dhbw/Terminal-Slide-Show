@@ -34,6 +34,7 @@ readonly PROFILE_PATH="${PROFILE_PATH:-$HOME/.mozilla/firefox/${PROFILE_NAME}}"
 # -----------------------------------------------------------------------------
 
 # Create fresh Firefox profile with kiosk-mode settings
+# Detects pi by custom user agent
 create_firefox_profile() {
     log_info "Creating fresh Firefox profile..."
     rm -rf "$PROFILE_PATH"
@@ -56,6 +57,7 @@ user_pref("browser.cache.memory.enable", true);
 user_pref("browser.cache.memory.capacity", 524288);
 user_pref("browser.privatebrowsing.autostart", true);
 user_pref("browser.startup.homepage_override.enabled", false);
+user_pref("general.useragent.override", "Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Firefox/123.0");
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
