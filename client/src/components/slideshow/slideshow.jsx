@@ -76,6 +76,7 @@ const Slideshow = () => {
 
   return (
     <div className="slideshow-container">
+      {/* Main content wrapper with AnimatePresence for smooth transitions */}
       <AnimatePresence mode="wait">
         {!loading && (media ? (
           media.isDynamicView ? (
@@ -98,7 +99,8 @@ const Slideshow = () => {
         />
       )}
 
-      {/* Loading overlay */}
+      {/* Loading overlay with server connection status
+          Displayed during content loading or server connection issues */}
       <AnimatePresence>
         {(loading || !serverReady) && isScheduleActive && (
           <Loading isServerConnecting={!serverReady} />

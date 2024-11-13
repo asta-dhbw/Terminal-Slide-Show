@@ -8,6 +8,10 @@ import { PowerManager } from './services/powerManager.js';
 import { Logger } from './utils/logger.js';
 import { config } from '../../config/config.js';
 
+/**
+ * Express application instance
+ * @type {import('express').Express}
+ */
 const app = express();
 const port = config.backend.port;
 const host = config.backend.host;
@@ -20,6 +24,11 @@ const powerManager = new PowerManager({
     inactivityTimeout: config.backendPowerSaving?.timeout || 5 * 60 * 1000 // 5 minutes default
 });
 
+/**
+ * Initializes all backend services
+ * @async
+ * @throws {Error} If services fail to initialize
+ */
 async function initialize() {
     try {
         await googleDriveService.initialize();
@@ -46,12 +55,19 @@ const handleClientActivity = (req, res, next) => {
 };
 
 
-// Serve static files - order matters!
-// 1. Serve public files first
+// Static File Serving
+/* ------------------------------------ */
+
+/**
+ * Static file middleware configuration
+ * Serves files in order:
+ * 1. Public files
+ * 2. Client dist folder
+ * 3. Media files with caching
+ */
+
 app.use(express.static(path.join(process.cwd(), 'client', 'public')));
-// 2. Serve the client dist folder (for production)
 app.use(express.static(path.join(process.cwd(), 'dist')));
-// 3. Serve media files
 app.use('/media', (req, res, next) => {
     // Cache for 1 day by default
     res.set({
@@ -63,30 +79,35 @@ app.use('/media', (req, res, next) => {
 
 // conditional requests for media files
 app.use('/media', (req, res, next) => {
-  const filePath = path.join(process.cwd(), config.paths.downloadPath, req.url);
-  
-  // Generate ETag from file stats
-  fs.stat(filePath, (err, stats) => {
-    if (err) return next();
-    
-    const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
-    res.set('ETag', etag);
+    const filePath = path.join(process.cwd(), config.paths.downloadPath, req.url);
 
-    // Check if client's cached version matches
-    if (req.headers['if-none-match'] === etag) {
-      return res.sendStatus(304); // Not Modified
-    }
+    // Generate ETag from file stats
+    fs.stat(filePath, (err, stats) => {
+        if (err) return next();
 
-    res.set({
-      'Cache-Control': 'public, max-age=86400',
-      'Last-Modified': stats.mtime.toUTCString()
+        const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
+        res.set('ETag', etag);
+
+        // Check if client's cached version matches
+        if (req.headers['if-none-match'] === etag) {
+            return res.sendStatus(304); // Not Modified
+        }
+
+        res.set({
+            'Cache-Control': 'public, max-age=86400',
+            'Last-Modified': stats.mtime.toUTCString()
+        });
+
+        next();
     });
-    
-    next();
-  });
 }, express.static(path.join(process.cwd(), config.paths.downloadPath)));
 
-// CORS middleware
+// Security Middleware
+/* ------------------------------------ */
+
+/**
+ * CORS configuration middleware
+ */
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // Allow any origin in development
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -94,7 +115,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// Security headers middleware
+/**
+ * Security headers middleware
+ */
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -102,12 +125,10 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/dynamic-view', (req, res) => {
-    logger.debug('Serving dynamic view');
-    res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
-});
 
-// API endpoints
+// Core API Routes
+/* ------------------------------------ */
+
 app.use('/api', handleClientActivity);
 
 app.use('/api', (req, res, next) => {
@@ -120,6 +141,12 @@ app.use('/api', (req, res, next) => {
     }
     next();
 });
+
+/**
+ * @route GET /api/current-media
+ * @description Get current media for client
+ * @param {string} req.clientId - Client identifier
+ */
 
 app.get('/api/current-media', (req, res) => {
     logger.debug(`Getting current media for client ${req.clientId}`);
@@ -156,7 +183,69 @@ app.get('/api/server-status', (req, res) => {
     }
 });
 
-// NASA APOD endpoint
+// Local Data API Routes
+/* ------------------------------------ */
+
+/**
+ * @route GET /api/quotes
+ * @description Get random quote from local database
+ */
+app.get('/api/quotes', async (req, res) => {
+    logger.debug('Fetching random quote');
+    try {
+        const quotesData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'quotes.json'), 'utf8');
+        const quotes = JSON.parse(quotesData).quotes;
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        res.json(randomQuote);
+    } catch (error) {
+        logger.error('Failed to fetch quote:', error);
+        res.status(500).json({ error: 'Failed to fetch quote' });
+    }
+});
+
+/**
+ * @route GET /api/facts
+ * @description Get random facts from local database
+ */
+app.get('/api/facts', async (req, res) => {
+    logger.debug('Fetching random fact');
+    try {
+        const factsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'facts.json'), 'utf8');
+        const facts = JSON.parse(factsData);
+        const randomFact = facts[Math.floor(Math.random() * facts.length)];
+        res.json(randomFact);
+    } catch (error) {
+        logger.error('Failed to fetch fact:', error);
+        res.status(500).json({ error: 'Failed to fetch fact' });
+    }
+});
+
+/**
+ * @route GET /api/greetings
+ * @description Get random Greeting messages from local database
+ */
+app.get('/api/greetings', async (req, res) => {
+    logger.debug('Fetching greetings');
+    try {
+        const greetingsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'greetings.json'), 'utf8');
+        const greetings = JSON.parse(greetingsData);
+        res.json(greetings);
+    } catch (error) {
+        logger.error('Failed to fetch greetings:', error);
+        res.status(500).json({ error: 'Failed to fetch greetings' });
+    }
+});
+
+
+
+// External API Integration Routes
+/* ------------------------------------ */
+
+/**
+ * @route GET /api/nasa-apod
+ * @description Fetch NASA Astronomy Picture of the Day
+ * @throws {Error} If NASA API request fails
+ */
 app.get('/api/nasa-apod', async (req, res) => {
     logger.debug('Fetching NASA APOD');
     try {
@@ -171,7 +260,7 @@ app.get('/api/nasa-apod', async (req, res) => {
             `https://api.nasa.gov/planetary/apod?api_key=${config.apiKeys.NASA_API_KEY}`
         );
         const data = await nasaResponse.json();
-        
+
         // Generate ETag based on data
         const etag = `W/"${Buffer.from(JSON.stringify(data)).length}"`;
         res.set('ETag', etag);
@@ -188,7 +277,11 @@ app.get('/api/nasa-apod', async (req, res) => {
     }
 });
 
-// Weather endpoint
+/**
+ * @route GET /api/weather
+ * @description Fetch weather data for location
+ * @param {string} req.query.location - Location to get weather for
+ */
 app.get('/api/weather', async (req, res) => {
     const location = req.query.location;
     logger.debug(`Fetching weather for location: ${location}`);
@@ -219,50 +312,23 @@ app.get('/api/weather', async (req, res) => {
     }
 });
 
-// Add these new endpoints
-app.get('/api/quotes', async (req, res) => {
-    logger.debug('Fetching random quote');
-    try {
-        const quotesData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'quotes.json'), 'utf8');
-        const quotes = JSON.parse(quotesData).quotes;
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        res.json(randomQuote);
-    } catch (error) {
-        logger.error('Failed to fetch quote:', error);
-        res.status(500).json({ error: 'Failed to fetch quote' });
-    }
-});
-
-app.get('/api/facts', async (req, res) => {
-    logger.debug('Fetching random fact');
-    try {
-        const factsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'facts.json'), 'utf8');
-        const facts = JSON.parse(factsData);
-        const randomFact = facts[Math.floor(Math.random() * facts.length)];
-        res.json(randomFact);
-    } catch (error) {
-        logger.error('Failed to fetch fact:', error);
-        res.status(500).json({ error: 'Failed to fetch fact' });
-    }
-});
-
-app.get('/api/greetings', async (req, res) => {
-    logger.debug('Fetching greetings');
-    try {
-        const greetingsData = await fs.readFile(path.join(process.cwd(), 'server', 'data', 'greetings.json'), 'utf8');
-        const greetings = JSON.parse(greetingsData);
-        res.json(greetings);
-    } catch (error) {
-        logger.error('Failed to fetch greetings:', error);
-        res.status(500).json({ error: 'Failed to fetch greetings' });
-    }
-});
 
 // Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
 });
-// Start the server
+
+app.get('/dynamic-view', (req, res) => {
+    logger.debug('Serving dynamic view');
+    res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
+
+// Server Lifecycle
+/* ------------------------------------ */
+
+/**
+ * Start server and initialize services
+ */
 app.listen(port, () => {
     logger.info(`Backend running at http://${host}:${port}/`);
     initialize();

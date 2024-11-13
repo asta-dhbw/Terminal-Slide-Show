@@ -1,5 +1,10 @@
 import React from 'react';
 
+/**
+ * @description Animated server icon showing two stacked server units with status indicators and connecting lines
+ * Features pulsing animations on the top server and dashed connection line
+ * @returns {JSX.Element} Animated server SVG icon
+ */
 export const Server = () => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 140">
             <rect x="5" y="15" width="70" height="25" rx="8"

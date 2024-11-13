@@ -1,7 +1,7 @@
 // config/frontend.config.js
 export const frontendConfig = {
     info: {
-        location: "Friedrichshafen",
+        location: "Friedrichshafen", // Location setting for geolocation services
     },
     slideshow: {
         watchInterval: 1000, // Interval for watching media files in downloadPath in milliseconds

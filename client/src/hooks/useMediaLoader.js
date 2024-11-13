@@ -2,6 +2,18 @@ import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { frontendConfig } from '../../../config/frontend.config.js';
 
+/**
+ * Custom hook for loading and managing media content with server connectivity
+ * @param {boolean} isScheduleActive - Controls whether media loading is active
+ * @returns {Object} Media loader state and controls
+ * 
+ * State management for:
+ * - Media content loading
+ * - Server connectivity
+ * - Error handling
+ * - Client identification
+ * - Navigation between media items
+ */
 export const useMediaLoader = (isScheduleActive = true) => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -11,17 +23,14 @@ export const useMediaLoader = (isScheduleActive = true) => {
   const [serverReconnected, setServerReconnected] = useState(false);
   const [initialLoadStartTime, setInitialLoadStartTime] = useState(null);
   const [clientId] = useState(() => {
-    //if only one use per browser is wanted:  const storedId = localStorage.getItem('clientId');
-    // and combine this settin original instances detect other tabs via storage
     return uuidv4(); // storedId ||
   });
 
-  // Store clientId in localStorage
   useEffect(() => {
     localStorage.setItem('clientId', clientId);
   }, [clientId]);
 
-  // Reset all state when schedule becomes inactive o5r loading media is null ( needed for reinitialization)
+  // Reset all state when schedule becomes inactive o5 loading media is null ( needed for reinitialization)
   useEffect(() => {
     if (!isScheduleActive || !media) {
       setMedia(null);
@@ -34,6 +43,11 @@ export const useMediaLoader = (isScheduleActive = true) => {
     }
   }, [isScheduleActive, media]);
 
+    /**
+   * Utility function for making authenticated requests
+   * @param {string} url - API endpoint URL
+   * @returns {Promise<Response>} Fetch response
+   */
   const fetchWithClientId = useCallback(async (url) => {
     const response = await fetch(url, {
       headers: {
@@ -160,12 +174,12 @@ export const useMediaLoader = (isScheduleActive = true) => {
   }, [checkServer, loadMedia, serverReady, isScheduleActive]);
 
   return {
-    media,
-    loading,
-    error,
-    serverReady,
-    navigateMedia,
-    clientId
+    media,        // Current media content
+    loading,      // Loading status flag
+    error,        // Error message if any
+    serverReady,  // Server connection status
+    navigateMedia,// Function to navigate between media
+    clientId      // Unique client identifier
   };
 };
 

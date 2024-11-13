@@ -1,11 +1,20 @@
-// TODO Better detection of Raspberry Pi devices currently only checks user agent for common identifiers
+/**
+ * Detects if the current device is a Raspberry Pi
+ * @returns {boolean} True if running on Raspberry Pi, false otherwise
+ * 
+ * Note: Detection is based on user agent strings which may not be 100% reliable
+ * as they can be spoofed or modified
+ */
 export const isRaspberryPi = () => {
+  // Skip detection if not running in browser environment
   if (typeof window === 'undefined') return false;
 
-  // Check user agent for Raspberry Pi specific identifiers
+  // Get lowercase user agent string from browser
   const userAgent = window.navigator.userAgent.toLowerCase();
 
-  // Common identifiers for Raspberry Pi browsers
+  // Check for Raspberry Pi indicators in user agent
+  // x86_64: Common architecture for Pi 4
+  // raspbian: Official Raspberry Pi OS
   return userAgent.includes('x86_64') ||
-    userAgent.includes('raspbian')
+    userAgent.includes('raspbian');
 };

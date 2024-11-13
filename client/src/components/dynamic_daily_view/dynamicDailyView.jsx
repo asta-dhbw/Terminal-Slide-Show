@@ -1,3 +1,9 @@
+/**
+ * @component DynamicDailyView
+ * @description A dynamic dashboard component that displays time, weather, quotes, NASA imagery and facts
+ * Updates content periodically and handles day/night transitions
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Quote, Coffee, MapPin, Clock, Info } from 'lucide-react';
 import '../../styles/dynamicDailyView.css';
@@ -18,39 +24,44 @@ const DynamicDailyView = () => {
 
   const isNight = time.getHours() >= 18 || time.getHours() < 6;
 
-const fetchQuotes = async () => {
-  try {
-    const response = await fetch('/api/quotes');
-    const quote = await response.json();
-    setQuote(quote);
-    setError(null);
-  } catch (err) {
-    setError('Failed to load quote');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const fetchQuotes = async () => {
+    try {
+      const response = await fetch('/api/quotes');
+      const quote = await response.json();
+      setQuote(quote);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load quote');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-const fetchFacts = async () => {
-  try {
-    const response = await fetch('/api/facts');
-    const fact = await response.json();
-    setFact(fact);
-  } catch (err) {
-    console.error('Failed to fetch facts:', err);
-  }
-};
+  const fetchFacts = async () => {
+    try {
+      const response = await fetch('/api/facts');
+      const fact = await response.json();
+      setFact(fact);
+    } catch (err) {
+      console.error('Failed to fetch facts:', err);
+    }
+  };
 
-const fetchGreetings = async () => {
-  try {
-    const response = await fetch('/api/greetings');
-    const greetings = await response.json();
-    setGreetings(greetings);
-  } catch (err) {
-    console.error('Failed to fetch greetings:', err);
-  }
-};
+  const fetchGreetings = async () => {
+    try {
+      const response = await fetch('/api/greetings');
+      const greetings = await response.json();
+      setGreetings(greetings);
+    } catch (err) {
+      console.error('Failed to fetch greetings:', err);
+    }
+  };
 
+  /**
+   * Returns appropriate greeting based on current hour
+   * @param {number} hour - Current hour (0-23)
+   * @returns {string} Corresponding greeting message
+   */
   const getGreetings = (hour) => {
     for (const range in greetings) {
       const [start, end] = range.split('-').map(Number);
@@ -70,7 +81,7 @@ const fetchGreetings = async () => {
       console.error('Failed to fetch NASA image:', err);
     }
   };
-  
+
   const fetchWeather = async () => {
     try {
       const response = await fetch(`/api/weather?location=${encodeURIComponent(frontendConfig.info.location)}`);

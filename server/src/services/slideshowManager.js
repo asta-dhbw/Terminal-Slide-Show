@@ -1,4 +1,8 @@
-// src/services/slideshowManager.js
+/**
+ * @fileoverview Manages slideshow media files and client sessions
+ * @module SlideshowManager
+ */
+
 import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '../utils/logger.js';
@@ -6,16 +10,48 @@ import { DateParser } from '../utils/dateParser.js';
 import { config } from '../../../config/config.js';
 import { isValidFile } from '../utils/fileValidator.js';
 
+/**
+ * @typedef {Object} MediaFile
+ * @property {string} name - File name
+ * @property {string} path - Full file path
+ * @property {Object} [dates] - Parsed dates from filename
+ * @property {boolean} [isDynamicView] - Whether this is a dynamic view
+ */
+
+/**
+ * @typedef {Object} ClientSession
+ * @property {number} currentIndex - Current media index
+ * @property {number} lastAccessed - Timestamp of last access
+ */
+
+
+/**
+ * Manages slideshow media files and client sessions
+ * @class SlideshowManager
+ */
 export class SlideshowManager {
+  /**
+   * Creates a new SlideshowManager instance
+   * @constructor
+   */
   constructor() {
+    /** @private @type {Logger} */
     this.logger = new Logger('SlideshowManager');
+    /** @private @type {string} */
     this.downloadPath = config.paths.downloadPath;
+    /** @private @type {string} */
     this.mediaPath = path.join(process.cwd(), this.downloadPath);
+    /** @private @type {MediaFile[]} */
     this.mediaFiles = [];
+    /** @private @type {NodeJS.Timeout|null} */
     this.watchInterval = null;
+    /** @private @type {boolean} */
     this.initialized = false;
+    /** @private @type {boolean} */
     this.isPaused = false;
+    /** @private @type {Map<string, ClientSession>} */
     this.clientSessions = new Map();
+    /** @private @type {MediaFile} */
     this.dynamicView = {
       name: 'dynamic-view',
       path: null,
@@ -23,6 +59,11 @@ export class SlideshowManager {
     };
   }
 
+    /**
+   * Initializes the slideshow manager
+   * @async
+   * @returns {Promise<void>}
+   */
   async initialize() {
     await fs.ensureDir(this.mediaPath);
     await this.updateMediaList();
@@ -30,10 +71,20 @@ export class SlideshowManager {
     this.initialized = true;
   }
 
+  /**
+   * Checks if manager is initialized
+   * @returns {boolean} Initialization status
+   */
   isInitialized() {
     return this.initialized;
   }
 
+    /**
+   * Updates the list of available media files
+   * @async
+   * @private
+   * @returns {Promise<void>}
+   */
   async updateMediaList() {
     if (this.isPaused) return;
   
@@ -65,7 +116,12 @@ export class SlideshowManager {
     }
   }
 
-  // Get or create client session
+  /**
+   * Gets or creates a client session
+   * @private
+   * @param {string} clientId - Unique client identifier
+   * @returns {ClientSession} Client session object
+   */
   getClientSession(clientId) {
     if (!this.clientSessions.has(clientId)) {
       this.clientSessions.set(clientId, {
@@ -76,7 +132,10 @@ export class SlideshowManager {
     return this.clientSessions.get(clientId);
   }
 
-  // Clean up old sessions periodically
+    /**
+   * Removes expired client sessions
+   * @private
+   */
   cleanupSessions() {
     const now = Date.now();
     const expirationTime = 24 * 60 * 60 * 1000; // 24 hours
@@ -88,6 +147,11 @@ export class SlideshowManager {
     }
   }
 
+    /**
+   * Gets current media for a client
+   * @param {string} clientId - Client identifier
+   * @returns {MediaFile|null} Current media file or null if none available
+   */
   getCurrentMedia(clientId) {
     if (this.mediaFiles.length === 0) return null;
     const session = this.getClientSession(clientId);
@@ -95,6 +159,11 @@ export class SlideshowManager {
     return this.mediaFiles[session.currentIndex];
   }
 
+    /**
+   * Advances to next media for a client
+   * @param {string} clientId - Client identifier
+   * @returns {MediaFile|null} Next media file or null if none available
+   */
   nextMedia(clientId) {
     if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
     const session = this.getClientSession(clientId);
@@ -103,6 +172,11 @@ export class SlideshowManager {
     return this.getCurrentMedia(clientId);
   }
 
+    /**
+   * Moves to previous media for a client
+   * @param {string} clientId - Client identifier
+   * @returns {MediaFile|null} Previous media file or null if none available
+   */
   previousMedia(clientId) {
     if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
     const session = this.getClientSession(clientId);
@@ -111,6 +185,10 @@ export class SlideshowManager {
     return this.getCurrentMedia(clientId);
   }
 
+    /**
+   * Starts watching for media changes
+   * @param {number} [interval=1000] - Watch interval in milliseconds
+   */
   startWatching(interval = 1000) {
     if (this.isPaused) return;
 
@@ -122,6 +200,9 @@ export class SlideshowManager {
     }, interval);
   }
 
+    /**
+   * Stops watching for media changes
+   */
   stop() {
     if (this.watchInterval) {
       clearInterval(this.watchInterval);
@@ -129,6 +210,11 @@ export class SlideshowManager {
     }
   }
 
+    /**
+   * Pauses slideshow manager operations
+   * @async
+   * @returns {Promise<void>}
+   */
   async pause() {
     this.logger.info('Pausing Slideshow Manager');
     this.isPaused = true;
@@ -138,6 +224,11 @@ export class SlideshowManager {
     }
   }
 
+    /**
+   * Resumes slideshow manager operations
+   * @async
+   * @returns {Promise<void>}
+   */
   async resume() {
     this.logger.info('Resuming Slideshow Manager');
     this.isPaused = false;

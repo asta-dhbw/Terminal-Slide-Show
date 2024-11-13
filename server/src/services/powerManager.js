@@ -1,4 +1,3 @@
-// src/services/powerManager.js
 import { Logger } from '../utils/logger.js';
 
 /**

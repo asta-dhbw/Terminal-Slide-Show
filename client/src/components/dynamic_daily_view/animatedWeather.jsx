@@ -1,7 +1,18 @@
+/**
+ * @module AnimatedWeather
+ * @description Weather visualization component with animated SVG weather conditions
+ */
+
 import React from 'react';
 import { Wind, ArrowUp } from 'lucide-react';
 import '../../styles/animatedWeather.css';
 
+/**
+ * Determines which weather animation to display based on weather code and time of day
+ * @param {number} code - Weather condition code (WMO standard)
+ * @param {boolean} isNight - Whether it's nighttime
+ * @returns {JSX.Element} Appropriate weather animation component
+ */
 const getWeatherAnimation = (code, isNight) => {
   if (isNight) {
     if (code <= 1) return <MoonAnimation />;
@@ -16,6 +27,10 @@ const getWeatherAnimation = (code, isNight) => {
   return isNight ? <MoonAnimation /> : <SunnyAnimation />;
 };
 
+/**
+ * Moon animation component with gradient and shadow effects
+ * @returns {JSX.Element} Animated moon SVG
+ */
 const MoonAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -62,6 +77,10 @@ const MoonAnimation = () => (
   </svg>
 );
 
+/**
+ * Sun animation component with pulsing rays
+ * @returns {JSX.Element} Animated sun SVG
+ */
 const SunnyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -114,6 +133,10 @@ const SunnyAnimation = () => (
   </svg>
 );
 
+/**
+ * Cloud animation component with floating effect
+ * @returns {JSX.Element} Animated cloud SVG
+ */
 const CloudyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -175,6 +198,10 @@ const CloudyAnimation = () => (
 );
 
 
+/**
+ * Night cloud animation component with moon and cloud
+ * @returns {JSX.Element} Animated night cloud SVG
+ */
 const NightlyPartlyCloudyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -220,6 +247,10 @@ const NightlyPartlyCloudyAnimation = () => (
   </svg>
 );
 
+/**
+ * Rain animation component with falling droplets
+ * @returns {JSX.Element} Animated rain SVG
+ */
 const RainyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <CloudyAnimation />
@@ -250,6 +281,10 @@ const RainyAnimation = () => (
   </svg>
 );
 
+/**
+ * Snow animation component with falling snowflakes
+ * @returns {JSX.Element} Animated snow SVG
+ */
 const SnowyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <CloudyAnimation />
@@ -278,6 +313,10 @@ const SnowyAnimation = () => (
   </svg>
 );
 
+/**
+ * Thunderstorm animation component with lightning effects
+ * @returns {JSX.Element} Animated thunderstorm SVG
+ */
 const ThunderstormAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -313,6 +352,10 @@ const ThunderstormAnimation = () => (
   </svg>
 );
 
+/**
+ * Partly cloudy animation component with sun and cloud
+ * @returns {JSX.Element} Animated partly cloudy SVG
+ */
 const PartlyCloudyAnimation = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full">
     <defs>
@@ -359,6 +402,16 @@ const PartlyCloudyAnimation = () => (
 );
 
 
+/**
+ * Main weather display component
+ * @component
+ * @param {Object} props - Component properties
+ * @param {number} props.weatherCode - WMO weather condition code
+ * @param {number} props.temperature - Current temperature in Celsius
+ * @param {number} props.windSpeed - Wind speed in km/h
+ * @param {number} props.windDirection - Wind direction in degrees
+ * @returns {JSX.Element} Weather display with animation and metrics
+ */
 const AnimatedWeather = ({ weatherCode, temperature, windSpeed, windDirection }) => {
   const isNight = new Date().getHours() >= 18 || new Date().getHours() < 6;
 
