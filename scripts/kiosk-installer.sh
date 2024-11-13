@@ -175,7 +175,7 @@ copy_kiosk_files() {
         # Handle web mode specific configurations
     if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
         log_info "Updating TARGET_URL in $script_name to: $TARGET_URL"
-        if ! sudo sed -i "s|^TARGET_URL=.*|TARGET_URL=\"$TARGET_URL\"|" "$home_dir/$script_name"; then
+        if ! sudo sed -i "s|^readonly TARGET_URL=.*|readonly TARGET_URL=\"$TARGET_URL\"|" "$home_dir/$script_name"; then
             log_error "Failed to update TARGET_URL in $script_name"
             return 1
         fi
