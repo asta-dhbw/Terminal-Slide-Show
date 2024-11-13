@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useMediaLoader } from '../../hooks/useMediaLoader';
+import { useLocalMediaManager } from '../../hooks/useLocalMediaManager';
 import { useControlsVisibility } from '../../hooks/useControlsVisibility';
 import { useServerStatus } from '../../hooks/useServerStatus';
 import { useSchedule } from '../../hooks/useSchedule';
@@ -11,6 +11,7 @@ import Loading from '../loading';
 import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
 import { frontendConfig } from '../../../../config/frontend.config.js';
+import ConnectionStatus from '../connectionToast.jsx';
 
 /**
  * @component Slideshow
@@ -24,7 +25,7 @@ const Slideshow = () => {
   const isScheduleActive = scheduleEnabled ? useSchedule() : true;
 
   // Custom hooks for managing media, controls, and server state
-  const { media, loading, error, serverReady, navigateMedia } = useMediaLoader(isScheduleActive);
+  const { media, loading, error, serverReady, navigateMedia } = useLocalMediaManager(isScheduleActive);
   const showControls = useControlsVisibility();
   const isServerConnected = useServerStatus(isScheduleActive);
 
@@ -42,12 +43,12 @@ const Slideshow = () => {
     }
   }, [isScheduleActive]);
 
-  const handleNavigate = (direction) => {
+  const handleNavigate = useCallback((direction) => {
     if (!isScheduleActive) return;
     setPaused(true);
     navigateMedia(direction);
     setTimeout(() => setPaused(false), 200);
-  };
+  }, [isScheduleActive, navigateMedia]);
 
   // Auto-advance timer effect
   useEffect(() => {
@@ -58,7 +59,7 @@ const Slideshow = () => {
     }, frontendConfig.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
-  }, [paused, media, loading, isScheduleActive]);
+  }, [paused, media, loading, isScheduleActive, handleNavigate]); // Added handleNavigate dependency
 
   // Return black screen when schedule is inactive
   if (!isScheduleActive) {

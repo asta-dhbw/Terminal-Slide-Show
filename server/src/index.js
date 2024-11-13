@@ -166,6 +166,16 @@ app.get('/api/previous-media', (req, res) => {
     res.json(media || { error: 'No media available' });
 });
 
+/**
+ * @route GET /api/all-media
+ * @description Get all available media files
+ */
+app.get('/api/all-media', (req, res) => {
+    logger.debug('Getting all media files');
+    const media = slideshowManager.getAllMedia();
+    res.json(media || []);
+});
+
 app.get('/api/server-status', (req, res) => {
     logger.debug('Checking server status');
     try {

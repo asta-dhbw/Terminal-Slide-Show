@@ -235,4 +235,12 @@ export class SlideshowManager {
     await this.updateMediaList();
     this.startWatching(config.slideshow.watchInterval);
   }
+
+  /**
+   * Gets all available media files
+   * @returns {MediaFile[]} Array of media files
+   */
+  getAllMedia() {
+    return this.mediaFiles;
+  }
 }
