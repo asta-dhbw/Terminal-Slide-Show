@@ -49,8 +49,6 @@ export class SlideshowManager {
     this.initialized = false;
     /** @private @type {boolean} */
     this.isPaused = false;
-    /** @private @type {Map<string, ClientSession>} */
-    this.clientSessions = new Map();
     /** @private @type {MediaFile} */
     this.dynamicView = {
       name: 'dynamic-view',
@@ -86,117 +84,48 @@ export class SlideshowManager {
    * @private
    * @returns {Promise<void>}
    */
-async updateMediaList() {
-  if (this.isPaused) return;
+  async updateMediaList() {
+    if (this.isPaused) return;
 
-  try {
-    const files = await fs.readdir(this.mediaPath);
-    const fileMedias = files
-      .filter(file => {
-        const ext = path.extname(file).toLowerCase();
-        return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
-      })
-      .map(file => ({
-        name: file,
-        path: path.join(this.mediaPath, file),
-        dates: DateParser.parseFileName(file)
-      }))
-      .filter(file => isValidFile(file.name));
+    try {
+      const files = await fs.readdir(this.mediaPath);
+      const fileMedias = files
+        .filter(file => {
+          const ext = path.extname(file).toLowerCase();
+          return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
+        })
+        .map(file => ({
+          name: file,
+          path: path.join(this.mediaPath, file),
+          dates: DateParser.parseFileName(file)
+        }))
+        .filter(file => isValidFile(file.name));
 
-    // Create new media list
-    const newMediaList = [
-      ...fileMedias.slice(0, Math.floor(fileMedias.length / 2)),
-      this.dynamicView,
-      ...fileMedias.slice(Math.floor(fileMedias.length / 2))
-    ];
+      // Create new media list
+      const newMediaList = [
+        ...fileMedias.slice(0, Math.floor(fileMedias.length / 2)),
+        this.dynamicView,
+        ...fileMedias.slice(Math.floor(fileMedias.length / 2))
+      ];
 
-    // Check if media list has changed
-    const hasChanged = JSON.stringify(this.mediaFiles) !== JSON.stringify(newMediaList);
+      // Check if media list has changed
+      const hasChanged = JSON.stringify(this.mediaFiles) !== JSON.stringify(newMediaList);
 
-    if (hasChanged) {
-      this.mediaFiles = newMediaList;
-      this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
-      
-      // Broadcast update to all connected clients
-      if (global.webSocketManager) {
-        global.webSocketManager.broadcastUpdate(this.mediaFiles);
+      if (hasChanged) {
+        this.mediaFiles = newMediaList;
+        this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
+        
+        // Broadcast update to all connected clients
+        if (global.webSocketManager) {
+          global.webSocketManager.broadcastUpdate(this.mediaFiles);
+        }
       }
-    }
-  } catch (error) {
-    this.logger.error('Failed to update media list:', error);
-  }
-}
-
-  /**
-   * Gets or creates a client session
-   * @private
-   * @param {string} clientId - Unique client identifier
-   * @returns {ClientSession} Client session object
-   */
-  getClientSession(clientId) {
-    if (!this.clientSessions.has(clientId)) {
-      this.clientSessions.set(clientId, {
-        currentIndex: 0,
-        lastAccessed: Date.now()
-      });
-    }
-    return this.clientSessions.get(clientId);
-  }
-
-    /**
-   * Removes expired client sessions
-   * @private
-   */
-  cleanupSessions() {
-    const now = Date.now();
-    const expirationTime = 24 * 60 * 60 * 1000; // 24 hours
-    
-    for (const [clientId, session] of this.clientSessions.entries()) {
-      if (now - session.lastAccessed > expirationTime) {
-        this.clientSessions.delete(clientId);
-      }
+    } catch (error) {
+      this.logger.error('Failed to update media list:', error);
     }
   }
 
-    /**
-   * Gets current media for a client
-   * @param {string} clientId - Client identifier
-   * @returns {MediaFile|null} Current media file or null if none available
-   */
-  getCurrentMedia(clientId) {
-    if (this.mediaFiles.length === 0) return null;
-    const session = this.getClientSession(clientId);
-    session.lastAccessed = Date.now();
-    return this.mediaFiles[session.currentIndex];
-  }
-
-    /**
-   * Advances to next media for a client
-   * @param {string} clientId - Client identifier
-   * @returns {MediaFile|null} Next media file or null if none available
-   */
-  nextMedia(clientId) {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
-    const session = this.getClientSession(clientId);
-    session.currentIndex = (session.currentIndex + 1) % this.mediaFiles.length;
-    session.lastAccessed = Date.now();
-    return this.getCurrentMedia(clientId);
-  }
-
-    /**
-   * Moves to previous media for a client
-   * @param {string} clientId - Client identifier
-   * @returns {MediaFile|null} Previous media file or null if none available
-   */
-  previousMedia(clientId) {
-    if (this.mediaFiles.length <= 1) return this.getCurrentMedia(clientId);
-    const session = this.getClientSession(clientId);
-    session.currentIndex = (session.currentIndex - 1 + this.mediaFiles.length) % this.mediaFiles.length;
-    session.lastAccessed = Date.now();
-    return this.getCurrentMedia(clientId);
-  }
-
-    /**
+      /**
    * Starts watching for media changes
    * @param {number} [interval=1000] - Watch interval in milliseconds
    */
@@ -206,7 +135,6 @@ async updateMediaList() {
     this.watchInterval = setInterval(async () => {
       if (!this.isPaused) {
         await this.updateMediaList();
-        this.cleanupSessions(); // Cleanup old sessions periodically
       }
     }, interval);
   }

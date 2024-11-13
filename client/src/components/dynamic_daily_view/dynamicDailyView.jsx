@@ -54,26 +54,23 @@ const DynamicDailyView = () => {
         const cachedData = loadFromCache(cacheKey);
         if (cachedData) {
           setter(cachedData);
-          setError(null);
           return;
         }
-        throw new Error('No connection and no cached data available');
+        return;
       }
-
+  
       const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setter(data);
       saveToCache(cacheKey, data);
-      setError(null);
     } catch (err) {
-      console.error(`Failed to fetch ${cacheKey}:`, err);
-      // Try to load from cache even if the error wasn't connection-related
+      console.warn(`Failed to fetch ${cacheKey}:`, err);
       const cachedData = loadFromCache(cacheKey);
       if (cachedData) {
         setter(cachedData);
-        setError(`Using cached ${cacheKey} data`);
-      } else {
-        setError(`Failed to load ${cacheKey}`);
       }
     } finally {
       if (cacheKey === 'quotes') setIsLoading(false);
@@ -108,34 +105,70 @@ const DynamicDailyView = () => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-
-    // Timer for content updates - only fetch if connected
+  
+    // Helper function to safely fetch data
+    const safeDataFetch = async () => {
+      if (!isServerConnected) {
+        console.log('Server not connected, using cached data if available');
+        
+        // Try loading from cache for each data type
+        const cachedQuotes = loadFromCache('quotes');
+        if (cachedQuotes) setQuote(cachedQuotes);
+        
+        const cachedWeather = loadFromCache('weather');
+        if (cachedWeather) setWeather(cachedWeather);
+        
+        const cachedFacts = loadFromCache('facts');
+        if (cachedFacts) setFact(cachedFacts);
+        
+        const cachedNasa = loadFromCache('nasa');
+        if (cachedNasa) setNasaImage(cachedNasa);
+        
+        const cachedGreetings = loadFromCache('greetings');
+        if (cachedGreetings) setGreetings(cachedGreetings);
+        
+        setIsLoading(false);
+        return;
+      }
+  
+      // If connected, fetch all data
+      try {
+        await Promise.all([
+          fetchQuotes(),
+          fetchWeather(),
+          fetchFacts(),
+          fetchNasaImage(),
+          fetchGreetings()
+        ]);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    // Initial data load
+    safeDataFetch();
+  
+    // Set up content refresh timer only if connected
     const contentTimer = setInterval(() => {
       if (isServerConnected) {
-        fetchQuotes();
-        fetchWeather();
-        fetchFacts();
+        safeDataFetch();
       }
-    }, 300000);
-
+    }, 300000); // 5 minutes
+  
     // NASA info auto-toggle timer
     const nasaInfoTimer = setInterval(() => {
       setShowNasaInfo(prev => !prev);
     }, 60000);
-
-    // Initial fetches
-    fetchQuotes();
-    fetchWeather();
-    fetchFacts();
-    fetchNasaImage();
-    fetchGreetings();
-
+  
+    // Cleanup
     return () => {
       clearInterval(timer);
       clearInterval(contentTimer);
       clearInterval(nasaInfoTimer);
     };
-  }, [isServerConnected]); // Re-run when connection status changes
+  }, [isServerConnected]);  // Re-run when connection status changes
 
   const formattedDate = time.toLocaleDateString('de-DE', {
     weekday: 'long',

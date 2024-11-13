@@ -452,15 +452,6 @@ start_mpv() {
     
     MPV_PID=$!
     
-    # Verify MPV started successfully
-    if ! ps -p $MPV_PID > /dev/null 2>&1; then
-        log_error "MPV failed to start, trying fallback options"
-        # Fallback to basic video output
-        mpv_opts+=(--vo=rpi --gpu-context=drm --hwdec=mmal)
-        mpv "${mpv_opts[@]}" "$MEDIA_DIR"/* &
-        MPV_PID=$!
-    fi
-
     # Wait for socket with timeout
     local max_attempts=50
     local attempts=0
