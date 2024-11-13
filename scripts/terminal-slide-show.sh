@@ -24,7 +24,7 @@ cleanup() {
         kill $MPV_PID 2>/dev/null
     fi
     rm -f "$MPV_SOCKET"
-    pkill -f "npm run dev:server"
+    pkill -f "npm run dev:backend"
     pkill -f "monitor_backend"
     pkill -f "inotifywait"
     tput cnorm
@@ -439,14 +439,6 @@ start_mpv() {
         --no-audio
         --idle=yes
         --reset-on-next-file=all
-    )
-
-    # Add fallback video output options
-    mpv_opts+=(
-        --vo=gpu,rpi,drm,x11
-        --gpu-context="${MPV_GPU_CONTEXT}"
-        --hwdec=auto
-        --gpu-api=opengl
     )
 
     # Check if media directory is empty
