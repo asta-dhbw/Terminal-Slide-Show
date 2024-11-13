@@ -72,17 +72,19 @@ init_project_logging() {
 # Exit and cleanup handling
 # -----------------------------------------------------------------------------
 
-# Clean up resources and exit with given code
-# Arguments:
-#   $1 - Optional: Cleanup function name to call
-#   $2 - Optional: Exit code (defaults to 0)
+# Cleanup and exit with proper signal handling
 cleanup_and_exit() {
     local cleanup_function="$1"
     local exit_code="${2:-0}"
     
-    # If a cleanup function is provided, run it
+    # Remove existing traps to prevent recursive calls
+    trap - EXIT SIGINT SIGTERM SIGHUP ERR
+
+    # If cleanup function exists and is callable, run it
     if [ -n "$cleanup_function" ] && declare -F "$cleanup_function" >/dev/null; then
         "$cleanup_function"
+    else
+        echo "Warning: Cleanup function '$cleanup_function' not found" >&2
     fi
     
     exit "$exit_code"
@@ -91,8 +93,29 @@ cleanup_and_exit() {
 # Set up signal traps with custom cleanup handler
 # Arguments:
 #   $1 - Cleanup function name to call on exit
+#   $2 - Optional default exit code (default: 0)
 setup_signal_traps() {
-    local cleanup_function="$1"
+    local cleanup_function="${1}"
+    local default_exit_code="${2:-0}"
     
-    trap 'cleanup_and_exit "$cleanup_function" 0' ERR EXIT
+    # Validate input
+    if [ -z "$cleanup_function" ]; then
+        echo "Error: Cleanup function name required" >&2
+        return 1
+    fi
+    
+    # Verify cleanup function exists
+    if ! declare -F "$cleanup_function" >/dev/null; then
+        echo "Error: Cleanup function '$cleanup_function' not found" >&2
+        return 1
+    fi
+    
+    # Set up traps for various signals
+    trap 'cleanup_and_exit "$cleanup_function" "$default_exit_code"' EXIT
+    trap 'cleanup_and_exit "$cleanup_function" 130' SIGINT  # Control-C
+    trap 'cleanup_and_exit "$cleanup_function" 143' SIGTERM # Kill command
+    trap 'cleanup_and_exit "$cleanup_function" 129' SIGHUP  # Terminal closed
+    trap 'cleanup_and_exit "$cleanup_function" 1' ERR      # Error during execution
+    
+    return 0
 }
