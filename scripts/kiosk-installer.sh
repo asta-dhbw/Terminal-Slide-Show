@@ -38,9 +38,9 @@ load_config() {
     fi
 
     # Extract configuration values
-    KIOSK_USER=$(grep "^KIOSK_USER=" "$env_file" | cut -d'=' -f2)
-    KIOSK_PASSWORD=$(grep "^KIOSK_PASSWORD=" "$env_file" | cut -d'=' -f2)
-    TARGET_URL=$(grep "^KIOSK_URL=" "$env_file" | cut -d'=' -f2)
+    KIOSK_USER=$(grep "^KIOSK_USER=" "$config_file" | cut -d'=' -f2)
+    KIOSK_PASSWORD=$(grep "^KIOSK_PASSWORD=" "$config_file" | cut -d'=' -f2)
+    TARGET_URL=$(grep "^KIOSK_URL=" "$config_file" | cut -d'=' -f2)
 
     # Set defaults if values not found
     KIOSK_USERNAME="${KIOSK_USER:-kiosk}"
