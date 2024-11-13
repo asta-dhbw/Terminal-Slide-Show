@@ -17,40 +17,46 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
     exit 1
 }
 
-# Get directory where script is located
-SCRIPT_DIR="$(get_script_dir)"
-PROJECT_DIR="$(find_project_dir)"
-CONFIG_FILE="$PROJECT_DIR/config/config.js"
+
+# -----------------------------------------------------------------------------
+# Constants and defaults
+# -----------------------------------------------------------------------------
+readonly MODE_WEB="web"
+readonly MODE_TERMINAL="terminal"
+readonly WEB_PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
+readonly TERMINAL_PACKAGES="mpv socat inotify-tools nodejs jq npm curl"
 
 
-if [ -f "$CONFIG_FILE" ]; then
-    # Extract values using grep and sed
-    KIOSK_USER=$(grep -A 2 "kiosk: {" "$CONFIG_FILE" | grep "user:" | sed "s/.*user: '\([^']*\)'.*/\1/")
-    KIOSK_PASSWORD=$(grep -A 3 "kiosk: {" "$CONFIG_FILE" | grep "password:" | sed "s/.*password: '\([^']*\)'.*/\1/")
-    TARGET_URL=$(grep -A 1 "kiosk: {" "$CONFIG_FILE" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
+# -----------------------------------------------------------------------------
+# Configuration management
+# -----------------------------------------------------------------------------
+load_config() {
+    local config_file="${1:?Config file path required}"
+    if [ ! -f "$config_file" ]; then
+        log_error "Config file not found: $config_file"
+        return 1
+    fi
 
-fi
+    # Extract configuration values
+    KIOSK_USER=$(grep -A 2 "kiosk: {" "$config_file" | grep "user:" | sed "s/.*user: '\([^']*\)'.*/\1/")
+    KIOSK_PASSWORD=$(grep -A 3 "kiosk: {" "$config_file" | grep "password:" | sed "s/.*password: '\([^']*\)'.*/\1/")
+    TARGET_URL=$(grep -A 1 "kiosk: {" "$config_file" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
 
-# Use config values if available, otherwise use defaults
-KIOSK_USERNAME="${KIOSK_USER:-kiosk}"
-PASSWORD="${KIOSK_PASSWORD:-!SECURE@PASSWORD!}"
-TARGET_URL="${TARGET_URL:-https://www.google.com}"
+    # Set defaults if values not found
+    KIOSK_USERNAME="${KIOSK_USER:-kiosk}"
+    PASSWORD="${KIOSK_PASSWORD:-!SECURE@PASSWORD!}"
+    TARGET_URL="${TARGET_URL:-https://www.google.com}"
+}
 
 
-# Initialize logging with custom settings
-init_project_logging "kiosk_installer"
-
-
-MODE_WEB="web"
-MODE_TERMINAL="terminal"
-SELECTED_MODE=""
-
+# -----------------------------------------------------------------------------
+# Mode selection menu
+# -----------------------------------------------------------------------------
 select_mode() {
     local selected=0
-    local options=("Web Browser Kiosk" "Terminal Only")
+    local -r options=("Web Browser Kiosk" "Terminal Only")
     
-    # Hide cursor
-    tput civis
+    tput civis  # Hide cursor
     
     while true; do
         # Clear previous menu
@@ -72,7 +78,6 @@ select_mode() {
         
         # Read single character
         read -rsn1 key
-        
         case "$key" in
             $'\x1B')  # ESC sequence
                 read -rsn2 key
@@ -87,191 +92,213 @@ select_mode() {
                         ;;
                 esac
                 ;;
-            '') # Enter key
+            '') # Enter
                 printf "\033[%dB\n" $((${#options[@]} + 2))
                 tput cnorm   # Show cursor
-                if [ $selected -eq 0 ]; then
-                    SELECTED_MODE=$MODE_WEB
-                else
-                    SELECTED_MODE=$MODE_TERMINAL
-                fi
-                return
+                SELECTED_MODE=$([ $selected -eq 0 ] && echo "$MODE_WEB" || echo "$MODE_TERMINAL")
+                return 0
                 ;;
         esac
     done
 }
 
-select_mode
+# -----------------------------------------------------------------------------
+# Package management
+# -----------------------------------------------------------------------------
+install_packages() {
+    local -r packages="$1"
+    local failed_packages=()
 
-log_info "Selected mode: $SELECTED_MODE"
+    for pkg in $packages; do
+        if ! dpkg -l | awk '{print $2}' | grep -q "^$pkg$"; then
+            log_info "Installing $pkg..."
+            if ! sudo apt-get install -y "$pkg"; then
+                log_error "Failed to install package: $pkg"
+                failed_packages+=("$pkg")
+            fi
+        fi
+    done
 
-# Step 1: Check and install required packages
-log_info "Checking and installing required packages..."
+    if [ ${#failed_packages[@]} -ne 0 ]; then
+        log_error "Failed to install packages: ${failed_packages[*]}"
+        return 1
+    fi
+}
 
-# Modify package installation based on mode
-if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
-    PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
-else
-    PACKAGES="mpv socat inotify-tools nodejs jq"
-fi
+# -----------------------------------------------------------------------------
+# User management
+# -----------------------------------------------------------------------------
+create_kiosk_user() {
+    local username="$1"
+    local password="$2"
 
-failed_packages=()
+    if id "$username" &>/dev/null; then
+        log_warn "User $username already exists"
+    else
+        log_info "Creating user: $username"
+        sudo adduser --disabled-password --gecos "" "$username"
+        printf "%s:%s" "$username" "$password" | sudo chpasswd
+    fi
 
-for pkg in $PACKAGES; do
-    if ! dpkg -l | awk '{print $2}' | grep -q "^$pkg$"; then
-        log_info "Installing $pkg..."
-        if ! sudo apt-get install -y "$pkg"; then
-            log_error "Failed to install package: $pkg"
-            failed_packages+=("$pkg")
+    #for auto login sudoer is required
+    log_info "Adding user to required groups"
+    sudo usermod -aG netdev,video,audio,sudo "$username"
+}
+
+# -----------------------------------------------------------------------------
+# File management
+# -----------------------------------------------------------------------------
+copy_kiosk_files() {
+    local username="$1"
+    local script_name="$2"
+    local script_dir="$3"
+    local home_dir="/home/$username"
+
+    # Copy main script and utilities
+    local files=(
+        "$script_name"
+        "logger.sh"
+        "network-manager.sh"
+        "project-utils.sh"
+    )
+
+    for file in "${files[@]}"; do
+        if [ ! -f "$script_dir/$file" ]; then
+            log_error "Required file not found: $file"
+            return 1
+        fi
+        sudo cp "$script_dir/$file" "$home_dir/"
+        sudo chown "$username:$username" "$home_dir/$file"
+        [ -x "$script_dir/$file" ] && sudo chmod +x "$home_dir/$file"
+    done
+
+        # Handle web mode specific configurations
+    if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
+        log_info "Updating TARGET_URL in $script_name to: $TARGET_URL"
+        if ! sudo sed -i "s|^TARGET_URL=.*|TARGET_URL=\"$TARGET_URL\"|" "$home_dir/$script_name"; then
+            log_error "Failed to update TARGET_URL in $script_name"
+            return 1
         fi
     fi
-done
 
-if [ ${#failed_packages[@]} -ne 0 ]; then
-    log_error "Failed to install the following packages:"
-    for pkg in "${failed_packages[@]}"; do
-        log_error "  - $pkg"
-    done
-    log_error "Please check your internet connection and package repositories"
-    exit 1
-fi
+    # Copy additional files for terminal mode
+    if [ "$SELECTED_MODE" = "$MODE_TERMINAL" ]; then
+        for dir in "server" "config"; do
+            sudo cp -r "$script_dir/$dir" "$home_dir/"
+            sudo chown -R "$username:$username" "$home_dir/$dir"
+        done
+        sudo cp "$script_dir/package.json" "$home_dir/"
+        sudo chown "$username:$username" "$home_dir/package.json"
 
-log_info "All required packages installed successfully"
+        # Run npm install as kiosk user
+        log_info "Installing npm dependencies..."
+        if ! sudo -u "$username" bash -c "cd $home_dir && npm install"; then
+            log_error "Failed to install npm dependencies"
+            return 1
+        fi
+        log_info "npm dependencies installed successfully"
+    fi
+}
 
-# Step 1.2: Check if user exists
-if id "$KIOSK_USERNAME" &>/dev/null; then
-    log_warn "User $KIOSK_USERNAME already exists"
-else
-    # Create the user with no password and no sudo privileges
-    log_info "Creating user: $KIOSK_USERNAME"
-    sudo adduser --disabled-password --gecos "" "$KIOSK_USERNAME"
-
-    # Set the password using printf to handle special characters
-    log_info "Setting password for user: $KIOSK_USERNAME"
-    printf "%s:%s" "$KIOSK_USERNAME" "$PASSWORD" | sudo chpasswd
-fi
-
-# Step 2: Add the kiosk user to groups needed for network access
-log_info "Adding user to groups: netdev, video, audio"
-sudo usermod -aG netdev,video,audio "$KIOSK_USERNAME"
-if [ "$SELECTED_MODE" = "$MODE_WEB" ]; then
-    kiosk_script="kiosk.sh"
-elif [ "$SELECTED_MODE" = "$MODE_TERMINAL" ]; then
-    kiosk_script="terminal-slide-show.sh"
-    
-    # Copy additional files needed for terminal mode
-    log_info "Copying server folder, package.json and config folder"
-    sudo cp -r "$SCRIPT_DIR/server" "/home/$KIOSK_USERNAME/"
-    sudo cp "$SCRIPT_DIR/package.json" "/home/$KIOSK_USERNAME/"
-    sudo cp -r "$SCRIPT_DIR/config" "/home/$KIOSK_USERNAME/"
-    
-    # Set permissions for additional files
-    sudo chown -R "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/server"
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/package.json"
-    sudo chown -R "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/config"
-else
-    log_error "Invalid mode selected: $SELECTED_MODE"
-    exit 1
-fi
-
-# Step 3: Copy and modify $kiosk_script from installer directory to user's home
-if [ -f "$SCRIPT_DIR/$kiosk_script" ]; then
-    log_info "Copying $kiosk_script to user's home directory"
-    sudo cp "$SCRIPT_DIR/$kiosk_script" "/home/$KIOSK_USERNAME/"
-    sudo cp "$SCRIPT_DIR/logger.sh" "/home/$KIOSK_USERNAME/"
-    sudo cp "$SCRIPT_DIR/network-manager.sh" "/home/$KIOSK_USERNAME/"
-    sudo cp "$SCRIPT_DIR/project-utils.sh" "/home/$KIOSK_USERNAME/"
-    
-    # Update TARGET_URL in $kiosk_script
-    log_info "Updating TARGET_URL in $kiosk_script to: $TARGET_URL"
-    sudo sed -i "s|^TARGET_URL=.*|TARGET_URL=\"$TARGET_URL\"|" "/home/$KIOSK_USERNAME/$kiosk_script"
-    
-    # Set correct permissions
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/$kiosk_script"
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/logger.sh"
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/network-manager.sh"
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/project-utils.sh"
-    sudo chmod +x "/home/$KIOSK_USERNAME/$kiosk_script"
-    sudo chmod +x "/home/$KIOSK_USERNAME/network-manager.sh"
-else
-    log_error "Error: $kiosk_script script not found in $SCRIPT_DIR"
-    exit 1
-fi
-
-# Step 4: Set up autologin for the kiosk user
-
-#for auto login sudoer is required
-sudo usermod -aG sudo "$KIOSK_USERNAME"
-
-# Edit the lightdm config for autologin (Debian typically uses LightDM for graphical login)
-log_info "Configuring LightDM autologin for user: $KIOSK_USERNAME"
-if [ -f /etc/lightdm/lightdm.conf ]; then
+# -----------------------------------------------------------------------------
+# Autologin configuration
+# -----------------------------------------------------------------------------
+configure_lightdm_autologin() {
+    local username="$1"
+    local config_file="/etc/lightdm/lightdm.conf"
     log_debug "Modifying existing LightDM configuration"
-    sudo sed -i "s/^autologin-user=.*/autologin-user=$KIOSK_USERNAME/" /etc/lightdm/lightdm.conf
-    if [ $? -ne 0 ]; then
-        log_error "Failed to update LightDM configuration"
-        exit 1
+
+    if [ -f "$config_file" ]; then
+        sudo sed -i "s/^autologin-user=.*/autologin-user=$username/" "$config_file"
+    else
+        echo "[Seat:*]" | sudo tee "$config_file" > /dev/null
+        echo "autologin-user=$username" | sudo tee -a "$config_file" > /dev/null
     fi
-else
-    log_debug "Creating new LightDM configuration"
-    echo "[Seat:*]" | sudo tee /etc/lightdm/lightdm.conf > /dev/null
-    echo "autologin-user=$KIOSK_USERNAME" | sudo tee -a /etc/lightdm/lightdm.conf > /dev/null
-    if [ $? -ne 0 ]; then
-        log_error "Failed to create LightDM configuration"
-        exit 1
-    fi
-fi
+}
 
-# TTY Autologin Configuration
-TTY_CONFIG_DIR="/etc/systemd/system/getty@tty1.service.d"
-TTY_CONFIG_FILE="$TTY_CONFIG_DIR/autologin.conf"
+configure_tty_autologin() {
+    local username="$1"
+    local config_dir="/etc/systemd/system/getty@tty1.service.d"
+    local config_file="$config_dir/autologin.conf"
+    log_debug "Configuring TTY autologin"
 
-log_debug "Configuring TTY autologin"
-sudo mkdir -p "$TTY_CONFIG_DIR"
-
-# Create or update TTY autologin configuration
-cat << EOF | sudo tee "$TTY_CONFIG_FILE" > /dev/null
+    sudo mkdir -p "$config_dir"
+    cat << EOF | sudo tee "$config_file" > /dev/null
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin $KIOSK_USERNAME --noclear %I \$TERM
+ExecStart=-/sbin/agetty --autologin $username --noclear %I \$TERM
 EOF
 
-if [ $? -ne 0 ]; then
-    log_error "Failed to configure TTY autologin"
-    exit 1
-fi
+    log_debug "Reloading systemd configuration"
+    sudo systemctl daemon-reload
+    sudo systemctl restart getty@tty1.service
+}
 
-# Reload systemd daemon and restart getty service
-log_debug "Reloading systemd configuration"
-sudo systemctl daemon-reload
-sudo systemctl restart getty@tty1.service
+# -----------------------------------------------------------------------------
+# Profile configuration
+# -----------------------------------------------------------------------------
+configure_autostart() {
+    local username="$1"
+    local script_path="$2"
+    local home_dir="/home/$username"
 
-log_info "Autologin configuration completed successfully"
+    local profile_file
+    for file in ".bash_profile" ".profile"; do
+        if [ -f "$home_dir/$file" ]; then
+            profile_file="$home_dir/$file"
+            break
+        fi
+    done
 
-# Step 5: Configure autostart in user profile
-log_info "Configuring autostart in user profile"
-PROFILE_PATH="/home/$KIOSK_USERNAME"
-PROFILE_LINE="$PROFILE_PATH/$kiosk_script"
+    # Create .profile if neither exists
+    profile_file="${profile_file:-$home_dir/.profile}"
+    [ ! -f "$profile_file" ] && sudo touch "$profile_file"
 
-# Check which profile file exists and should be used
-if [ -f "$PROFILE_PATH/.bash_profile" ]; then
-    PROFILE_FILE="$PROFILE_PATH/.bash_profile"
-elif [ -f "$PROFILE_PATH/.profile" ]; then
-    PROFILE_FILE="$PROFILE_PATH/.profile"
-else
-    PROFILE_FILE="$PROFILE_PATH/.profile"
-    log_info "Creating new .profile file"
-    sudo touch "$PROFILE_FILE"
-fi
+    if ! grep -q "^$script_path" "$profile_file"; then
+        echo "$script_path" | sudo tee -a "$profile_file" > /dev/null
+        sudo chown "$username:$username" "$profile_file"
+        sudo chmod 644 "$profile_file"
+    fi
+}
 
-# Check if startup command already exists
-if ! grep -q "^$PROFILE_LINE" "$PROFILE_FILE"; then sudo sed -i "s|^TARGET_URL=.*|TARGET_URL=\"$TARGET_URL\"|" "/home/$KIOSK_USERNAME/$kiosk_script"
-    log_info "Adding kiosk startup to $PROFILE_FILE"
-    echo "$PROFILE_LINE" | sudo tee -a "$PROFILE_FILE" > /dev/null
-    sudo chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "$PROFILE_FILE"
-    sudo chmod 644 "$PROFILE_FILE"
-else
-    log_debug "Startup command already exists in $PROFILE_FILE"
-fi
+# -----------------------------------------------------------------------------
+# Main execution
+# -----------------------------------------------------------------------------
+main() {
+    # Initialize
+    local script_dir="$(get_script_dir)"
+    local project_dir="$(find_project_dir)"
+    init_project_logging "kiosk_installer"
 
-log_info "Kiosk user created successfully. Please reboot the system to apply changes."
+    # Load configuration
+    load_config "$project_dir/config/config.js"
+
+    # Select installation mode
+    select_mode
+    log_info "Selected mode: $SELECTED_MODE"
+
+    # Install required packages
+    local packages="$([[ $SELECTED_MODE = $MODE_WEB ]] && echo "$WEB_PACKAGES" || echo "$TERMINAL_PACKAGES")"
+    install_packages "$packages"
+
+    # Create and configure kiosk user
+    create_kiosk_user "$KIOSK_USERNAME" "$PASSWORD"
+
+    # Determine script name based on mode
+    local kiosk_script="$([[ $SELECTED_MODE = $MODE_WEB ]] && echo "kiosk.sh" || echo "terminal-slide-show.sh")"
+    
+    # Copy required files
+    copy_kiosk_files "$KIOSK_USERNAME" "$kiosk_script" "$script_dir"
+
+    # Configure autologin
+    configure_lightdm_autologin "$KIOSK_USERNAME"
+    configure_tty_autologin "$KIOSK_USERNAME"
+
+    # Configure autostart
+    configure_autostart "$KIOSK_USERNAME" "/home/$KIOSK_USERNAME/$kiosk_script"
+
+    log_info "Kiosk installation completed successfully. Please reboot to apply changes."
+}
+
+# Execute main if script is run directly
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
