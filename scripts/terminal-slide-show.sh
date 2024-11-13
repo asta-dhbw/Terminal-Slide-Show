@@ -231,7 +231,7 @@ suggest_install() {
 # Verify all required system dependencies are installed
 check_dependencies() {
     # Check for required commands
-    local required_commands=("mpv" "socat" "inotifywait" "find" "node" "jq")
+    local required_commands=("mpv" "socat" "inotifywait" "find" "node" "jq" "ffmpeg")
     
     for cmd in "${required_commands[@]}"; do
         if ! command -v "$cmd" >/dev/null 2>&1; then

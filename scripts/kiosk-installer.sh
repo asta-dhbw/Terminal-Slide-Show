@@ -24,7 +24,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
 readonly MODE_WEB="web"
 readonly MODE_TERMINAL="terminal"
 readonly WEB_PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
-readonly TERMINAL_PACKAGES="mpv socat inotify-tools nodejs jq npm curl"
+readonly TERMINAL_PACKAGES="mpv socat inotify-tools nodejs jq npm curl ffmpeg"
 
 # -----------------------------------------------------------------------------
 # Check for root privileges
@@ -284,7 +284,7 @@ main() {
     local script_dir="$(get_script_dir)"
     local project_dir="$(find_project_dir)"
     init_project_logging "kiosk_installer"
-    
+
     check_sudo
 
     # Load configuration

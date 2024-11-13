@@ -4,6 +4,7 @@ downloads/
 config/*.json
 .env
 black.svg
+black.png
 
 # Logs
 logs
