@@ -56,52 +56,50 @@ select_mode() {
     local selected=0
     local -r options=("Web Browser Kiosk" "Terminal Only")
     
-    tput civis  # Hide cursor
-    
+    # Clear screen and hide cursor
+    clear
+    tput civis
+
     while true; do
-        # Clear previous menu
-        printf "\033[2K\r"
-        echo "Select kiosk mode:"
-        echo
+        # Clear screen each time
+        tput cup 0 0
         
-        # Display options
+        echo "Select kiosk mode (use arrow keys and press Enter):"
+        echo ""
+        
+        # Display options with better visual indicators
         for i in "${!options[@]}"; do
             if [ $i -eq $selected ]; then
-                echo "→ ${options[$i]}"
+                echo -e "\033[7m → ${options[$i]} \033[0m"  # Highlighted
             else
-                echo "  ${options[$i]}"
+                echo "   ${options[$i]}"
             fi
         done
         
-        # Move cursor up to redraw menu
-        printf "\033[%dA" $((${#options[@]} + 2))
-        
-        # Read single character
+        # Read key input
         read -rsn1 key
+        
         case "$key" in
-            $'\x1B')  # ESC sequence
+            $'\x1B')
                 read -rsn2 key
                 case "$key" in
-                    '[A') # Up arrow
-                        ((selected--))
-                        [ $selected -lt 0 ] && selected=$((${#options[@]} - 1))
+                    '[A') # Up
+                        ((selected > 0)) && ((selected--))
                         ;;
-                    '[B') # Down arrow
-                        ((selected++))
-                        [ $selected -ge ${#options[@]} ] && selected=0
+                    '[B') # Down
+                        ((selected < ${#options[@]}-1)) && ((selected++))
                         ;;
                 esac
                 ;;
-            '') # Enter
-                printf "\033[%dB\n" $((${#options[@]} + 2))
-                tput cnorm   # Show cursor
+            '')  # Enter
+                clear
+                tput cnorm  # Show cursor
                 SELECTED_MODE=$([ $selected -eq 0 ] && echo "$MODE_WEB" || echo "$MODE_TERMINAL")
                 return 0
                 ;;
         esac
     done
 }
-
 # -----------------------------------------------------------------------------
 # Package management
 # -----------------------------------------------------------------------------
