@@ -1,14 +1,9 @@
-/**
- * @component DynamicDailyView
- * @description A dynamic dashboard component that displays time, weather, quotes, NASA imagery and facts
- * Updates content periodically and handles day/night transitions
- */
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, Quote, Coffee, MapPin, Clock, Info } from 'lucide-react';
 import '../../styles/dynamicDailyView.css';
 import AnimatedWeather from './animatedWeather';
 import { frontendConfig } from '../../../../config/frontend.config.js';
+import { useServerStatus } from '../../hooks/useServerStatus';
 
 const DynamicDailyView = () => {
   const [time, setTime] = useState(new Date());
@@ -21,47 +16,83 @@ const DynamicDailyView = () => {
   const [nasaImage, setNasaImage] = useState(null);
   const [showNasaInfo, setShowNasaInfo] = useState(false);
   const [greetings, setGreetings] = useState({});
+  const isServerConnected = useServerStatus();
 
   const isNight = time.getHours() >= 18 || time.getHours() < 6;
 
-  const fetchQuotes = async () => {
+  const loadFromCache = (key) => {
     try {
-      const response = await fetch('/api/quotes');
-      const quote = await response.json();
-      setQuote(quote);
+      const cached = localStorage.getItem(`dynamicView_${key}`);
+      if (!cached) return null;
+      const { data, timestamp } = JSON.parse(cached);
+      // Cache valid for 30 minutes
+      if (Date.now() - timestamp > 30 * 60 * 1000) {
+        localStorage.removeItem(`dynamicView_${key}`);
+        return null;
+      }
+      return data;
+    } catch (err) {
+      console.warn('Failed to load from cache:', err);
+      return null;
+    }
+  };
+
+  const saveToCache = (key, data) => {
+    try {
+      localStorage.setItem(`dynamicView_${key}`, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (err) {
+      console.warn('Failed to save to cache:', err);
+    }
+  };
+
+  const fetchWithCache = async (endpoint, cacheKey, setter) => {
+    try {
+      if (!isServerConnected) {
+        const cachedData = loadFromCache(cacheKey);
+        if (cachedData) {
+          setter(cachedData);
+          setError(null);
+          return;
+        }
+        throw new Error('No connection and no cached data available');
+      }
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      setter(data);
+      saveToCache(cacheKey, data);
       setError(null);
     } catch (err) {
-      setError('Failed to load quote');
+      console.error(`Failed to fetch ${cacheKey}:`, err);
+      // Try to load from cache even if the error wasn't connection-related
+      const cachedData = loadFromCache(cacheKey);
+      if (cachedData) {
+        setter(cachedData);
+        setError(`Using cached ${cacheKey} data`);
+      } else {
+        setError(`Failed to load ${cacheKey}`);
+      }
     } finally {
-      setIsLoading(false);
+      if (cacheKey === 'quotes') setIsLoading(false);
     }
   };
 
-  const fetchFacts = async () => {
-    try {
-      const response = await fetch('/api/facts');
-      const fact = await response.json();
-      setFact(fact);
-    } catch (err) {
-      console.error('Failed to fetch facts:', err);
-    }
+  const fetchQuotes = () => fetchWithCache('/api/quotes', 'quotes', setQuote);
+  const fetchFacts = () => fetchWithCache('/api/facts', 'facts', setFact);
+  const fetchGreetings = () => fetchWithCache('/api/greetings', 'greetings', setGreetings);
+  const fetchNasaImage = () => fetchWithCache('/api/nasa-apod', 'nasa', setNasaImage);
+  
+  const fetchWeather = () => {
+    fetchWithCache(
+      `/api/weather?location=${encodeURIComponent(frontendConfig.info.location)}`,
+      'weather',
+      (data) => setWeather(data.current_weather)
+    );
   };
 
-  const fetchGreetings = async () => {
-    try {
-      const response = await fetch('/api/greetings');
-      const greetings = await response.json();
-      setGreetings(greetings);
-    } catch (err) {
-      console.error('Failed to fetch greetings:', err);
-    }
-  };
-
-  /**
-   * Returns appropriate greeting based on current hour
-   * @param {number} hour - Current hour (0-23)
-   * @returns {string} Corresponding greeting message
-   */
   const getGreetings = (hour) => {
     for (const range in greetings) {
       const [start, end] = range.split('-').map(Number);
@@ -72,45 +103,25 @@ const DynamicDailyView = () => {
     return 'Nachtschicht oder Feierabend? 🌙';
   };
 
-  const fetchNasaImage = async () => {
-    try {
-      const response = await fetch('/api/nasa-apod');
-      const data = await response.json();
-      setNasaImage(data);
-    } catch (err) {
-      console.error('Failed to fetch NASA image:', err);
-    }
-  };
-
-  const fetchWeather = async () => {
-    try {
-      const response = await fetch(`/api/weather?location=${encodeURIComponent(frontendConfig.info.location)}`);
-      const data = await response.json();
-      setWeather(data.current_weather);
-    } catch (err) {
-      console.error('Failed to fetch weather:', err);
-      setError('Failed to load weather data');
-    }
-  };
-
-  // Combine all timers in a single useEffect
   useEffect(() => {
     // Timer for time updates
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
 
-    // Timer for content updates
+    // Timer for content updates - only fetch if connected
     const contentTimer = setInterval(() => {
-      fetchQuotes();
-      fetchWeather();
-      fetchFacts();
+      if (isServerConnected) {
+        fetchQuotes();
+        fetchWeather();
+        fetchFacts();
+      }
     }, 300000);
 
     // NASA info auto-toggle timer
     const nasaInfoTimer = setInterval(() => {
-      setShowNasaInfo(prev => !prev); // Toggle between open and closed
-    }, 60000); // Toggles every 30 seconds
+      setShowNasaInfo(prev => !prev);
+    }, 60000);
 
     // Initial fetches
     fetchQuotes();
@@ -119,14 +130,12 @@ const DynamicDailyView = () => {
     fetchNasaImage();
     fetchGreetings();
 
-    // Cleanup all timers
     return () => {
       clearInterval(timer);
       clearInterval(contentTimer);
       clearInterval(nasaInfoTimer);
     };
-  }, []);
-
+  }, [isServerConnected]); // Re-run when connection status changes
 
   const formattedDate = time.toLocaleDateString('de-DE', {
     weekday: 'long',
@@ -164,6 +173,12 @@ const DynamicDailyView = () => {
           <img src="/slideshow.png" alt="DHBW Logo" />
         </div>
 
+        {!isServerConnected && (
+          <div className="offline-badge">
+            <span className="text-yellow-300">⚠️ Offline Mode - Using Cached Data</span>
+          </div>
+        )}
+
         <div className="location-badge">
           <MapPin className="text-blue-300" />
           <span>{frontendConfig.info.location}</span>
@@ -188,7 +203,7 @@ const DynamicDailyView = () => {
             {isLoading ? (
               <p className="quote-text">Lädt Zitat...</p>
             ) : error ? (
-              <p className="quote-text text-red-300">{error}</p>
+              <p className="quote-text text-yellow-300">{error}</p>
             ) : quote ? (
               <>
                 <p className="quote-text">{quote.text}</p>
