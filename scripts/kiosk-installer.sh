@@ -156,6 +156,7 @@ copy_kiosk_files() {
     local username="$1"
     local script_name="$2"
     local script_dir="$3"
+    local project_dir="$4"
     local home_dir="/home/$username"
 
     # Copy main script and utilities
@@ -188,10 +189,10 @@ copy_kiosk_files() {
     # Copy additional files for terminal mode
     if [ "$SELECTED_MODE" = "$MODE_TERMINAL" ]; then
         for dir in "server" "config"; do
-            sudo cp -r "$script_dir/$dir" "$home_dir/"
+            sudo cp -r "$project_dir/$dir" "$home_dir/"
             sudo chown -R "$username:$username" "$home_dir/$dir"
         done
-        sudo cp "$script_dir/package.json" "$home_dir/"
+        sudo cp "$project_dir/package.json" "$home_dir/"
         sudo chown "$username:$username" "$home_dir/package.json"
 
         # Run npm install as kiosk user
@@ -292,7 +293,7 @@ main() {
     local kiosk_script="$([[ $SELECTED_MODE = $MODE_WEB ]] && echo "kiosk.sh" || echo "terminal-slide-show.sh")"
     
     # Copy required files
-    copy_kiosk_files "$KIOSK_USERNAME" "$kiosk_script" "$script_dir"
+    copy_kiosk_files "$KIOSK_USERNAME" "$kiosk_script" "$script_dir" "$project_dir"
 
     # Configure autologin
     configure_lightdm_autologin "$KIOSK_USERNAME"
