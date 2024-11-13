@@ -15,7 +15,6 @@ export const isRaspberryPi = () => {
   // Check for Raspberry Pi indicators in user agent
   // x86_64: Common architecture for Pi 4
   // raspbian: Official Raspberry Pi OS
-  return false;
   return userAgent.includes('x86_64') ||
     userAgent.includes('raspbian');
 };
