@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { frontendConfig } from '../../../config/frontend.config.js';
 
@@ -9,15 +8,28 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   const [error, setError] = useState(null);
   const [serverReady, setServerReady] = useState(false);
 
-  const fetchAllMedia = useCallback(async () => {
+  // Simple fetch function to get all media
+  const fetchMediaList = useCallback(async () => {
     if (!isScheduleActive) return;
     
     try {
       const response = await fetch('/api/all-media');
       if (!response.ok) throw new Error('Failed to fetch media');
       
-      const data = await response.json();
-      setAllMedia(data);
+      const newMedia = await response.json();
+      
+      // Only update if the media list has changed
+      const currentMediaIds = allMedia.map(m => m.name).sort().join(',');
+      const newMediaIds = newMedia.map(m => m.name).sort().join(',');
+      
+      if (currentMediaIds !== newMediaIds) {
+        setAllMedia(newMedia);
+        // Reset to first item if current index is invalid
+        if (currentIndex >= newMedia.length) {
+          setCurrentIndex(0);
+        }
+      }
+      
       setServerReady(true);
       setError(null);
     } catch (err) {
@@ -26,37 +38,44 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     } finally {
       setLoading(false);
     }
-  }, [isScheduleActive]);
+  }, [isScheduleActive, allMedia, currentIndex]);
 
-  // Poll for media updates
+  // Set up polling interval when active
   useEffect(() => {
     if (!isScheduleActive) {
       setAllMedia([]);
+      setCurrentIndex(0);
       setLoading(false);
       return;
     }
 
-    fetchAllMedia();
-    const interval = setInterval(fetchAllMedia, frontendConfig.polling.mediaLoaderInterval);
+    // Initial fetch
+    fetchMediaList();
+
+    // Poll for updates
+    const interval = setInterval(fetchMediaList, frontendConfig.polling.mediaLoaderInterval);
     
     return () => clearInterval(interval);
-  }, [fetchAllMedia, isScheduleActive]);
+  }, [fetchMediaList, isScheduleActive]);
 
-  const getCurrentMedia = useCallback(() => {
-    return allMedia[currentIndex] || null;
-  }, [allMedia, currentIndex]);
-
+  // Navigation functions
   const navigateMedia = useCallback((direction) => {
     if (allMedia.length === 0) return null;
     
-    if (direction === 'next') {
-      setCurrentIndex((prev) => (prev + 1) % allMedia.length);
-    } else if (direction === 'previous') {
-      setCurrentIndex((prev) => (prev - 1 + allMedia.length) % allMedia.length);
-    }
-    
-    return getCurrentMedia();
-  }, [allMedia, getCurrentMedia]);
+    setCurrentIndex(prev => {
+      if (direction === 'next') {
+        return (prev + 1) % allMedia.length;
+      } else if (direction === 'previous') {
+        return (prev - 1 + allMedia.length) % allMedia.length;
+      }
+      return prev;
+    });
+  }, [allMedia.length]);
+
+  // Get current media
+  const getCurrentMedia = useCallback(() => {
+    return allMedia[currentIndex] || null;
+  }, [allMedia, currentIndex]);
 
   return {
     media: getCurrentMedia(),

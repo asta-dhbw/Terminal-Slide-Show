@@ -11,7 +11,7 @@ export const frontendConfig = {
     },
     polling: {
         serverStatusInterval: 10000, // Interval for polling server status in milliseconds
-        mediaLoaderInterval: 1000000, // Interval for polling media loader in milliseconds
+        mediaLoaderInterval: 10000, // Interval for polling media loader in milliseconds
     },
     schedule: {
         enabled: true, // Enable or disable the schedule feature
