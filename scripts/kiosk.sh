@@ -1,42 +1,39 @@
 #!/bin/bash
+#
+# Kiosk Mode Manager
+# Manages a fullscreen Firefox browser in kiosk mode with automatic recovery
+# Features X server management, Firefox profile configuration, and process monitoring
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-# Required packages installation commented out - uncomment if needed
-# sudo apt install -y xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit
+# -----------------------------------------------------------------------------
+# Dependencies and initialization
+# -----------------------------------------------------------------------------
 
-# Source the logger
-source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
-
-cleanup() {
-    log_info "Performing cleanup..."
-    
-    # Kill processes
-    pkill -f firefox
-    pkill -f openbox
-    pkill -f unclutter
-    
-    # Clean up X server
-    for lock in /tmp/.X${DISPLAY_NUM#:}-lock /tmp/.X11-unix/X${DISPLAY_NUM#:}; do
-        if [ -e "$lock" ]; then
-            log_info "Removing X lock file: $lock"
-            rm -f "$lock" # sudo rm -f "$lock"
-        fi
-    done
-    
-    # Kill any remaining X server
-    pkill Xorg # sudo pkill Xorg
-    
-    reset_terminal
-    
-    # Wait for processes to fully terminate
-    sleep 2
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
+    echo "Failed to source project-utils.sh" >&2
+    exit 1
 }
 
-reset_terminal() {
-    tput cnorm
-    tput sgr0
-    tput rmcup
-}
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
 
+# Environment variables with defaults
+readonly TARGET_URL="${TARGET_URL:-https://www.google.com}"
+readonly PROFILE_NAME="${PROFILE_NAME:-kiosk.default}"
+readonly DISPLAY_NUM="${DISPLAY_NUM:-:0}"
+readonly PROFILE_PATH="${PROFILE_PATH:-$HOME/.mozilla/firefox/${PROFILE_NAME}}"
+
+
+
+# -----------------------------------------------------------------------------
+# Firefox profile management
+# -----------------------------------------------------------------------------
+
+# Create fresh Firefox profile with kiosk-mode settings
 create_firefox_profile() {
     log_info "Creating fresh Firefox profile..."
     rm -rf "$PROFILE_PATH"
@@ -64,6 +61,11 @@ EOF
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
 }
 
+# -----------------------------------------------------------------------------
+# Window manager configuration
+# -----------------------------------------------------------------------------
+
+# Set up minimal Openbox configuration for kiosk mode
 setup_openbox() {
     log_info "Setting up Openbox configuration..."
     mkdir -p "$HOME/.config/openbox"
@@ -82,6 +84,11 @@ setup_openbox() {
 EOF
 }
 
+# -----------------------------------------------------------------------------
+# Display server management
+# -----------------------------------------------------------------------------
+
+# Start X server with retry logic
 start_x_server() {
     log_info "Starting X server..."
     
@@ -107,6 +114,11 @@ start_x_server() {
     return 1
 }
 
+# -----------------------------------------------------------------------------
+# Browser management
+# -----------------------------------------------------------------------------
+
+# Launch Firefox in kiosk mode with monitoring
 launch_firefox() {
     log_info "Launching Firefox ..."
 
@@ -135,62 +147,87 @@ launch_firefox() {
     return 1
 }
 
+# Hide mouse cursor for kiosk mode
 disable_mouse_cursor() {
     log_info "Disabling mouse cursor..."
     DISPLAY=$DISPLAY_NUM unclutter -idle 0 -root &
 }
 
-main() {
-    # Get directory where script is located
-    SCRIPT_DIR="$(get_script_dir)"
+# -----------------------------------------------------------------------------
+# Cleanup and reset functions
+# -----------------------------------------------------------------------------
 
-    TARGET_URL="https://www.google.com" 
-    PROFILE_NAME="kiosk.default"
-    PROFILE_PATH="$HOME/.mozilla/firefox/$PROFILE_NAME"
-    DISPLAY_NUM=":0"
+# Reset terminal to normal state
+reset_terminal() {
+    tput cnorm
+    tput sgr0
+    tput rmcup
+}
+
+cleanup() {
+    log_info "Performing cleanup..."
+    
+    # Use || true to prevent failures in strict mode
+    pkill -f firefox || true
+    pkill -f openbox || true
+    pkill -f unclutter || true
+    
+    # Clean up X server locks
+    for lock in /tmp/.X${DISPLAY_NUM#:}-lock /tmp/.X11-unix/X${DISPLAY_NUM#:}; do
+        [ -e "$lock" ] && rm -f "$lock" || true
+    done
+    
+    pkill Xorg || true
+    reset_terminal || true
+    sleep 2
+}
+
+# -----------------------------------------------------------------------------
+# Main execution
+# -----------------------------------------------------------------------------
+
+main() {
+    local network_status=0
+
+    # Set up signal handlers
+    setup_signal_traps cleanup
 
     clear
-    # Initialize logging
     init_project_logging "kiosk"
-
     cleanup
 
     # Run network manager and capture status
-    "$SCRIPT_DIR/network-manager.sh"
-    network_status=$?
-
-    if [ $network_status -ne 0 ]; then
-        log_error "Network setup failed with status $network_status"
+    if ! "$(get_script_dir)/network-manager.sh"; then
+        log_error "Network setup failed"
         exit 1
     fi
 
-    log_info "Network setup completed successfully"
     log_info "Starting kiosk mode..."
 
     create_firefox_profile
     setup_openbox
     
-    if ! start_x_server; then
-        log_error "Failed to start X server. Exiting."
+    start_x_server || {
+        log_error "Failed to start X server"
         exit 1
-    fi
+    }
     
     sleep 3  # Give X server time to stabilize
     
     disable_mouse_cursor
     
-    if ! launch_firefox; then
-        log_error "Failed to launch Firefox. Exiting."
+    launch_firefox || {
+        log_error "Failed to launch Firefox"
         cleanup
         exit 1
-    fi
+    }
     
     # Monitor and restart if needed
     while true; do
         if ! pgrep -x "firefox" > /dev/null; then
             log_warn "Firefox process died, restarting..."
             launch_firefox || {
-                log_error "Failed to restart Firefox. Cleaning up..."
+                log_error "Firefox restart failed"
                 cleanup
                 exit 1
             }
@@ -199,4 +236,4 @@ main() {
     done
 }
 
-main
+[ "${BASH_SOURCE[0]}" = "$0" ] && main "$@"

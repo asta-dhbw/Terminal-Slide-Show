@@ -1,18 +1,36 @@
 #!/bin/bash
+#
+# Docker and Git setup automation script
+# Handles container management and git configuration
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-# Stop and remove all containers defined in docker-compose.yml
+# -----------------------------------------------------------------------------
+# Container cleanup
+# -----------------------------------------------------------------------------
 docker compose down
 
-# Set merge as default pull strategy and configure automatic merge message
+# -----------------------------------------------------------------------------
+# Git configuration
+# -----------------------------------------------------------------------------
+# Configure git pull strategy to create merge commits
 git config pull.rebase false
 git config pull.ff false
 git config merge.commit no-edit
 
-# Modified fetch and pull command
+# -----------------------------------------------------------------------------
+# Update repository
+# -----------------------------------------------------------------------------
+# Stash changes, pull updates, and ensure script remains executable
 git stash && git pull --no-edit && chmod +x docker.sh
 
-# Build/rebuild containers defined in docker-compose.yml without using cache
+# -----------------------------------------------------------------------------
+# Container management
+# -----------------------------------------------------------------------------
+# Rebuild containers without using cache
 docker compose build --no-cache
 
-# Start containers in detached mode (-d flag runs them in background)
+# Start containers in background mode
 docker compose up -d

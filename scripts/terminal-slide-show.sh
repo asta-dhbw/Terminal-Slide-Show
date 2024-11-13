@@ -1,6 +1,28 @@
 #!/bin/bash
-source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
+#
+# Terminal Slideshow Manager
+# Manages a fullscreen slideshow with MPV player, including scheduling and network checks
+# Features automatic display management, file monitoring, and backend health checks
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
+# -----------------------------------------------------------------------------
+# Dependencies and initialization
+# -----------------------------------------------------------------------------
+
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
+    echo "Failed to source project-utils.sh" >&2
+    exit 1
+}
+
+# -----------------------------------------------------------------------------
+# Configuration management
+# -----------------------------------------------------------------------------
+
+# Parse JavaScript config file using Node.js
+# Handles schedule, network, and path configurations
 parse_config() {
     # Use node to parse the JavaScript config file and extract needed values using dynamic import
     local config_values
@@ -73,6 +95,11 @@ parse_config() {
     log_info "Configuration loaded: Schedule enabled: $SCHEDULE_ENABLED, On time: $ON_TIME, Off time: $OFF_TIME, download path: $DOWNLOAD_PATH"
 }
 
+# -----------------------------------------------------------------------------
+# Schedule management
+# -----------------------------------------------------------------------------
+
+# Check if current date falls within configured vacation periods
 is_vacation_period() {
     local current_date=$(date +%Y-%m-%d)
     
@@ -94,6 +121,7 @@ is_vacation_period() {
     return 1
 }
 
+# Determine if system should be operating based on schedule
 is_operating_hours() {
     # Check if schedule is enabled
     if [ "$SCHEDULE_ENABLED" != "true" ]; then
@@ -133,6 +161,7 @@ is_operating_hours() {
     fi
 }
 
+# Monitor and manage display state based on schedule
 check_display_state() {
     while true; do
         if is_operating_hours; then
@@ -160,6 +189,11 @@ check_display_state() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# System dependencies
+# -----------------------------------------------------------------------------
+
+# Suggest installation command based on package manager
 suggest_install() {
     if command -v apt-get >/dev/null 2>&1; then
         log_info "Install with: apt-get install $1"
@@ -170,6 +204,7 @@ suggest_install() {
     fi
 }
 
+# Verify all required system dependencies are installed
 check_dependencies() {
     # Check for required commands
     local required_commands=("mpv" "socat" "inotifywait" "find" "node" "jq")
@@ -193,6 +228,11 @@ check_dependencies() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# Display management
+# -----------------------------------------------------------------------------
+
+# Create black screen SVG for off-hours display
 create_black_image() {
     local black_image="${PROJECT_DIR}/black.svg"
     local max_retries=5
@@ -227,6 +267,7 @@ EOF
     return 1
 }
 
+# Start MPV instance with black screen
 start_mpv_black() {
     local black_image
     local max_retries=3
@@ -280,6 +321,7 @@ start_mpv_black() {
     return 1
 }
 
+# Send commands to MPV through socket with retry logic
 send_mpv_command() {
     local max_retries=3
     local retry_count=0
@@ -305,6 +347,11 @@ send_mpv_command() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# Playlist management
+# -----------------------------------------------------------------------------
+
+# Update MPV playlist with current media files
 update_playlist() {
     log_info "Updating playlist..."
     
@@ -334,6 +381,7 @@ update_playlist() {
     send_mpv_command '{ "command": ["playlist-play-index", "0"] }'
 }
 
+# Start MPV instance with media playlist
 start_mpv() {
     # Remove socket if it exists
     rm -f "$MPV_SOCKET"
@@ -370,6 +418,8 @@ start_mpv() {
     update_playlist
 }
 
+
+# Monitor media directory for changes
 monitor_files() {
     local last_change=0
     local debounce_delay=1  # Delay in seconds to group rapid changes
@@ -393,6 +443,11 @@ monitor_files() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# Backend services
+# -----------------------------------------------------------------------------
+
+# Run npm development server
 run_npm_commands() {
     log_info "Installing npm dependencies..."
     npm install || {
@@ -404,6 +459,7 @@ run_npm_commands() {
     npm run dev & # Run in background
 }
 
+# Initialize and run slideshow management
 run_slideshow() {
     log_info "Starting slideshow management..."
     monitor_backend &
@@ -422,7 +478,7 @@ run_slideshow() {
     monitor_files &
 }
 
-
+# Cleanup processes on exit
 cleanup() {
     log_info "Cleaning up..."
     if [ -n "$MPV_PID" ]; then
@@ -436,6 +492,7 @@ cleanup() {
     exit 0
 }
 
+# Check backend API health
 check_backend_health() {
     local endpoint="http://127.0.0.1:3000/api/server-status"
     local status_code
@@ -447,6 +504,7 @@ check_backend_health() {
     return 1
 }
 
+# Monitor backend health periodically
 monitor_backend() {
     while true; do
         if ! check_backend_health; then
@@ -458,27 +516,46 @@ monitor_backend() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# Main execution
+# -----------------------------------------------------------------------------
+
 main() {
     # Configuration
-    PROJECT_DIR="$(find_project_dir)"
-    MPV_SOCKET="/tmp/mpv-socket"
-    MPV_PID=""
+    local mpv_socket="/tmp/mpv-socket"
+    local mpv_pid=""
+    local config_file
+    local current_state="off"
+    local default_on_time="07:30"
+    local default_off_time="20:00" 
+    local default_media_path="./downloads"
+    local media_dir
+    local project_dir="$(find_project_dir)"
+    local scrip_dir="$(get_script_dir)"
 
-    CONFIG_FILE="${PROJECT_DIR}/config/config.js"
-    CURRENT_STATE="off"
-    DEFAULT_ON_TIME="07:30"
-    DEFAULT_OFF_TIME="20:00"
-    DEFAULT_MEDIA_PATH="./downloads"
+    config_file="${project_dir}/config/config.js"
+    media_dir="${project_dir}/${default_media_path}"
+
+    # Export needed variables for child processes
+    export MPV_SOCKET="$mpv_socket"
+    export MPV_PID="$mpv_pid"
+    export CURRENT_STATE="$current_state"
+    export CONFIG_FILE="$config_file"
+    export PROJECT_DIR="$project_dir"
+    export MEDIA_DIR="$media_dir"
+    export DEFAULT_ON_TIME="$default_on_time"
+    export DEFAULT_OFF_TIME="$default_off_time"
+    export DEFAULT_DOWNLOAD_PATH="$default_media_path" 
 
     init_project_logging "terminal_slideshow"
     
     # Load configuration
     parse_config
 
-    MEDIA_DIR="${PROJECT_DIR}/${DOWNLOAD_PATH}"
+    MEDIA_DIR="${project_dir}/${DOWNLOAD_PATH}"
 
     # Run network manager and capture status
-    "$SCRIPT_DIR/network-manager.sh"
+    "$scrip_dir/network-manager.sh"
     network_status=$?
     if [ $network_status -ne 0 ]; then
         log_error "Network setup failed with status $network_status"
@@ -507,4 +584,5 @@ main() {
     # Wait for cleanup
     wait
 }
+
 main "$@"

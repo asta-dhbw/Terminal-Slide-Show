@@ -1,8 +1,29 @@
 #!/bin/bash
-# Wireless network reconnection script - connects to visible networks by signal strength
+#
+# Network Manager Script
+# Manages network connections with failover between Ethernet and WiFi
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
 
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
+    echo "Failed to source project-utils.sh" >&2
+    exit 1
+}
+
+# -----------------------------------------------------------------------------
+# Progress visualization
+# -----------------------------------------------------------------------------
+
+# Display an animated spinner with a message in a bordered box
+# Arguments:
+#   $1 - Message to display (default: "Loading...")
+#   $2 - Process ID to monitor
 spinner() {
     local message="${1:-Loading...}"
     local pid=$2
@@ -29,17 +50,23 @@ spinner() {
     tput cnorm
 }
 
+
+# -----------------------------------------------------------------------------
+# Network status checks
+# -----------------------------------------------------------------------------
+
+# Test internet connectivity using Google DNS
 check_connection() {
     ping -c 1 8.8.8.8 >/dev/null 2>&1
     return $?
 }
 
-# Get current wireless connection info
+# Get current wireless SSID if connected
 get_current_wifi() {
     nmcli -t -f ACTIVE,SSID dev wifi | grep '^yes' | cut -d: -f2
 }
 
-# Get list of currently visible networks sorted by signal strength
+# Get list of visible WiFi networks sorted by signal strength
 get_visible_networks() {
     # Get networks sorted by signal strength (RATE), with strongest first
     nmcli -f SIGNAL,SSID dev wifi list | tail -n +2 | sed 's/^ *//' | \
@@ -49,12 +76,19 @@ get_visible_networks() {
     done
 }
 
-# Get signal strength for a specific SSID
+# Get signal strength percentage for specific SSID
+# Arguments:
+#   $1 - SSID to check
 get_signal_strength() {
     local ssid=$1
     nmcli -f SIGNAL,SSID dev wifi list | grep "$ssid" | sort -nr | head -1 | awk '{print $1}'
 }
 
+# -----------------------------------------------------------------------------
+# Network connection management
+# -----------------------------------------------------------------------------
+
+# Attempt to reconnect WiFi, trying current network first then known networks
 reconnect_wifi() {
     local current_ssid=$(get_current_wifi)
     log_info "📡 Current SSID: $current_ssid"
@@ -104,6 +138,9 @@ reconnect_wifi() {
     return 1
 }
 
+# Check if ethernet device is connected and has internet access
+# Arguments:
+#   $1 - Ethernet device name
 check_ethernet() {
     local device=$1
     
@@ -123,6 +160,8 @@ check_ethernet() {
     return $?
 }
 
+
+# Attempt to establish ethernet connection on available devices
 connect_ethernet() {
     log_info "🔌 Checking Ethernet connection..."
     
@@ -171,33 +210,41 @@ connect_ethernet() {
     return 1
 }
 
+# -----------------------------------------------------------------------------
+# Main execution
+# -----------------------------------------------------------------------------
 
-# Initialize logging
-init_project_logging "network_manager" 
+main() {
+    # Initialize logging
+    init_project_logging "network_manager" 
 
-# Main loop
-attempt=1
+    # Main loop
+    attempt=1
 
-while ! check_connection; do
-    log_info "⚠️ Attempt $attempt"
-    (sleep 1) &
-    spinner "Checking connection" $!
-    
-    if ! check_connection; then
-        log_warn "❌ No connection detected"
+    while ! check_connection; do
+        log_info "⚠️ Attempt $attempt"
+        (sleep 1) &
+        spinner "Checking connection" $!
         
-        # Try Ethernet first
-        if connect_ethernet; then
-            log_info "🌐 Internet connection established via Ethernet"
-            exit 0
+        if ! check_connection; then
+            log_warn "❌ No connection detected"
+            
+            # Try Ethernet first
+            if connect_ethernet; then
+                log_info "🌐 Internet connection established via Ethernet"
+                exit 0
+            fi
+            
+            # Fall back to WiFi if Ethernet fails
+            log_info "📡 Falling back to WiFi..."
+            reconnect_wifi
+            sleep 5 # Wait for connection to establish
+            attempt=$((attempt + 1))
         fi
-        
-        # Fall back to WiFi if Ethernet fails
-        log_info "📡 Falling back to WiFi..."
-        reconnect_wifi
-        sleep 5 # Wait for connection to establish
-        attempt=$((attempt + 1))
-    fi
-done
+    done
 
-log_info "🌐 Internet connection established successfully"
+    log_info "🌐 Internet connection established successfully"
+}
+
+
+main "$@"

@@ -1,10 +1,33 @@
 #!/bin/bash
+#
+# Logging utility script for bash applications
+# Provides configurable logging levels and file output
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-# Default values
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -euo pipefail  # Strict error handling
+
+# -----------------------------------------------------------------------------
+# Constants and defaults
+# -----------------------------------------------------------------------------
+declare -A -r LOG_LEVELS=(
+    ["ERROR"]=0
+    ["WARN"]=1 
+    ["INFO"]=2
+    ["DEBUG"]=3
+)
+readonly DEFAULT_LOG_LEVEL="INFO"
+readonly DEFAULT_LOG_FILE="application.log"
+
+# Get the absolute path of the script directory
+get_script_dir() {
+    echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+}
 
 find_project_dir() {
-    local dir="$SCRIPT_DIR"
+    local dir="$(get_script_dir)"
     while [[ "$dir" != "/" ]]; do
         if [[ -f "$dir/package.json" ]]; then
             echo "$dir"
@@ -12,20 +35,23 @@ find_project_dir() {
         fi
         dir="$(dirname "$dir")"
     done
-    echo "$SCRIPT_DIR"  # Fallback to script directory if marker not found
+      echo "$(get_script_dir)"  # Fallback
 }
 
-PROJECT_DIR="$(find_project_dir)"
+# -----------------------------------------------------------------------------
+# Configuration with validation
+# -----------------------------------------------------------------------------
+LOG_LEVEL="${LOG_LEVEL:-$DEFAULT_LOG_LEVEL}"
+LOG_DIR="${LOG_DIR:-$(find_project_dir)/logs}"
+LOG_FILE="${LOG_FILE:-${LOG_DIR}/${DEFAULT_LOG_FILE}}"
 
-LOG_LEVEL=${LOG_LEVEL:-"INFO"}  # Can be ERROR, WARN, INFO, DEBUG
-LOG_DIR=${LOG_DIR:-"$PROJECT_DIR/logs"}   # Default log directory
-LOG_FILE=${LOG_FILE:-"$LOG_DIR/application.log"}
-
-# Log levels
-declare -A LOG_LEVELS=( ["ERROR"]=0 ["WARN"]=1 ["INFO"]=2 ["DEBUG"]=3 )
-
-# Create log directory if it doesn't exist
-mkdir -p "$LOG_DIR"
+validate_log_level() {
+    local level="$1"
+    if [[ ! -v LOG_LEVELS[$level] ]]; then
+        printf 'Invalid log level: %s\n' "$level" >&2
+        return 1
+    fi
+}
 
 timestamp() {
     date "+%Y-%m-%d %H:%M:%S"
@@ -57,17 +83,23 @@ init_logging() {
     local log_file=$2
     local log_level=$3
     
-    if [[ ! -z "$log_dir" ]]; then
-        LOG_DIR=$log_dir
-        mkdir -p "$LOG_DIR"
+    if [[ -n "$log_dir" ]]; then
+        if ! mkdir -p "$log_dir"; then
+            printf 'Failed to create log directory: %s\n' "$log_dir" >&2
+            return 1
+        fi
+        LOG_DIR="$log_dir"
     fi
     
-    if [[ ! -z "$log_file" ]]; then
-        LOG_FILE=$log_file
+    if [[ -n "$log_file" ]]; then
+        LOG_FILE="$log_file"
     fi
     
-    if [[ ! -z "$log_level" ]]; then
-        LOG_LEVEL=$log_level
+    if [[ -n "$log_level" ]]; then
+        if ! validate_log_level "$log_level"; then
+            return 1
+        fi
+        LOG_LEVEL="$log_level"
     fi
     
     log_debug "Logging initialized - DIR: $LOG_DIR, FILE: $LOG_FILE, LEVEL: $LOG_LEVEL"

@@ -1,13 +1,32 @@
 #!/bin/bash
+#
+# Project utility functions for bash applications
+# Provides common project-wide functionality and logging setup
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-# project-utils.sh - Common utility functions for the project
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+
+source "$(dirname "${BASH_SOURCE[0]}")/logger.sh" || {
+    echo "Failed to source logger.sh" >&2
+    exit 1
+}
+
+# -----------------------------------------------------------------------------
+# Script location utilities 
+# -----------------------------------------------------------------------------
 
 # Get the absolute path of the script directory
 get_script_dir() {
     echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 }
 
-# Find the project root directory (where package.json exists)
+# Find the project root directory by looking for package.json
+# Returns script directory as fallback if not found
 find_project_dir() {
     local dir="$(get_script_dir)"
     while [[ "$dir" != "/" ]]; do
@@ -20,11 +39,19 @@ find_project_dir() {
     echo "$(get_script_dir)"  # Fallback to script directory if marker not found
 }
 
-# Initialize logging with defaults derived from project structure
+# -----------------------------------------------------------------------------
+# Logging initialization
+# -----------------------------------------------------------------------------
+
+# Initialize project-aware logging with sensible defaults
+# Arguments:
+#   $1 - Script name for log file
+#   $2 - Optional: Custom log directory
+#   $3 - Optional: Custom log level
 init_project_logging() {
-    local script_name="$1"
-    local custom_log_dir="$2"
-    local custom_log_level="$3"
+    local script_name="${1:?Script name is required}"
+    local custom_log_dir="${2:-}"
+    local custom_log_level="${3:-}"
     
     # Source the logger if not already sourced
     if ! declare -F log_info >/dev/null; then
@@ -41,7 +68,14 @@ init_project_logging() {
     init_logging "$log_dir" "$log_file" "${custom_log_level:-INFO}"
 }
 
-# Clean up resources and exit
+# -----------------------------------------------------------------------------
+# Exit and cleanup handling
+# -----------------------------------------------------------------------------
+
+# Clean up resources and exit with given code
+# Arguments:
+#   $1 - Optional: Cleanup function name to call
+#   $2 - Optional: Exit code (defaults to 0)
 cleanup_and_exit() {
     local cleanup_function="$1"
     local exit_code="${2:-0}"
@@ -54,9 +88,11 @@ cleanup_and_exit() {
     exit "$exit_code"
 }
 
-# Set up signal trapping with custom cleanup
+# Set up signal traps with custom cleanup handler
+# Arguments:
+#   $1 - Cleanup function name to call on exit
 setup_signal_traps() {
     local cleanup_function="$1"
     
-    trap 'cleanup_and_exit "$cleanup_function" 0' SIGINT SIGTERM EXIT
+    trap 'cleanup_and_exit "$cleanup_function" 0' ERR EXIT
 }

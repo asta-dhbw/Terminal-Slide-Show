@@ -1,12 +1,21 @@
 #!/bin/bash
+#
+# Kiosk System Installer
+# Sets up a secure kiosk environment on Debian-based systems
+# Features user creation, autologin, and mode-specific configurations
+#
+# Author: Muddyblack
+# Date: 11.11.2024
+# Version: 1.0
 
-# Disclaimer: This script is provided as-is and without warranty. Use at your own risk.
-# This script is intended to be run on a fresh Debian installation to set up a kiosk user.
-# It will create a new user, set up autologin, and configure autostart of a kiosk script.
-# The script should be run as root or with sudo privileges.
+# -----------------------------------------------------------------------------
+# Dependencies and initialization
+# -----------------------------------------------------------------------------
 
-# Source the logger
-source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
+    echo "Failed to source project-utils.sh" >&2
+    exit 1
+}
 
 # Get directory where script is located
 SCRIPT_DIR="$(get_script_dir)"
