@@ -38,9 +38,9 @@ load_config() {
     fi
 
     # Extract configuration values
-    KIOSK_USER=$(grep -A 2 "kiosk: {" "$config_file" | grep "user:" | sed "s/.*user: '\([^']*\)'.*/\1/")
-    KIOSK_PASSWORD=$(grep -A 3 "kiosk: {" "$config_file" | grep "password:" | sed "s/.*password: '\([^']*\)'.*/\1/")
-    TARGET_URL=$(grep -A 1 "kiosk: {" "$config_file" | grep "targetUrl:" | sed "s/.*targetUrl: '\([^']*\)'.*/\1/")
+    KIOSK_USER=$(grep "^KIOSK_USER=" "$env_file" | cut -d'=' -f2)
+    KIOSK_PASSWORD=$(grep "^KIOSK_PASSWORD=" "$env_file" | cut -d'=' -f2)
+    TARGET_URL=$(grep "^KIOSK_URL=" "$env_file" | cut -d'=' -f2)
 
     # Set defaults if values not found
     KIOSK_USERNAME="${KIOSK_USER:-kiosk}"
@@ -271,7 +271,7 @@ main() {
     init_project_logging "kiosk_installer"
 
     # Load configuration
-    load_config "$project_dir/config/config.js"
+    load_config "$project_dir/config/.env"
 
     # Select installation mode
     select_mode
