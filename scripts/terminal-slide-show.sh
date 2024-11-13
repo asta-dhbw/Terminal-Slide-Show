@@ -269,7 +269,7 @@ EOF
             printf "%s" "$black_image"
             return 0
         fi
-        log_warning "Waiting for black image to be accessible (attempt $((retry_count + 1)))" >/dev/null
+        log_warn "Waiting for black image to be accessible (attempt $((retry_count + 1)))" >/dev/null
         sleep 1
         retry_count=$((retry_count + 1))
     done
@@ -321,7 +321,7 @@ start_mpv_black() {
             log_info "MPV started successfully with black screen"
             return 0
         else
-            log_warning "MPV failed to start, retrying..."
+            log_warn "MPV failed to start, retrying..."
             retry_count=$((retry_count + 1))
             sleep 1
         fi
@@ -343,7 +343,7 @@ send_mpv_command() {
             fi
         fi
         
-        log_warning "MPV socket communication failed, attempt $((retry_count + 1))/$max_retries"
+        log_warn "MPV socket communication failed, attempt $((retry_count + 1))/$max_retries"
         retry_count=$((retry_count + 1))
         
         if [ $retry_count -eq $max_retries ]; then
