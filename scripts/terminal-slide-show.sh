@@ -595,7 +595,7 @@ main() {
     mkdir -p "$MEDIA_DIR" "$LOG_DIR"
     
     # Set up signal handlers
-    setup_signal_traps "cleanup"
+    setup_signal_traps cleanup
     
     # Run npm commands before slideshow
     run_npm_commands
