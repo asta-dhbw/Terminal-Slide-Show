@@ -11,7 +11,7 @@ import Loading from '../loading';
 import ErrorToast from '../errorToast';
 import DynamicDailyView from '../dynamic_daily_view/dynamicDailyView';
 import { frontendConfig } from '../../../../config/frontend.config.js';
-import ConnectionStatus from '../connectionToast.jsx';
+import ConnectionToast from '../connectionToast.jsx';
 
 /**
  * @component Slideshow
@@ -59,19 +59,14 @@ const Slideshow = () => {
     }, frontendConfig.slideshow.defaultSlideDuration);
 
     return () => clearTimeout(autoContinueTimer.current);
-  }, [paused, media, loading, isScheduleActive, handleNavigate]); // Added handleNavigate dependency
+  }, [paused, media, loading, isScheduleActive, handleNavigate]);
 
-  // Return black screen when schedule is inactive
-  if (!isScheduleActive) {
-    return <div className="w-screen h-screen bg-black" />;
-  }
-
-  // Only show loading states if schedule is active
-  if (!isServerConnected && isScheduleActive) {
+  // Only show loading states if schedule is active and no cached media
+  if (!isServerConnected && !media && isScheduleActive) {
     return <Loading key="loading" isServerConnecting={!isServerConnected} />;
   }
 
-  if (loading && isScheduleActive) {
+  if (loading && !media && isScheduleActive) {
     return <Loading key="loading" isServerConnecting={false} />;
   }
 
@@ -80,17 +75,20 @@ const Slideshow = () => {
       {/* Main content wrapper with AnimatePresence for smooth transitions */}
       <AnimatePresence mode="wait">
         {!loading && (media ? (
-          media.isDynamicView ? (
-            <DynamicDailyView key="dynamic-view" />
-          ) : (
-            <MediaCanvas key="media" media={media} />
-          )
+          <>
+            {media.isDynamicView ? (
+              <DynamicDailyView key="dynamic-view" />
+            ) : (
+              <MediaCanvas key="media" media={media} />
+            )}
+            {!isServerConnected && <ConnectionToast />}
+          </>
         ) : isScheduleActive ? (
           <DynamicDailyView key="dynamic-view" />
         ) : null)}
       </AnimatePresence>
 
-      {/* Navigation controls - only show when media is available */}
+      {/* Navigation controls */}
       {media && (
         <Controls
           show={showControls}
@@ -100,15 +98,7 @@ const Slideshow = () => {
         />
       )}
 
-      {/* Loading overlay with server connection status
-          Displayed during content loading or server connection issues */}
-      <AnimatePresence>
-        {(loading || !serverReady) && isScheduleActive && (
-          <Loading isServerConnecting={!serverReady} />
-        )}
-      </AnimatePresence>
-
-      {/* Only show error toast when not in dynamic view */}
+      {/* Error toast */}
       <AnimatePresence>
         {error && !loading && isScheduleActive && !media?.isDynamicView && (
           <ErrorToast message={error} />
