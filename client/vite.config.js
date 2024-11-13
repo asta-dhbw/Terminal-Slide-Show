@@ -15,7 +15,7 @@ export default defineConfig({
     port: config.frontend.port,
     strictPort: false,
     watch: {
-      usePolling: true // Important for Docker volumes
+      usePolling: true
     },
     proxy: {
       '/api': {
@@ -23,14 +23,19 @@ export default defineConfig({
           ? `http://localhost:${config.backend.port}`
           : `http://backend:${config.backend.port}`,
         changeOrigin: true,
-        secure: false,
+      },
+      '/ws': {
+        target: isDevelopment
+          ? `ws://localhost:${config.backend.port}`
+          : `ws://backend:${config.backend.port}`,
+        ws: true,
+        changeOrigin: true,
       },
       '/media': {
         target: isDevelopment
           ? `http://localhost:${config.backend.port}`
           : `http://backend:${config.backend.port}`,
         changeOrigin: true,
-        secure: false,
       }
     }
   },

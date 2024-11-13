@@ -64,12 +64,13 @@ export class SlideshowManager {
    * @async
    * @returns {Promise<void>}
    */
-  async initialize() {
-    await fs.ensureDir(this.mediaPath);
-    await this.updateMediaList();
-    this.startWatching(config.slideshow.watchInterval);
-    this.initialized = true;
-  }
+    async initialize() {
+      await fs.ensureDir(this.mediaPath);
+      await this.updateMediaList();
+      this.startWatching(config.slideshow.watchInterval);
+      this.initialized = true;
+      return;
+    }
 
   /**
    * Checks if manager is initialized
@@ -85,36 +86,46 @@ export class SlideshowManager {
    * @private
    * @returns {Promise<void>}
    */
-  async updateMediaList() {
-    if (this.isPaused) return;
-  
-    try {
-      const files = await fs.readdir(this.mediaPath);
-      const fileMedias = files
-        .filter(file => {
-          const ext = path.extname(file).toLowerCase();
-          return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
-        })
-        .map(file => ({
-          name: file,
-          path: path.join(this.mediaPath, file),
-          dates: DateParser.parseFileName(file)
-        }))
-        .filter(file => isValidFile(file.name));
-  
-      // Add dynamic view at the middle of the sequence
-      const midPoint = Math.floor(fileMedias.length / 2);
-      this.mediaFiles = [
-        ...fileMedias.slice(0, midPoint),
-        this.dynamicView,
-        ...fileMedias.slice(midPoint)
-      ];
-  
+async updateMediaList() {
+  if (this.isPaused) return;
+
+  try {
+    const files = await fs.readdir(this.mediaPath);
+    const fileMedias = files
+      .filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
+      })
+      .map(file => ({
+        name: file,
+        path: path.join(this.mediaPath, file),
+        dates: DateParser.parseFileName(file)
+      }))
+      .filter(file => isValidFile(file.name));
+
+    // Create new media list
+    const newMediaList = [
+      ...fileMedias.slice(0, Math.floor(fileMedias.length / 2)),
+      this.dynamicView,
+      ...fileMedias.slice(Math.floor(fileMedias.length / 2))
+    ];
+
+    // Check if media list has changed
+    const hasChanged = JSON.stringify(this.mediaFiles) !== JSON.stringify(newMediaList);
+
+    if (hasChanged) {
+      this.mediaFiles = newMediaList;
       this.logger.info(`Updated media list: ${this.mediaFiles.length} files`);
-    } catch (error) {
-      this.logger.error('Failed to update media list:', error);
+      
+      // Broadcast update to all connected clients
+      if (global.webSocketManager) {
+        global.webSocketManager.broadcastUpdate(this.mediaFiles);
+      }
     }
+  } catch (error) {
+    this.logger.error('Failed to update media list:', error);
   }
+}
 
   /**
    * Gets or creates a client session

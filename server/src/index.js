@@ -7,15 +7,21 @@ import { SlideshowManager } from './services/slideshowManager.js';
 import { PowerManager } from './services/powerManager.js';
 import { Logger } from './utils/logger.js';
 import { config } from '../../config/config.js';
+import { createServer } from 'http';
+import { webSocketManager } from './services/webSocketManager.js';
 
 /**
  * Express application instance
  * @type {import('express').Express}
  */
 const app = express();
+const server = createServer(app);
 const port = config.backend.port;
 const host = config.backend.host;
 const logger = new Logger('Main');
+
+
+
 
 // Initialize services
 const googleDriveService = new GoogleDriveService();
@@ -24,6 +30,12 @@ const powerManager = new PowerManager({
     inactivityTimeout: config.backendPowerSaving?.timeout || 5 * 60 * 1000 // 5 minutes default
 });
 
+// Make slideshowManager globally accessible
+global.slideshowManager = slideshowManager;
+webSocketManager.initialize(server);
+global.webSocketManager = webSocketManager;
+
+
 /**
  * Initializes all backend services
  * @async
@@ -31,16 +43,17 @@ const powerManager = new PowerManager({
  */
 async function initialize() {
     try {
-        await googleDriveService.initialize();
-        await googleDriveService.startSync();
+        // Initialize core services first
         await slideshowManager.initialize();
+        await googleDriveService.initialize();
+        
+        // Start services
+        await googleDriveService.startSync();
 
-        // Initialize power manager and register services
+        // Initialize power manager
         powerManager.initialize();
         powerManager.registerService('googleDrive', googleDriveService);
         powerManager.registerService('slideshow', slideshowManager);
-
-        await powerManager.pauseServices();
 
         logger.info('All services initialized successfully');
     } catch (error) {
@@ -339,9 +352,13 @@ app.get('/dynamic-view', (req, res) => {
 /**
  * Start server and initialize services
  */
-app.listen(port, () => {
-    logger.info(`Backend running at http://${host}:${port}/`);
-    initialize();
+initialize().then(() => {
+    server.listen(port, () => {
+        logger.info(`Backend running at http://${host}:${port}/`);
+    });
+}).catch(error => {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
 });
 
 // Handle shutdown

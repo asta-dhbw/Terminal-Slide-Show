@@ -29,4 +29,9 @@ export const frontendConfig = {
         autoplay: true, // Autoplay media files
         muted: true // Mute media files
     },
+    websocket: {
+        heartbeatInterval: 30000, // Enable or disable the WebSocket server
+        reconnectInterval: 5000, // Interval for reconnecting WebSocket clients in milliseconds
+        maxReconnectAttempts: 5, // Maximum number of reconnect attempts
+    },
 };
