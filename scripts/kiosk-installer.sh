@@ -53,25 +53,56 @@ load_config() {
 # Mode selection menu
 # -----------------------------------------------------------------------------
 select_mode() {
-    clear
-    echo "Select kiosk mode:"
-    echo "0) Web Browser Kiosk"
-    echo "1) Terminal Only"
-    echo ""
-    
+    # Initialize variables
+    local options=("Web Browser Kiosk" "Terminal Only")
+    local selected=0
+    local key=""
+
+    # Hide cursor
+    tput civis
+
     while true; do
-        read -p "Enter selection (0 or 1): " selection
-        case "$selection" in
-            0)
-                SELECTED_MODE="$MODE_WEB"
-                return 0
+        clear
+        echo "Select kiosk mode:"
+        echo ""
+        
+        # Display options with highlighting
+        for i in "${!options[@]}"; do
+            if [ $i -eq $selected ]; then
+                echo -e "\e[7m> ${options[$i]}\e[0m"  # Highlighted
+            else
+                echo "  ${options[$i]}"
+            fi
+        done
+
+        # Read single character
+        read -s -n 1 key
+
+        # Handle arrow keys
+        case "$key" in
+            "A") # Up arrow
+                if [ $selected -gt 0 ]; then
+                    selected=$((selected - 1))
+                fi
                 ;;
-            1)
-                SELECTED_MODE="$MODE_TERMINAL"
-                return 0
+            "B") # Down arrow
+                if [ $selected -lt $((${#options[@]} - 1)) ]; then
+                    selected=$((selected + 1))
+                fi
                 ;;
-            *)
-                echo "Invalid selection. Please enter 0 or 1."
+            "") # Enter key
+                case $selected in
+                    0)
+                        SELECTED_MODE="$MODE_WEB"
+                        tput cnorm  # Show cursor
+                        return 0
+                        ;;
+                    1)
+                        SELECTED_MODE="$MODE_TERMINAL"
+                        tput cnorm  # Show cursor
+                        return 0
+                        ;;
+                esac
                 ;;
         esac
     done
