@@ -242,6 +242,30 @@ check_dependencies() {
 # Display management
 # -----------------------------------------------------------------------------
 
+# Set up display environment variables
+setup_display_environment() {
+    # Set default GPU context
+    MPV_GPU_CONTEXT="drm"
+    export MPV_GPU_CONTEXT
+
+    # Set XDG_RUNTIME_DIR if not set
+    if [ -z "$XDG_RUNTIME_DIR" ]; then
+        export XDG_RUNTIME_DIR="/run/user/$UID"
+        mkdir -p "$XDG_RUNTIME_DIR"
+        chmod 0700 "$XDG_RUNTIME_DIR"
+    fi
+
+    # Check if we're running in Wayland or X11
+    if [ -n "$WAYLAND_DISPLAY" ]; then
+        MPV_GPU_CONTEXT="wayland"
+    elif [ -n "$DISPLAY" ]; then
+        MPV_GPU_CONTEXT="x11"
+    fi
+    
+    # Export for child processes
+    export MPV_GPU_CONTEXT
+}
+
 # Create black screen SVG for off-hours display
 create_black_image() {
     local black_image="${PROJECT_DIR}/black.svg"
@@ -415,37 +439,47 @@ start_mpv() {
     # Remove socket if it exists
     rm -f "$MPV_SOCKET"
     
+    # Base MPV options
+    local mpv_opts=(
+        --input-ipc-server="$MPV_SOCKET"
+        --force-window=yes
+        --image-display-duration=5
+        --loop-playlist=inf
+        --fullscreen
+        --no-audio
+        --idle=yes
+        --reset-on-next-file=all
+    )
+
+    # Add fallback video output options
+    mpv_opts+=(
+        --vo=gpu,rpi,drm,x11
+        --gpu-context="${MPV_GPU_CONTEXT}"
+        --hwdec=auto
+        --gpu-api=opengl
+    )
+
     # Check if media directory is empty
     if [ -z "$(ls -A "$MEDIA_DIR" 2>/dev/null)" ]; then
         log_info "Media directory empty, creating placeholder"
         local placeholder=$(create_placeholder_image)
-        
-        # Start MPV with placeholder
-        mpv --input-ipc-server="$MPV_SOCKET" \
-            --force-window=yes \
-            --image-display-duration=inf \
-            --fullscreen \
-            --no-audio \
-            --idle=yes \
-            --loop-file=inf \
-            "$placeholder" &
+        mpv "${mpv_opts[@]}" --image-display-duration=inf --loop-file=inf "$placeholder" &
     else
-        # Start MPV with media files
-        mpv --input-ipc-server="$MPV_SOCKET" \
-            --force-window=yes \
-            --image-display-duration=5 \
-            --loop-playlist=inf \
-            --fullscreen \
-            --no-audio \
-            --idle=yes \
-            --loop-playlist=inf \
-            --reset-on-next-file=all \
-            "$MEDIA_DIR"/* &
+        mpv "${mpv_opts[@]}" "$MEDIA_DIR"/* &
     fi
     
     MPV_PID=$!
     
-    # Wait for socket to be created
+    # Verify MPV started successfully
+    if ! ps -p $MPV_PID > /dev/null 2>&1; then
+        log_error "MPV failed to start, trying fallback options"
+        # Fallback to basic video output
+        mpv_opts+=(--vo=rpi --gpu-context=drm --hwdec=mmal)
+        mpv "${mpv_opts[@]}" "$MEDIA_DIR"/* &
+        MPV_PID=$!
+    fi
+
+    # Wait for socket with timeout
     local max_attempts=50
     local attempts=0
     while [ ! -S "$MPV_SOCKET" ] && [ $attempts -lt $max_attempts ]; do
@@ -455,10 +489,9 @@ start_mpv() {
     
     if [ ! -S "$MPV_SOCKET" ]; then
         log_error "Failed to create MPV socket"
-        exit 1
+        return 1
     fi
     
-    # Initial playlist load only if directory not empty
     if [ -n "$(ls -A "$MEDIA_DIR" 2>/dev/null)" ]; then
         sleep 1
         update_playlist
@@ -560,6 +593,8 @@ main() {
     local media_dir
     local project_dir="$(find_project_dir)"
     local scrip_dir="$(get_script_dir)"
+
+    setup_display_environment
 
     config_file="${project_dir}/config/config.js"
     media_dir="${project_dir}/${default_media_path}"
