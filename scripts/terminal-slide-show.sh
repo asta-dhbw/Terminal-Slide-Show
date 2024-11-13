@@ -17,6 +17,20 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
     exit 1
 }
 
+# Cleanup processes on exit
+cleanup() {
+    log_info "Cleaning up..."
+    if [ -n "$MPV_PID" ]; then
+        kill $MPV_PID 2>/dev/null
+    fi
+    rm -f "$MPV_SOCKET"
+    pkill -f "npm run dev:server"
+    pkill -f "monitor_backend"
+    pkill -f "inotifywait"
+    tput cnorm
+    exit 0
+}
+
 # -----------------------------------------------------------------------------
 # Configuration management
 # -----------------------------------------------------------------------------
@@ -539,20 +553,6 @@ run_npm_commands() {
     npm run dev:backend & # Run in background
 }
 
-# Cleanup processes on exit
-cleanup() {
-    log_info "Cleaning up..."
-    if [ -n "$MPV_PID" ]; then
-        kill $MPV_PID 2>/dev/null
-    fi
-    rm -f "$MPV_SOCKET"
-    pkill -f "npm run dev:server"
-    pkill -f "monitor_backend"
-    pkill -f "inotifywait"
-    tput cnorm
-    exit 0
-}
-
 # Check backend API health
 check_backend_health() {
     local endpoint="http://127.0.0.1:3000/api/server-status"
@@ -630,7 +630,7 @@ main() {
     mkdir -p "$MEDIA_DIR" "$LOG_DIR"
     
     # Set up signal handlers
-    setup_signal_traps cleanup
+    setup_signal_traps "cleanup" 0
     
     # Run npm commands before slideshow
     run_npm_commands
