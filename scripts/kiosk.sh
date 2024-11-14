@@ -111,11 +111,12 @@ cat > "$PROFILE_PATH/error.html" << EOF
 EOF
 
 cat > "$PROFILE_PATH/auto-reload.js" << EOF
-let lastLoadAttempt = 0;
+let lastLoadAttempt = Date.now();
 const RETRY_INTERVAL = 5000;
 let isError = false;
 let mainFrame = null;
 let errorFrame = null;
+let retryTimer = null;
 
 function createErrorFrame() {
     if (!errorFrame) {
@@ -135,17 +136,31 @@ function createErrorFrame() {
 
 function showError() {
     if (!isError) {
+        console.log('Showing error page');
         isError = true;
         createErrorFrame();
         if (mainFrame) {
             mainFrame.style.visibility = 'hidden';
         }
-        startRetryTimer();
+        // Start retry timer
+        if (!retryTimer) {
+            retryTimer = setInterval(() => {
+                console.log('Attempting to reload');
+                if (mainFrame) {
+                    const now = Date.now();
+                    if (now - lastLoadAttempt >= RETRY_INTERVAL) {
+                        lastLoadAttempt = now;
+                        mainFrame.src = mainFrame.src;
+                    }
+                }
+            }, 1000);
+        }
     }
 }
 
 function hideError() {
     if (isError) {
+        console.log('Hiding error page');
         isError = false;
         if (errorFrame) {
             errorFrame.remove();
@@ -154,65 +169,69 @@ function hideError() {
         if (mainFrame) {
             mainFrame.style.visibility = 'visible';
         }
-    }
-}
-
-function startRetryTimer() {
-    if (isError) {
-        const now = Date.now();
-        if (now - lastLoadAttempt >= RETRY_INTERVAL) {
-            lastLoadAttempt = now;
-            if (mainFrame) {
-                mainFrame.src = mainFrame.src;
-            }
+        if (retryTimer) {
+            clearInterval(retryTimer);
+            retryTimer = null;
         }
     }
 }
 
 function checkIframeContent(iframe) {
     try {
+        // First check if we can access the contentDocument
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-        if (doc) {
-            const isErrorPage = doc.documentElement.innerHTML.includes('about:neterror') ||
-                              doc.documentElement.innerHTML.includes('about:certerror');
-            if (isErrorPage) {
-                showError();
-                return false;
-            }
-            return true;
+        if (!doc) {
+            console.log('No document access');
+            return false;
         }
+
+        // Check if it's a Firefox error page
+        if (doc.documentElement.innerHTML.includes('about:neterror') || 
+            doc.documentElement.innerHTML.includes('about:certerror')) {
+            console.log('Firefox error page detected');
+            return false;
+        }
+
+        // If we can access the document and it's not an error page, assume success
+        console.log('Content loaded successfully');
+        return true;
     } catch (e) {
-        showError();
+        // Cross-origin error or other issue
+        console.log('Error checking content:', e);
         return false;
     }
-    return false;
 }
 
 window.onload = function() {
+    console.log('Window loaded');
     mainFrame = document.querySelector('iframe');
-    if (!mainFrame) return;
-
-    mainFrame.addEventListener('load', function() {
-        if (checkIframeContent(mainFrame)) {
-            hideError();
-        }
-    });
-
-    mainFrame.addEventListener('error', function() {
-        showError();
-    });
-
-    // Initial check
-    if (!checkIframeContent(mainFrame)) {
-        showError();
+    if (!mainFrame) {
+        console.log('No main iframe found');
+        return;
     }
 
-    // Regular checking for connection issues
-    setInterval(function() {
-        if (isError) {
-            startRetryTimer();
+    // Handle iframe load events
+    mainFrame.addEventListener('load', function() {
+        console.log('Iframe load event');
+        const contentOk = checkIframeContent(mainFrame);
+        if (contentOk) {
+            hideError();
+        } else {
+            showError();
         }
-    }, 1000);
+    });
+
+    // Handle direct errors
+    mainFrame.addEventListener('error', function(e) {
+        console.log('Iframe error event:', e);
+        showError();
+    });
+
+    // Initial content check
+    const initialContentOk = checkIframeContent(mainFrame);
+    if (!initialContentOk) {
+        showError();
+    }
 };
 EOF
 
