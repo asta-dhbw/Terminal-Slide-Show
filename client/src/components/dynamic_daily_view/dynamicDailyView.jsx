@@ -9,7 +9,7 @@ const DynamicDailyView = () => {
   const [time, setTime] = useState(new Date());
   const [quote, setQuote] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [fact, setFact] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [weather, setWeather] = useState(null);
