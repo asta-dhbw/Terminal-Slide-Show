@@ -60,6 +60,8 @@ user_pref("browser.startup.homepage_override.enabled", false);
 user_pref("general.useragent.override", "Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Firefox/123.0");
 user_pref("network.manage-offline-status", true);
 user_pref("browser.offline-apps.notify", false);
+user_pref("security.fileuri.strict_origin_policy", false);
+user_pref("privacy.file_unique_origin", false);
 EOF
 
 # Create auto-reload script
@@ -72,7 +74,24 @@ setInterval(function() {
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
+
+    cat > "$PROFILE_PATH/kiosk.html" << EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="auto-reload.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; }
+        iframe { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <iframe src="$TARGET_URL"></iframe>
+</body>
+</html>
+EOF
 }
+
 
 # -----------------------------------------------------------------------------
 # Window manager configuration
@@ -137,7 +156,7 @@ launch_firefox() {
 
     # Modified Firefox launch command to include auto-reload script
     DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" \
-        --new-window "data:text/html,<script src='auto-reload.js'></script><iframe src='$TARGET_URL' style='position:fixed;top:0;left:0;width:100%;height:100%;border:none;'></iframe>" &
+        --new-window "file://$PROFILE_PATH/kiosk.html" &
     
     # Wait for Firefox process to start
     local max_attempts=10
