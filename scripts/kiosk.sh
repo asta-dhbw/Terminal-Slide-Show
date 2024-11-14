@@ -26,7 +26,8 @@ readonly TARGET_URL="${TARGET_URL:-https://www.google.com}"
 readonly PROFILE_NAME="${PROFILE_NAME:-kiosk.default}"
 readonly DISPLAY_NUM="${DISPLAY_NUM:-:0}"
 readonly PROFILE_PATH="${PROFILE_PATH:-$HOME/.mozilla/firefox/${PROFILE_NAME}}"
-readonly ERROR_PAGE="${ERROR_PAGE:-$HOME/.mozilla/firefox/${PROFILE_NAME}/error.html}"
+
+
 
 # -----------------------------------------------------------------------------
 # Firefox profile management
@@ -57,73 +58,9 @@ user_pref("browser.cache.memory.capacity", 524288);
 user_pref("browser.privatebrowsing.autostart", true);
 user_pref("browser.startup.homepage_override.enabled", false);
 user_pref("general.useragent.override", "Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Firefox/123.0");
-user_pref("browser.sessionstore.enabled", false);
-user_pref("browser.xul.error_pages.enabled", false);
-user_pref("browser.xul.error_pages.expert_bad_cert", false);
-user_pref("browser.aboutConfig.showWarning", false);
-user_pref("security.fileuri.strict_origin_policy", false);
-user_pref("toolkit.startup.max_resumed_crashes", -1);
-user_pref("browser.newtab.url", "file://${ERROR_PAGE}");
 EOF
 
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
-}
-
-setup_error_page() {
-    log_info "Setting up error page..."
-    cat > "$ERROR_PAGE" << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Loading...</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Loading Page...</h1>
-        <div class="spinner"></div>
-        <p>Attempting to connect to service...</p>
-    </div>
-    <script>
-        function reloadPage() {
-            window.location.reload();
-        }
-        setTimeout(reloadPage, 5000);
-    </script>
-</body>
-</html>
-EOF
 }
 
 # -----------------------------------------------------------------------------
@@ -187,27 +124,28 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ..."
 
-    setup_error_page
     DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
-    # Monitor page load status
-    local max_attempts=20
+    # Wait for Firefox process to start
+    local max_attempts=10
     local attempt=0
-    
     while [ $attempt -lt $max_attempts ]; do
-        if curl -s --head "$TARGET_URL" >/dev/null 2>&1; then
-            log_info "Page loaded successfully"
-            return 0
+        if pgrep -x "firefox" > /dev/null; then
+            log_info "Firefox process started"
+            sleep 2  # Give Firefox time to create window
+            if xdotool search --onlyvisible --class "Firefox" >/dev/null 2>&1; then
+                log_info "Firefox window detected"
+                return 0
+            else
+                log_info "Firefox process running but window not detected"
+                return 0
+            fi
         fi
-        
         attempt=$((attempt + 1))
-        sleep 2
-        
-        # Reload page
-        DISPLAY=$DISPLAY_NUM xdotool search --onlyvisible --class "Firefox" key F5
+        sleep 1
     done
     
-    log_error "Failed to load page after $max_attempts attempts"
+    log_error "Failed to start Firefox after $max_attempts attempts"
     return 1
 }
 
