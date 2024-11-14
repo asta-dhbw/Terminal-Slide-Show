@@ -114,6 +114,7 @@ cat > "$PROFILE_PATH/auto-reload.js" << EOF
 let lastLoadAttempt = 0;
 const RETRY_INTERVAL = 5000;
 let isError = false;
+let hasLoadedOnce = false;
 
 function showError() {
     if (!isError) {
@@ -146,6 +147,9 @@ function hideError() {
 }
 
 function checkAndReload() {
+    // Only check if we haven't loaded successfully yet
+    if (hasLoadedOnce) return;
+    
     const iframe = document.querySelector('iframe');
     const now = Date.now();
     
@@ -155,12 +159,13 @@ function checkAndReload() {
 
     try {
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!iframeDoc || !navigator.onLine) {
+        if (!iframeDoc) {
             showError();
             lastLoadAttempt = now;
             iframe.src = iframe.src;
         } else {
             hideError();
+            hasLoadedOnce = true;
         }
     } catch (e) {
         showError();
@@ -177,6 +182,7 @@ window.onload = function() {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             if (iframeDoc) {
                 hideError();
+                hasLoadedOnce = true;
             }
         } catch (e) {
             showError();
@@ -189,6 +195,7 @@ window.onload = function() {
         setTimeout(() => iframe.src = iframe.src, RETRY_INTERVAL);
     };
 
+    // Check less frequently once initial load is attempted
     setInterval(checkAndReload, RETRY_INTERVAL);
 };
 EOF
