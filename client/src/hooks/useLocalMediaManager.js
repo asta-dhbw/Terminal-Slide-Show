@@ -13,7 +13,7 @@ import { useServerStatus } from './useServerStatus';
 import { frontendConfig } from '../../../config/frontend.config';
 
 /**
- * Custom hook for managing local media state with WebSocket and HTTP fallback
+ * Custom hook for managing local media state with WebSocket
  * @param {boolean} [isScheduleActive=true] - Whether the media schedule is currently active
  * @returns {MediaManagerResult} Media management state and functions
  */
@@ -44,22 +44,6 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   const MAX_RECONNECT_ATTEMPTS = frontendConfig.websocket.maxReconnectAttempts;
   const RECONNECT_INTERVAL = frontendConfig.websocket.reconnectInterval;
 
-  /**
-   * Fetches media list using HTTP as fallback when WebSocket is unavailable
-   * @async
-   * @returns {Promise<void>}
-   */
-  const fetchMediaFallback = useCallback(async () => {
-    try {
-      const response = await fetch('/api/all-media');
-      if (!response.ok) throw new Error('Failed to fetch media');
-      const data = await response.json();
-      setAllMedia(data);
-      setLoading(false);
-    } catch (err) {
-      console.warn('Fallback media fetch failed:', err);
-    }
-  }, []);
 
   /**
  * Establishes WebSocket connection with reconnection logic
@@ -78,7 +62,8 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     }
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
+    const wsPath = frontendConfig.websocket.path || '/ws';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}${wsPath}`);
     wsRef.current = ws;
 
     console.log('Attempting WebSocket connection...');
@@ -119,16 +104,12 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     ws.onerror = (error) => {
       console.warn('WebSocket error:', error);
       setWebSocketStatus('error');
-      // Don't set serverReady to false, as we can still use HTTP fallback
     };
 
     ws.onclose = () => {
       console.log('WebSocket connection closed');
       setWebSocketStatus('disconnected');
       wsRef.current = null;
-
-      // Fetch media via HTTP while disconnected
-      fetchMediaFallback();
 
       // Attempt to reconnect if still active
       if (isScheduleActive && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
@@ -146,7 +127,7 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
     }, 30000);
 
     ws.addEventListener('close', () => clearInterval(pingInterval));
-  }, [isScheduleActive, isServerConnected, fetchMediaFallback]);
+  }, [isScheduleActive, isServerConnected]);
 
   /**
 * Navigates between media items
@@ -178,8 +159,6 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   // Initial setup and cleanup
   useEffect(() => {
     if (isScheduleActive && isServerConnected) {
-      // Initial media fetch via HTTP
-      fetchMediaFallback();
       // Then try WebSocket connection
       connect();
     } else {
@@ -199,16 +178,8 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
         wsRef.current = null;
       }
     };
-  }, [isScheduleActive, isServerConnected, connect, fetchMediaFallback]);
+  }, [isScheduleActive, isServerConnected, connect]);
 
-
-  // Poll for updates when WebSocket is down
-  useEffect(() => {
-    if (!isScheduleActive || webSocketStatus === 'connected') return;
-
-    const pollInterval = setInterval(fetchMediaFallback, 10000);
-    return () => clearInterval(pollInterval);
-  }, [isScheduleActive, webSocketStatus, fetchMediaFallback]);
 
   return {
     media: getCurrentMedia(),

@@ -49,6 +49,7 @@ const DynamicDailyView = () => {
   };
 
   const fetchWithCache = async (endpoint, cacheKey, setter) => {
+    console.debug('Fetch attempt - Server status:', isServerConnected);
     try {
       if (!isServerConnected) {
         const cachedData = loadFromCache(cacheKey);
@@ -72,8 +73,6 @@ const DynamicDailyView = () => {
       if (cachedData) {
         setter(cachedData);
       }
-    } finally {
-      if (cacheKey === 'quotes') setIsLoading(false);
     }
   };
 
@@ -101,15 +100,15 @@ const DynamicDailyView = () => {
   };
 
   useEffect(() => {
-    // Timer for time updates
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
   
     // Helper function to safely fetch data
     const safeDataFetch = async () => {
+      console.debug('Current server connection status:', isServerConnected);
       if (!isServerConnected) {
-        console.log('Server not connected, using cached data if available');
+        console.debug('Server disconnected - using cache');
         
         // Try loading from cache for each data type
         const cachedQuotes = loadFromCache('quotes');
@@ -141,7 +140,7 @@ const DynamicDailyView = () => {
           fetchGreetings()
         ]);
       } catch (error) {
-        console.error('Error fetching initial data:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
