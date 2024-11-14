@@ -62,8 +62,15 @@ user_pref("network.manage-offline-status", true);
 user_pref("browser.offline-apps.notify", false);
 user_pref("security.fileuri.strict_origin_policy", false);
 user_pref("privacy.file_unique_origin", false);
-user_pref("browser.xul.error_pages.enabled", false);
-user_pref("browser.xul.error_pages.expert_bad_cert", false);
+user_pref("browser.xul.error_pages.enabled", true);
+user_pref("browser.xul.error_pages.expert_bad_cert", true);
+user_pref("network.dns.disablePrefetch", false);
+user_pref("network.http.connection-retry-timeout", 1000);
+user_pref("network.http.connection-timeout", 5000);
+user_pref("network.http.max-connections", 48);
+user_pref("network.http.max-connections-per-server", 16);
+user_pref("network.http.max-persistent-connections-per-server", 8);
+user_pref("network.http.request.timeout", 5000);
 EOF
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
 
@@ -112,118 +119,100 @@ EOF
 
 cat > "$PROFILE_PATH/auto-reload.js" << EOF
 let lastLoadAttempt = Date.now();
-const RETRY_INTERVAL = 5000;
+const RETRY_INTERVAL = 2000; // Reduced to 2 seconds
 let isError = false;
 let mainFrame = null;
 let errorFrame = null;
 let retryTimer = null;
-let initialLoadComplete = false;  // Track initial successful load
 
 function createErrorFrame() {
     if (!errorFrame) {
         errorFrame = document.createElement('iframe');
         errorFrame.id = 'error-frame';
         errorFrame.src = 'error.html';
-        errorFrame.style.position = 'fixed';
-        errorFrame.style.top = '0';
-        errorFrame.style.left = '0';
-        errorFrame.style.width = '100%';
-        errorFrame.style.height = '100%';
-        errorFrame.style.border = 'none';
-        errorFrame.style.zIndex = '1000';
+        errorFrame.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:1000;';
         document.body.appendChild(errorFrame);
     }
 }
 
 function showError() {
-    if (!isError && !initialLoadComplete) {  // Show only if initial load not completed
-        console.log('Showing error page');
-        isError = true;
-        createErrorFrame();
-        if (mainFrame) {
-            mainFrame.style.visibility = 'hidden';
-        }
-        if (!retryTimer) {
-            retryTimer = setInterval(() => {
-                console.log('Attempting to reload');
-                if (mainFrame) {
-                    const now = Date.now();
-                    if (now - lastLoadAttempt >= RETRY_INTERVAL) {
-                        lastLoadAttempt = now;
-                        mainFrame.src = mainFrame.src;
-                    }
-                }
-            }, 1000);
-        }
+    console.log('Showing error page');
+    isError = true;
+    createErrorFrame();
+    if (mainFrame) {
+        mainFrame.style.visibility = 'hidden';
     }
+    startRetryTimer();
 }
 
 function hideError() {
-    if (isError) {
-        console.log('Hiding error page');
-        isError = false;
-        if (errorFrame) {
-            errorFrame.remove();
-            errorFrame = null;
-        }
-        if (mainFrame) {
-            mainFrame.style.visibility = 'visible';
-        }
-        if (retryTimer) {
-            clearInterval(retryTimer);
-            retryTimer = null;
-        }
+    console.log('Hiding error page');
+    isError = false;
+    if (errorFrame) {
+        errorFrame.remove();
+        errorFrame = null;
+    }
+    if (mainFrame) {
+        mainFrame.style.visibility = 'visible';
+    }
+    stopRetryTimer();
+}
+
+function startRetryTimer() {
+    if (!retryTimer) {
+        retryTimer = setInterval(() => reloadMainFrame(), RETRY_INTERVAL);
     }
 }
 
-function checkIframeContent(iframe) {
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!doc) {
-            console.log('No document access');
-            return false;
-        }
-        if (doc.documentElement.innerHTML.includes('about:neterror') || 
-            doc.documentElement.innerHTML.includes('about:certerror')) {
-            console.log('Firefox error page detected');
-            return false;
-        }
-        console.log('Content loaded successfully');
-        return true;
-    } catch (e) {
-        console.log('Error checking content:', e);
-        return false;
+function stopRetryTimer() {
+    if (retryTimer) {
+        clearInterval(retryTimer);
+        retryTimer = null;
+    }
+}
+
+function reloadMainFrame() {
+    if (mainFrame) {
+        console.log('Reloading main frame');
+        mainFrame.src = mainFrame.src;
     }
 }
 
 window.onload = function() {
-    console.log('Window loaded');
     mainFrame = document.querySelector('iframe');
-    if (!mainFrame) {
-        console.log('No main iframe found');
-        return;
-    }
+    if (!mainFrame) return;
+
+    // Force initial load
+    reloadMainFrame();
 
     mainFrame.addEventListener('load', function() {
-        console.log('Iframe load event');
-        const contentOk = checkIframeContent(mainFrame);
-        if (contentOk) {
-            hideError();
-            initialLoadComplete = true;  // Mark as loaded successfully
-        } else {
+        try {
+            const doc = mainFrame.contentDocument || mainFrame.contentWindow.document;
+            if (doc && doc.body && !doc.body.innerHTML.includes('about:neterror')) {
+                hideError();
+            } else {
+                showError();
+            }
+        } catch (e) {
             showError();
         }
     });
 
-    mainFrame.addEventListener('error', function(e) {
-        console.log('Iframe error event:', e);
+    mainFrame.addEventListener('error', function() {
         showError();
     });
 
-    const initialContentOk = checkIframeContent(mainFrame);
-    if (!initialContentOk) {
-        showError();
-    }
+    // Check status every 5 seconds
+    setInterval(() => {
+        try {
+            const doc = mainFrame.contentDocument || mainFrame.contentWindow.document;
+            if (!doc || !doc.body) {
+                showError();
+            }
+        } catch (e) {
+            showError();
+        }
+    }, 5000);
 };
 EOF
 
