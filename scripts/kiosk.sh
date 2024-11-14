@@ -62,6 +62,8 @@ user_pref("network.manage-offline-status", true);
 user_pref("browser.offline-apps.notify", false);
 user_pref("security.fileuri.strict_origin_policy", false);
 user_pref("privacy.file_unique_origin", false);
+user_pref("browser.xul.error_pages.enabled", false);
+user_pref("browser.xul.error_pages.expert_bad_cert", false);
 EOF
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
 
@@ -112,15 +114,12 @@ cat > "$PROFILE_PATH/auto-reload.js" << EOF
 let lastLoadAttempt = 0;
 const RETRY_INTERVAL = 5000;
 let isError = false;
+let mainFrame = null;
+let errorFrame = null;
 
-function showError() {
-    if (!isError) {
-        isError = true;
-        const iframe = document.querySelector('iframe');
-        if (iframe) {
-            iframe.style.display = 'none';
-        }
-        const errorFrame = document.createElement('iframe');
+function createErrorFrame() {
+    if (!errorFrame) {
+        errorFrame = document.createElement('iframe');
         errorFrame.id = 'error-frame';
         errorFrame.src = 'error.html';
         errorFrame.style.position = 'fixed';
@@ -129,53 +128,91 @@ function showError() {
         errorFrame.style.width = '100%';
         errorFrame.style.height = '100%';
         errorFrame.style.border = 'none';
+        errorFrame.style.zIndex = '1000';
         document.body.appendChild(errorFrame);
+    }
+}
+
+function showError() {
+    if (!isError) {
+        isError = true;
+        createErrorFrame();
+        if (mainFrame) {
+            mainFrame.style.visibility = 'hidden';
+        }
+        startRetryTimer();
     }
 }
 
 function hideError() {
     if (isError) {
         isError = false;
-        const iframe = document.querySelector('iframe');
-        if (iframe) {
-            iframe.style.display = 'block';
-        }
-        const errorFrame = document.getElementById('error-frame');
         if (errorFrame) {
             errorFrame.remove();
+            errorFrame = null;
+        }
+        if (mainFrame) {
+            mainFrame.style.visibility = 'visible';
         }
     }
 }
 
-window.onload = function() {
-    const iframe = document.querySelector('iframe');
-    
-    iframe.onload = function() {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (iframeDoc) {
-                hideError();
+function startRetryTimer() {
+    if (isError) {
+        const now = Date.now();
+        if (now - lastLoadAttempt >= RETRY_INTERVAL) {
+            lastLoadAttempt = now;
+            if (mainFrame) {
+                mainFrame.src = mainFrame.src;
             }
-        } catch (e) {
-            showError();
-            lastLoadAttempt = Date.now();
-            setTimeout(() => {
-                if (isError) {
-                    iframe.src = iframe.src;
-                }
-            }, RETRY_INTERVAL);
         }
-    };
+    }
+}
 
-    iframe.onerror = function() {
-        showError();
-        lastLoadAttempt = Date.now();
-        setTimeout(() => {
-            if (isError) {
-                iframe.src = iframe.src;
+function checkIframeContent(iframe) {
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (doc) {
+            const isErrorPage = doc.documentElement.innerHTML.includes('about:neterror') ||
+                              doc.documentElement.innerHTML.includes('about:certerror');
+            if (isErrorPage) {
+                showError();
+                return false;
             }
-        }, RETRY_INTERVAL);
-    };
+            return true;
+        }
+    } catch (e) {
+        showError();
+        return false;
+    }
+    return false;
+}
+
+window.onload = function() {
+    mainFrame = document.querySelector('iframe');
+    if (!mainFrame) return;
+
+    mainFrame.addEventListener('load', function() {
+        if (checkIframeContent(mainFrame)) {
+            hideError();
+        }
+    });
+
+    mainFrame.addEventListener('error', function() {
+        showError();
+    });
+
+    // Initial check
+    if (!checkIframeContent(mainFrame)) {
+        showError();
+    }
+
+    // Regular checking for connection issues
+    setInterval(function() {
+        if (isError) {
+            startRetryTimer();
+        }
+    }, 1000);
 };
 EOF
 
@@ -185,8 +222,21 @@ cat > "$PROFILE_PATH/kiosk.html" << EOF
 <head>
     <script src="auto-reload.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        iframe { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            overflow: hidden; 
+        }
+        iframe { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
