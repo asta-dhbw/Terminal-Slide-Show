@@ -42,7 +42,7 @@ create_firefox_profile() {
 
     cat > "$PROFILE_PATH/prefs.js" << EOF
 user_pref("browser.rights.3.shown", true);
-user_pref("browser.startup.homepage", "file://$PROFILE_PATH/kiosk.html");
+user_pref("browser.startup.homepage", "$TARGET_URL");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.sessionstore.enabled", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
@@ -58,195 +58,10 @@ user_pref("browser.cache.memory.capacity", 524288);
 user_pref("browser.privatebrowsing.autostart", true);
 user_pref("browser.startup.homepage_override.enabled", false);
 user_pref("general.useragent.override", "Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Firefox/123.0");
-user_pref("network.manage-offline-status", true);
-user_pref("browser.offline-apps.notify", false);
-user_pref("security.fileuri.strict_origin_policy", false);
-user_pref("privacy.file_unique_origin", false);
-user_pref("browser.xul.error_pages.enabled", true);
-user_pref("browser.xul.error_pages.expert_bad_cert", true);
-user_pref("network.dns.disablePrefetch", false);
-user_pref("network.http.connection-retry-timeout", 1000);
-user_pref("network.http.connection-timeout", 5000);
-user_pref("network.http.max-connections", 48);
-user_pref("network.http.max-connections-per-server", 16);
-user_pref("network.http.max-persistent-connections-per-server", 8);
-user_pref("network.http.request.timeout", 5000);
 EOF
+
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
-
-cat > "$PROFILE_PATH/error.html" << EOF
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .error-container {
-            text-align: center;
-            padding: 2rem;
-        }
-        .error-icon {
-            font-size: 48px;
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        .error-message {
-            color: #333;
-            font-size: 24px;
-        }
-        .error-subtitle {
-            color: #666;
-            margin-top: 1rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="error-container">
-        <div class="error-icon">⚠️</div>
-        <div class="error-message">Loading Error</div>
-        <div class="error-subtitle">Please wait while we reconnect...</div>
-    </div>
-</body>
-</html>
-EOF
-
-cat > "$PROFILE_PATH/auto-reload.js" << EOF
-let lastLoadAttempt = Date.now();
-const RETRY_INTERVAL = 2000; // Reduced to 2 seconds
-let isError = false;
-let mainFrame = null;
-let errorFrame = null;
-let retryTimer = null;
-
-function createErrorFrame() {
-    if (!errorFrame) {
-        errorFrame = document.createElement('iframe');
-        errorFrame.id = 'error-frame';
-        errorFrame.src = 'error.html';
-        errorFrame.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:1000;';
-        document.body.appendChild(errorFrame);
-    }
 }
-
-function showError() {
-    console.log('Showing error page');
-    isError = true;
-    createErrorFrame();
-    if (mainFrame) {
-        mainFrame.style.visibility = 'hidden';
-    }
-    startRetryTimer();
-}
-
-function hideError() {
-    console.log('Hiding error page');
-    isError = false;
-    if (errorFrame) {
-        errorFrame.remove();
-        errorFrame = null;
-    }
-    if (mainFrame) {
-        mainFrame.style.visibility = 'visible';
-    }
-    stopRetryTimer();
-}
-
-function startRetryTimer() {
-    if (!retryTimer) {
-        retryTimer = setInterval(() => reloadMainFrame(), RETRY_INTERVAL);
-    }
-}
-
-function stopRetryTimer() {
-    if (retryTimer) {
-        clearInterval(retryTimer);
-        retryTimer = null;
-    }
-}
-
-function reloadMainFrame() {
-    if (mainFrame) {
-        console.log('Reloading main frame');
-        mainFrame.src = mainFrame.src;
-    }
-}
-
-window.onload = function() {
-    mainFrame = document.querySelector('iframe');
-    if (!mainFrame) return;
-
-    // Force initial load
-    reloadMainFrame();
-
-    mainFrame.addEventListener('load', function() {
-        try {
-            const doc = mainFrame.contentDocument || mainFrame.contentWindow.document;
-            if (doc && doc.body && !doc.body.innerHTML.includes('about:neterror')) {
-                hideError();
-            } else {
-                showError();
-            }
-        } catch (e) {
-            showError();
-        }
-    });
-
-    mainFrame.addEventListener('error', function() {
-        showError();
-    });
-
-    // Check status every 5 seconds
-    setInterval(() => {
-        try {
-            const doc = mainFrame.contentDocument || mainFrame.contentWindow.document;
-            if (!doc || !doc.body) {
-                showError();
-            }
-        } catch (e) {
-            showError();
-        }
-    }, 5000);
-};
-EOF
-
-cat > "$PROFILE_PATH/kiosk.html" << EOF
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="auto-reload.js"></script>
-    <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            overflow: hidden; 
-        }
-        iframe { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-            z-index: 1;
-        }
-    </style>
-</head>
-<body>
-    <iframe src="$TARGET_URL"></iframe>
-</body>
-</html>
-EOF
-}
-
-
 
 # -----------------------------------------------------------------------------
 # Window manager configuration
@@ -309,9 +124,7 @@ start_x_server() {
 launch_firefox() {
     log_info "Launching Firefox ..."
 
-    # Modified Firefox launch command to include auto-reload script
-    DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" \
-        --new-window "file://$PROFILE_PATH/kiosk.html" &
+    DISPLAY=$DISPLAY_NUM firefox --kiosk --no-remote --profile "$PROFILE_PATH" "$TARGET_URL" &
     
     # Wait for Firefox process to start
     local max_attempts=10
