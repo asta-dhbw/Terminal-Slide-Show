@@ -42,7 +42,7 @@ create_firefox_profile() {
 
     cat > "$PROFILE_PATH/prefs.js" << EOF
 user_pref("browser.rights.3.shown", true);
-user_pref("browser.startup.homepage", "$TARGET_URL");
+user_pref("browser.startup.homepage", "file://$PROFILE_PATH/kiosk.html");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.sessionstore.enabled", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
@@ -65,7 +65,6 @@ user_pref("privacy.file_unique_origin", false);
 EOF
     cp "$PROFILE_PATH/prefs.js" "$PROFILE_PATH/user.js"
 
-# Create custom error page
 cat > "$PROFILE_PATH/error.html" << EOF
 <!DOCTYPE html>
 <html>
@@ -109,18 +108,18 @@ cat > "$PROFILE_PATH/error.html" << EOF
 </html>
 EOF
 
-# Create auto-reload script
 cat > "$PROFILE_PATH/auto-reload.js" << EOF
 let lastLoadAttempt = 0;
 const RETRY_INTERVAL = 5000;
 let isError = false;
-let hasLoadedOnce = false;
 
 function showError() {
     if (!isError) {
         isError = true;
         const iframe = document.querySelector('iframe');
-        iframe.style.visibility = 'hidden';
+        if (iframe) {
+            iframe.style.display = 'none';
+        }
         const errorFrame = document.createElement('iframe');
         errorFrame.id = 'error-frame';
         errorFrame.src = 'error.html';
@@ -138,39 +137,13 @@ function hideError() {
     if (isError) {
         isError = false;
         const iframe = document.querySelector('iframe');
-        iframe.style.visibility = 'visible';
+        if (iframe) {
+            iframe.style.display = 'block';
+        }
         const errorFrame = document.getElementById('error-frame');
         if (errorFrame) {
             errorFrame.remove();
         }
-    }
-}
-
-function checkAndReload() {
-    // Only check if we haven't loaded successfully yet
-    if (hasLoadedOnce) return;
-    
-    const iframe = document.querySelector('iframe');
-    const now = Date.now();
-    
-    if (now - lastLoadAttempt < RETRY_INTERVAL) {
-        return;
-    }
-
-    try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!iframeDoc) {
-            showError();
-            lastLoadAttempt = now;
-            iframe.src = iframe.src;
-        } else {
-            hideError();
-            hasLoadedOnce = true;
-        }
-    } catch (e) {
-        showError();
-        lastLoadAttempt = now;
-        iframe.src = iframe.src;
     }
 }
 
@@ -182,47 +155,41 @@ window.onload = function() {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             if (iframeDoc) {
                 hideError();
-                hasLoadedOnce = true;
             }
         } catch (e) {
             showError();
+            lastLoadAttempt = Date.now();
+            setTimeout(() => {
+                if (isError) {
+                    iframe.src = iframe.src;
+                }
+            }, RETRY_INTERVAL);
         }
     };
 
     iframe.onerror = function() {
         showError();
         lastLoadAttempt = Date.now();
-        setTimeout(() => iframe.src = iframe.src, RETRY_INTERVAL);
+        setTimeout(() => {
+            if (isError) {
+                iframe.src = iframe.src;
+            }
+        }, RETRY_INTERVAL);
     };
-
-    // Check less frequently once initial load is attempted
-    setInterval(checkAndReload, RETRY_INTERVAL);
 };
 EOF
 
-# Create kiosk HTML file with auto-reload script
- cat > "$PROFILE_PATH/kiosk.html" << EOF
+cat > "$PROFILE_PATH/kiosk.html" << EOF
 <!DOCTYPE html>
 <html>
 <head>
     <script src="auto-reload.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         iframe { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        #overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: #fff; 
-            z-index: 1000;
-        }
     </style>
 </head>
 <body>
-    <div id="overlay"></div>
     <iframe src="$TARGET_URL"></iframe>
 </body>
 </html>
