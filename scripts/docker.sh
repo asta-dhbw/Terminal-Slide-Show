@@ -8,6 +8,27 @@
 # Version: 1.0
 
 # -----------------------------------------------------------------------------
+# Check for remote changes
+# -----------------------------------------------------------------------------
+echo "Checking for remote changes..."
+git stash && git fetch
+
+UPSTREAM=${1:-'@{u}'}
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse "$UPSTREAM")
+BASE=$(git merge-base @ "$UPSTREAM")
+
+if [ $LOCAL = $REMOTE ]; then
+    echo "No updates available. Skipping container operations."
+    exit 0
+elif [ $LOCAL = $BASE ]; then
+    echo "Updates found. Proceeding with container operations..."
+else
+    echo "Local changes exist. Please commit or stash them first."
+    exit 1
+fi
+
+# -----------------------------------------------------------------------------
 # Container cleanup
 # -----------------------------------------------------------------------------
 docker compose down
@@ -24,7 +45,7 @@ git config merge.commit no-edit
 # Update repository
 # -----------------------------------------------------------------------------
 # Stash changes, pull updates, and ensure script remains executable
-git stash && git pull --no-edit && chmod +x docker.sh
+git pull --no-edit && chmod +x docker.sh
 
 # -----------------------------------------------------------------------------
 # Container management

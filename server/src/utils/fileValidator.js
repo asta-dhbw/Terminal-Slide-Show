@@ -22,20 +22,25 @@ export function isValidFile(filename) {
     const now = new Date();
     const { startDate, endDate } = parsedDate;
 
-    if (startDate > now) {
-        return false; // Start date is in the future
+    // Helper to compare only dates, ignoring time
+    const isSameDay = (date1, date2) => {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    };
+
+    if (startDate > now && !isSameDay(startDate, now)) {
+        return false;
     }
 
-    if (endDate && endDate < now) {
-        return false; // End date is in the past
+    if (endDate && endDate < now && !isSameDay(endDate, now)) {
+        return false;
     }
 
     // For single-date files (no end date),
     // ensure the start date matches today's date
     if (!endDate) {
-        const startDateString = startDate.toISOString().split('T')[0];
-        const nowString = now.toISOString().split('T')[0];
-        return startDateString === nowString;
+        return isSameDay(startDate, now);
     }
 
     return true;
