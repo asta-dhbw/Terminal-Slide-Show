@@ -17,6 +17,7 @@ const DynamicDailyView = () => {
   const [showNasaInfo, setShowNasaInfo] = useState(false);
   const [greetings, setGreetings] = useState({});
   const isServerConnected = useServerStatus();
+  const [logoSrc, setLogoSrc] = useState('/slideshow.png');
 
   const isNight = time.getHours() >= 18 || time.getHours() < 6;
 
@@ -48,6 +49,35 @@ const DynamicDailyView = () => {
     }
   };
 
+  const cacheLogo = async () => {
+    try {
+      // Check cache first
+      const cachedLogo = loadFromCache('logo');
+      if (cachedLogo) {
+        return cachedLogo;
+      }
+
+      // Fetch and convert to base64 if not cached
+      const response = await fetch('/slideshow.png');
+      const blob = await response.blob();
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Logo = reader.result;
+          // Save to cache
+          saveToCache('logo', base64Logo);
+          resolve(base64Logo);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.warn('Failed to cache logo:', err);
+      return '/slideshow.png'; // Fallback to normal path
+    }
+  };
+
   const fetchWithCache = async (endpoint, cacheKey, setter) => {
     console.debug('Fetch attempt - Server status:', isServerConnected);
     try {
@@ -59,7 +89,7 @@ const DynamicDailyView = () => {
         }
         return;
       }
-  
+
       const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -103,33 +133,33 @@ const DynamicDailyView = () => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-  
+
     // Helper function to safely fetch data
     const safeDataFetch = async () => {
       console.debug('Current server connection status:', isServerConnected);
       if (!isServerConnected) {
         console.debug('Server disconnected - using cache');
-        
+
         // Try loading from cache for each data type
         const cachedQuotes = loadFromCache('quotes');
         if (cachedQuotes) setQuote(cachedQuotes);
-        
+
         const cachedWeather = loadFromCache('weather');
         if (cachedWeather) setWeather(cachedWeather);
-        
+
         const cachedFacts = loadFromCache('facts');
         if (cachedFacts) setFact(cachedFacts);
-        
+
         const cachedNasa = loadFromCache('nasa');
         if (cachedNasa) setNasaImage(cachedNasa);
-        
+
         const cachedGreetings = loadFromCache('greetings');
         if (cachedGreetings) setGreetings(cachedGreetings);
-        
+
         setIsLoading(false);
         return;
       }
-  
+
       // If connected, fetch all data
       try {
         await Promise.all([
@@ -145,22 +175,25 @@ const DynamicDailyView = () => {
         setIsLoading(false);
       }
     };
-  
+
     // Initial data load
     safeDataFetch();
-  
+
     // Set up content refresh timer only if connected
     const contentTimer = setInterval(() => {
       if (isServerConnected) {
         safeDataFetch();
       }
     }, 300000); // 5 minutes
-  
+
     // NASA info auto-toggle timer
     const nasaInfoTimer = setInterval(() => {
       setShowNasaInfo(prev => !prev);
     }, 60000);
-  
+
+    // Cache logo
+    cacheLogo().then(setLogoSrc);
+
     // Cleanup
     return () => {
       clearInterval(timer);
@@ -202,7 +235,7 @@ const DynamicDailyView = () => {
 
       <div className="content-wrapper">
         <div className="dhbw-logo">
-          <img src="/slideshow.png" alt="DHBW Logo" />
+          <img src={logoSrc} alt="DHBW Logo" />
         </div>
 
         {!isServerConnected && (

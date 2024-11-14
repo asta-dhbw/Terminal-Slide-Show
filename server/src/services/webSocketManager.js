@@ -23,9 +23,10 @@ class WebSocketManager {
   }
   
   /**
- * Initializes the WebSocket server
- * @param {http.Server} server - HTTP/HTTPS server to attach WebSocket to
- */
+   * Initializes the WebSocket server
+   * @param {import('http').Server} server - HTTP/HTTPS server to attach WebSocket to
+   * @throws {Error} When WebSocket server initialization fails
+   */
   initialize(server) {
     try {
       this.server = new WebSocketServer({
@@ -59,6 +60,10 @@ class WebSocketManager {
     }
   }
 
+  /**
+   * Starts the heartbeat check interval
+   * @private
+   */
   startHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
@@ -67,11 +72,11 @@ class WebSocketManager {
   }
 
   /**
- * Handles new WebSocket connections
- * @private
- * @param {WebSocket} ws - WebSocket connection
- * @param {http.IncomingMessage} req - HTTP request that initiated the connection
- */
+   * Handles new WebSocket connections
+   * @private
+   * @param {import('ws').WebSocket} ws - WebSocket connection
+   * @param {import('http').IncomingMessage} req - HTTP request that initiated the connection
+   */
   handleConnection(ws, req) {
     const clientId = Math.random().toString(36).substring(7);
     const clientInfo = {
@@ -113,6 +118,12 @@ class WebSocketManager {
     });
   }
 
+  /**
+   * Handles incoming WebSocket messages
+   * @private
+   * @param {import('ws').WebSocket} ws - WebSocket connection
+   * @param {Object} message - Parsed message object
+   */
   handleMessage(ws, message) {
     const client = this.clients.get(ws);
     if (!client) return;
@@ -127,6 +138,12 @@ class WebSocketManager {
     }
   }
 
+  /**
+   * Sends initial media data to a client
+   * @private
+   * @param {import('ws').WebSocket} ws - WebSocket connection
+   * @returns {Promise<void>}
+   */
   async sendInitialData(ws) {
     if (!global.slideshowManager) {
       this.logger.warn('SlideshowManager not available for initial data');
@@ -149,6 +166,10 @@ class WebSocketManager {
     }
   }
 
+  /**
+   * Broadcasts media updates to all connected clients
+   * @param {Array<Object>} mediaList - List of media items to broadcast
+   */
   broadcastUpdate(mediaList) {
     if (!this.initialized) {
       this.logger.debug('WebSocket server not yet initialized, skipping broadcast');
@@ -187,9 +208,9 @@ class WebSocketManager {
   }
 
   /**
- * Checks client heartbeats and removes stale connections
- * @private 
- */
+   * Checks client heartbeats and removes stale connections
+   * @private 
+   */
   checkHeartbeats() {
     const now = Date.now();
     for (const [ws, client] of this.clients) {
@@ -209,6 +230,9 @@ class WebSocketManager {
     }
   }
 
+  /**
+   * Stops the WebSocket server and cleans up connections
+   */
   stop() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);

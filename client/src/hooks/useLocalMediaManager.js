@@ -1,6 +1,13 @@
 /**
+ * @typedef {Object} MediaItem
+ * @property {string} id - Unique identifier of the media item
+ * @property {string} path - Path to the media file
+ * @property {string} type - Type of media (image, video, etc.)
+ */
+
+/**
  * @typedef {Object} MediaManagerResult
- * @property {Object|null} media - Current media object or null if none available
+ * @property {MediaItem|null} media - Current media object or null if none available
  * @property {boolean} loading - Whether media is currently being loaded
  * @property {boolean} serverReady - Whether server is ready to serve media
  * @property {'connected'|'connecting'|'disconnected'|'error'} webSocketStatus - Current WebSocket connection status
@@ -13,7 +20,7 @@ import { useServerStatus } from './useServerStatus';
 import { frontendConfig } from '../../../config/frontend.config';
 
 /**
- * Custom hook for managing local media state with WebSocket
+ * Custom hook for managing local media state with WebSocket connectivity
  * @param {boolean} [isScheduleActive=true] - Whether the media schedule is currently active
  * @returns {MediaManagerResult} Media management state and functions
  */
@@ -44,11 +51,10 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   const MAX_RECONNECT_ATTEMPTS = frontendConfig.websocket.maxReconnectAttempts;
   const RECONNECT_INTERVAL = frontendConfig.websocket.reconnectInterval;
 
-
   /**
- * Establishes WebSocket connection with reconnection logic
- * @returns {void}
- */
+   * Establishes WebSocket connection with automatic reconnection
+   * @private
+   */
   const connect = useCallback(() => {
     // Only attempt connection if server is connected and schedule is active
     if (!isScheduleActive || !isServerConnected || wsRef.current?.readyState === WebSocket.OPEN) {
@@ -130,10 +136,9 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   }, [isScheduleActive, isServerConnected]);
 
   /**
-* Navigates between media items
-* @param {'next'|'previous'} direction - Navigation direction
-* @returns {void}
-*/
+   * Changes the current media index based on navigation direction
+   * @param {'next'|'previous'} direction - Direction to navigate
+   */
   const navigateMedia = useCallback((direction) => {
     if (allMedia.length === 0) return null;
 
@@ -148,13 +153,13 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
   }, [allMedia.length]);
 
   /**
- * Gets current media item
- * @returns {Object|null} Current media item or null if none available
- */
+   * Retrieves the current media item
+   * @private
+   * @returns {MediaItem|null} Current media item or null if none available
+   */
   const getCurrentMedia = useCallback(() => {
     return allMedia[currentIndex] || null;
   }, [allMedia, currentIndex]);
-
 
   // Initial setup and cleanup
   useEffect(() => {
@@ -179,7 +184,6 @@ export const useLocalMediaManager = (isScheduleActive = true) => {
       }
     };
   }, [isScheduleActive, isServerConnected, connect]);
-
 
   return {
     media: getCurrentMedia(),
