@@ -90,58 +90,64 @@ export class GoogleDriveService {
    * @returns {Promise<Array<Object>>} List of synchronized files
    */
     async syncFiles() {
-      const MAX_RETRIES = 3;
-      let attempt = 0;
-  
-      while (attempt < MAX_RETRIES) {
-          try {
-              const files = await this.listFiles();
-              this.logger.info(`Found ${files.length} valid files in Google Drive`);
-  
-              const localFiles = await fs.readdir(this.downloadPath);
-  
-              // Download new files with improved error handling
-              for (const file of files) {
-                  const localPath = path.join(this.downloadPath, file.name);
-                  
-                  try {
-                      if (await fs.pathExists(localPath)) {
-                          continue;
-                      }
-                      await this.downloadFile(file.id, localPath);
-                      this.logger.info(`Downloaded: ${file.name}`);
-                  } catch (downloadError) {
-                      this.logger.warn(`Failed to download ${file.name}: ${downloadError.message}`);
-                      continue;
-                  }
-              }
-  
-              // Remove local files that no longer exist in Drive
-              for (const localFile of localFiles) {
-                  if (!files.some(file => file.name === localFile)) {
-                      const localPath = path.join(this.downloadPath, localFile);
-                      try {
-                          await fs.remove(localPath);
-                          this.logger.info(`Removed local file: ${localFile}`);
-                      } catch (removeError) {
-                          this.logger.warn(`Failed to remove ${localFile}: ${removeError.message}`);
-                      }
-                  }
-              }
-  
-              return files;
-          } catch (error) {
-              attempt++;
-              this.logger.warn(`Sync attempt ${attempt} failed: ${error.message}`);
-              if (attempt === MAX_RETRIES) {
-                  this.logger.error('Max retry attempts reached');
-                  throw error;
-              }
-              // Wait before retrying
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-      }
-  }
+        const MAX_RETRIES = 3;
+        let attempt = 0;
+    
+        while (attempt < MAX_RETRIES) {
+            try {
+                const files = await this.listFiles();
+                this.logger.info(`Found ${files.length} valid files in Google Drive`);
+    
+                const localFiles = await fs.readdir(this.downloadPath);
+    
+                // Download new files with improved error handling
+                for (const file of files) {
+                    const localPath = path.join(this.downloadPath, file.name);
+                    try {
+                        if (await fs.pathExists(localPath)) {
+                            continue;
+                        }
+                        await this.downloadFile(file.id, localPath);
+                        this.logger.info(`Downloaded: ${file.name}`);
+                    } catch (downloadError) {
+                        this.logger.warn(`Failed to download ${file.name}: ${downloadError.message}`);
+                        continue;
+                    }
+                }
+    
+                // Remove local files that no longer exist in Drive
+                for (const localFile of localFiles) {
+                    if (!files.some(file => file.name === localFile)) {
+                        const localPath = path.join(this.downloadPath, localFile);
+                        try {
+                            // Check if file exists before attempting removal
+                            if (await fs.pathExists(localPath)) {
+                                await fs.remove(localPath);
+                                this.logger.info(`Removed local file: ${localFile}`);
+                            }
+                        } catch (removeError) {
+                            this.logger.warn(`Failed to remove ${localFile}: ${removeError.message}`);
+                            // Continue execution even if removal fails
+                            continue;
+                        }
+                    }
+                }
+    
+                return files;
+            } catch (error) {
+                attempt++;
+                this.logger.warn(`Sync attempt ${attempt} failed: ${error.message}`);
+                if (attempt === MAX_RETRIES) {
+                    this.logger.error('Max retry attempts reached');
+                    // Don't throw error, just log it
+                    return [];
+                }
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+        }
+        return []; // Return empty array if all retries fail
+    }
 
     /**
    * Lists valid files from Google Drive
