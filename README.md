@@ -183,8 +183,6 @@ websocket: {
 }
 ```
 
-[Previous sections remain the same...]
-
 ## File Naming Convention
 Files in Google Drive should follow this naming pattern to enable scheduling:
 - Single date: `filename_DD-MM-YYYY.ext`
@@ -252,8 +250,6 @@ The application sets appropriate cache headers for different types of content:
   'ETag': true
 }
 ```
-
-[Previous sections remain the same...]
 
 ## Contributing
 
