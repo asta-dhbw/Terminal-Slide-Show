@@ -21,11 +21,27 @@ readonly TARGET_URL="${TARGET_URL:-https://www.google.com}"
 readonly DISPLAY_NUM="${DISPLAY_NUM:-:0}"
 
 # -----------------------------------------------------------------------------
+# Cleanup and signal handling
+# -----------------------------------------------------------------------------
+cleanup() {
+    pkill -f chromium || true
+    pkill -f openbox || true
+    pkill Xorg || true
+    for lock in /tmp/.X${DISPLAY_NUM#:}-lock /tmp/.X11-unix/X${DISPLAY_NUM#:}; do
+        [ -e "$lock" ] && rm -f "$lock"
+    done
+}
+
+setup_signal_handlers() {
+    trap cleanup EXIT INT TERM
+}
+
+# -----------------------------------------------------------------------------
 # Display management
 # -----------------------------------------------------------------------------
 start_x_server() {
     log_info "Starting minimal X server..."
-    cleanup
+    cleanup  # Now cleanup is defined before being used
     xinit /usr/bin/openbox-session -- $DISPLAY_NUM vt1 -nocursor &
     sleep 3
 }
@@ -63,17 +79,8 @@ launch_browser() {
     sleep 2
 }
 
-cleanup() {
-    pkill -f chromium || true
-    pkill -f openbox || true
-    pkill Xorg || true
-    for lock in /tmp/.X${DISPLAY_NUM#:}-lock /tmp/.X11-unix/X${DISPLAY_NUM#:}; do
-        [ -e "$lock" ] && rm -f "$lock"
-    done
-}
-
 main() {
-    setup_signal_traps cleanup
+    setup_signal_handlers  # Changed from setup_signal_traps
     clear
     init_project_logging "kiosk"
     cleanup
