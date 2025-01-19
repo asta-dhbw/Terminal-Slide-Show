@@ -123,13 +123,23 @@ install_packages() {
     local -r packages="$1"
     log_info "Installing minimal required packages..."
     
+    # Add Raspberry Pi repository key
+    log_info "Adding Raspberry Pi repository key..."
+    wget -qO - https://archive.raspberrypi.org/debian/raspberrypi.gpg.key | sudo apt-key add - || {
+        log_error "Failed to add Raspberry Pi repository key"
+        return 1
+    }
+    
     # Add Raspberry Pi repository if not present
     if ! grep -q "deb http://raspbian.raspberrypi.org/raspbian/" /etc/apt/sources.list; then
         echo "deb http://raspbian.raspberrypi.org/raspbian/ stable main" | sudo tee -a /etc/apt/sources.list
     fi
     
     # Update package list
-    sudo apt-get update
+    sudo apt-get update || {
+        log_error "Failed to update package list"
+        return 1
+    }
 
     # First install chromium-browser
     if ! dpkg -l | grep -q chromium-browser; then
