@@ -44,6 +44,7 @@ launch_browser() {
     # Launch Chromium with minimal features
     DISPLAY=$DISPLAY_NUM chromium-browser \
         --kiosk \
+        --user-agent="Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Chrome/123.0" \
         --disable-features=TranslateUI \
         --disable-suggestions-service \
         --disable-save-password-bubble \
