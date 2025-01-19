@@ -188,12 +188,20 @@ Files in Google Drive should follow this naming pattern to enable scheduling:
 - Single date: `filename_DD-MM-YYYY.ext`
 - Date range: `filename_DD-MM-YYYY@DD-MM-YYYY.ext`
 - Short format: `filename_DD-MM@DD-MM.ext`
+- Custom duration: `filename_Xs.ext` (where X is duration in seconds)
+
 It is possible to also use just `YY` and use any of these separators: `-._`
+You can combine both date and duration patterns:
 Examples:
 ```
 banner_01-01-2024@31-01-2024.jpg  # Show in January 2024
 notice_15-03.jpg                  # Show on March 15th (any year)
 event_01-06@15-06.jpg            # Show June 1-15 (any year)
+
+image_5s_25-12-2024.jpg    ✅ (works)
+image_10s_.jpg             ✅ (works)
+image5s_25-12-2024.jpg     ❌ (won't work - missing leading _)
+image_5s25-12-2024.jpg     ❌ (won't work - missing trailing _)
 ```
 
 ## Scheduling
