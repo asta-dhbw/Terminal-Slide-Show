@@ -42,8 +42,7 @@ launch_browser() {
     DISPLAY=$DISPLAY_NUM xset -dpms
 
     # Launch Chromium with minimal features
-    DISPLAY=$DISPLAY_NUM chromium-browser \
-        --kiosk \
+    DISPLAY=$DISPLAY_NUM chromium --kiosk \
         --user-agent="Mozilla/5.0 (TERMINAL-SLIDE-SHOW) Gecko/20100101 Chrome/123.0" \
         --disable-features=TranslateUI \
         --disable-suggestions-service \
