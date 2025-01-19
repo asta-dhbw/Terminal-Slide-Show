@@ -23,7 +23,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
 # -----------------------------------------------------------------------------
 readonly MODE_WEB="web"
 readonly MODE_TERMINAL="terminal"
-readonly WEB_PACKAGES="xserver-xorg-core xserver-xorg-video-fbdev xinit chromium-browser-l10n rpi-chromium-mods openbox x11-xserver-utils unclutter"
+readonly WEB_PACKAGES="xserver-xorg-core xserver-xorg-video-fbdev xinit chromium openbox x11-xserver-utils unclutter"
 readonly TERMINAL_PACKAGES="mpv nodejs"
 
 # -----------------------------------------------------------------------------
@@ -123,36 +123,16 @@ install_packages() {
     local -r packages="$1"
     log_info "Installing minimal required packages..."
     
-    # Add Raspberry Pi repository key
-    log_info "Adding Raspberry Pi repository key..."
-    wget -qO - https://archive.raspberrypi.org/debian/raspberrypi.gpg.key | sudo apt-key add - || {
-        log_error "Failed to add Raspberry Pi repository key"
-        return 1
-    }
-    
-    # Add Raspberry Pi repository if not present
-    if ! grep -q "deb http://raspbian.raspberrypi.org/raspbian/" /etc/apt/sources.list; then
-        echo "deb http://raspbian.raspberrypi.org/raspbian/ stable main" | sudo tee -a /etc/apt/sources.list
-    fi
-    
     # Update package list
-    sudo apt-get update || {
-        log_error "Failed to update package list"
-        return 1
-    }
+    sudo apt-get update
 
-    # First install chromium-browser
-    if ! dpkg -l | grep -q chromium-browser; then
-        sudo apt-get install -y --no-install-recommends chromium-browser
-    fi
-
-    # Then install remaining packages
+    # Install with --no-install-recommends to minimize dependencies
     sudo apt-get install -y --no-install-recommends $packages || {
         log_error "Failed to install packages"
         return 1
     }
 
-    # Clean up
+    # Clean up to save space
     sudo apt-get clean
     sudo apt-get autoremove -y
 }
