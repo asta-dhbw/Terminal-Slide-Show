@@ -15,8 +15,8 @@ export const frontendConfig = {
     },
     schedule: {
         enabled: true, // Enable or disable the schedule feature
-        onTime: '07:30', // Time to turn on the slideshow (24-hour format)
-        offTime: '23:45', // Time to turn off the slideshow (24-hour format)
+        onTime: '07:35', // Time to turn on the slideshow (24-hour format)
+        offTime: '19:30', // Time to turn off the slideshow (24-hour format)
         days: [1, 2, 3, 4, 5], // Days to run the slideshow (1 for Monday, ..., 7 for Sunday)
         vacationPeriods: [
             { start: '24.06.2024', end: '24.07.2024' }, // Example vacation period
