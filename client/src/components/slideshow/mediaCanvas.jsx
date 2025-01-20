@@ -116,18 +116,18 @@ const ImageCanvas = React.memo(({ media, mediaType }) => {
   const createBlurredBackground = useCallback((image, dimensions, canvasWidth, canvasHeight) => {
     const { scaledWidth, scaledHeight, x, y } = dimensions;
     const { width: imgWidth, height: imgHeight } = image;
-
+  
     const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d'); //use { alpha: false } for more optimization
-
+    const tempCtx = tempCanvas.getContext('2d');
+  
     tempCanvas.width = canvasWidth;
     tempCanvas.height = canvasHeight;
-
+  
     // Draw main image
     tempCtx.imageSmoothingQuality = 'medium';
     tempCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
     tempCtx.filter = `blur(${BLUR_AMOUNT})`;
-
+  
     // Draw edges for blur effect
     const edges = [
       { sx: 0, sy: 0, sw: 1, sh: imgHeight, dx: 0, dy: 0, dw: x, dh: canvasHeight },
@@ -135,11 +135,15 @@ const ImageCanvas = React.memo(({ media, mediaType }) => {
       { sx: 0, sy: 0, sw: imgWidth, sh: 1, dx: x, dy: 0, dw: scaledWidth, dh: y },
       { sx: 0, sy: imgHeight - 1, sw: imgWidth, sh: 1, dx: x, dy: y + scaledHeight, dw: scaledWidth, dh: canvasHeight - (y + scaledHeight) }
     ];
-
+  
     edges.forEach(edge => {
       tempCtx.drawImage(image, edge.sx, edge.sy, edge.sw, edge.sh, edge.dx, edge.dy, edge.dw, edge.dh);
     });
-
+  
+    // Add darkness overlay
+    tempCtx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
+    tempCtx.fillRect(0, 0, canvasWidth+50, canvasHeight+50);
+  
     return tempCanvas;
   }, []);
 
