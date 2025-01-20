@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ libc6-compat
+
+# Copy package files
+COPY package*.json ./
+
+# Clean install with platform-specific flags
+RUN npm cache clean --force && \
+    npm install --platform=linux --arch=x64 --no-save
+
+# Copy project files
+COPY . .
+
+# Build the frontend
+RUN npm run build
+
+# Runtime configuration
+ENV VITE_HOST=0.0.0.0
+EXPOSE 5173
+
+CMD ["npm", "run", "dev:frontend"]

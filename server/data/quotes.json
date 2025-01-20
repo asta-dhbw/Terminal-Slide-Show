@@ -1,0 +1,238 @@
+{
+    "quotes": [
+      {
+        "text": "Der See ist die Seele der Landschaft.",
+        "author": "Hermann Hesse",
+        "tags": ["natur", "bodensee"],
+        "translation": "The lake is the soul of the landscape."
+      },
+      {
+        "text": "Innovation unterscheidet zwischen einem Anführer und einem Nachfolger.",
+        "author": "Steve Jobs",
+        "tags": ["innovation", "führung"],
+        "translation": "Innovation distinguishes between a leader and a follower."
+      },
+      {
+        "text": "Wer aufhört, besser zu werden, hat aufgehört, gut zu sein.",
+        "author": "Philip Rosenthal",
+        "tags": ["entwicklung", "motivation"],
+        "translation": "Those who stop getting better have stopped being good."
+      },
+      {
+        "text": "Das Beste am Lernen ist, dass niemand es dir wegnehmen kann.",
+        "author": "B.B. King",
+        "tags": ["bildung", "lernen"],
+        "translation": "The beautiful thing about learning is that nobody can take it away from you."
+      },
+      {
+        "text": "Die Grenzen des Möglichen erkennt man nur, indem man ein wenig über sie hinausgeht.",
+        "author": "Arthur C. Clarke",
+        "tags": ["motivation", "grenzen"],
+        "translation": "The only way of discovering the limits of the possible is to venture past them into the impossible."
+      },
+      {
+        "text": "Der Unterschied zwischen dem Unmöglichen und dem Möglichen liegt in der Entschlossenheit.",
+        "author": "Tommy Lasorda",
+        "tags": ["entschlossenheit", "motivation"],
+        "translation": "The difference between the impossible and the possible lies in determination."
+      },
+      {
+        "text": "Nichts ist so beständig wie der Wandel.",
+        "author": "Heraklit",
+        "tags": ["wandel", "philosophie"],
+        "translation": "Nothing is as constant as change."
+      },
+      {
+        "text": "Die Zukunft gehört denen, die an die Schönheit ihrer Träume glauben.",
+        "author": "Eleanor Roosevelt",
+        "tags": ["zukunft", "träume"],
+        "translation": "The future belongs to those who believe in the beauty of their dreams."
+      },
+      {
+        "text": "Ein Problem ist eine Gelegenheit, dein Bestes zu geben.",
+        "author": "Duke Ellington",
+        "tags": ["probleme", "chancen"],
+        "translation": "A problem is a chance for you to do your best."
+      },
+      {
+        "text": "Der einzige Weg, großartige Arbeit zu leisten, ist zu lieben, was man tut.",
+        "author": "Steve Jobs",
+        "tags": ["arbeit", "leidenschaft"],
+        "translation": "The only way to do great work is to love what you do."
+      },
+      {
+        "text": "Wer sich Ziele setzt, lebt länger.",
+        "author": "Hans-Jürgen Quadbeck-Seeger",
+        "tags": ["ziele", "leben"],
+        "translation": "Those who set goals live longer."
+      },
+      {
+        "text": "Die Zeit ist keine Schnellstraße zwischen Wiege und Grab, sondern Platz zum Parken in der Sonne.",
+        "author": "Phil Bosmans",
+        "tags": ["zeit", "leben"],
+        "translation": "Time is not a highway between cradle and grave, but a place to park in the sun."
+      },
+      {
+        "text": "Das Geheimnis des Erfolgs ist anzufangen.",
+        "author": "Mark Twain",
+        "tags": ["erfolg", "anfang"],
+        "translation": "The secret of getting ahead is getting started."
+      },
+      {
+        "text": "Jeder Fortschritt beginnt mit der Entscheidung, es zu versuchen.",
+        "author": "Unbekannt",
+        "tags": ["fortschritt", "entscheidung"],
+        "translation": "All progress begins with the decision to try."
+      },
+      {
+        "text": "Die Würde des Menschen liegt in der Wahl.",
+        "author": "Max Frisch",
+        "tags": ["würde", "entscheidung"],
+        "translation": "Human dignity lies in choice."
+      },
+      {
+        "text": "Was wir wissen, ist ein Tropfen; was wir nicht wissen, ein Ozean.",
+        "author": "Isaac Newton",
+        "tags": ["wissen", "demut"],
+        "translation": "What we know is a drop, what we don't know is an ocean."
+      },
+      {
+        "text": "Die größte Entdeckung meiner Generation ist, dass Menschen ihr Leben ändern können, indem sie ihre Einstellung ändern.",
+        "author": "William James",
+        "tags": ["einstellung", "veränderung"],
+        "translation": "The greatest discovery of my generation is that human beings can alter their lives by altering their attitudes."
+      },
+      {
+        "text": "Der Mensch sollte immer größer denken, als er ist.",
+        "author": "Friedrich Dürrenmatt",
+        "tags": ["denken", "potenzial"],
+        "translation": "One should always think bigger than oneself."
+      },
+      {
+        "text": "Kreativität ist Intelligenz, die Spaß hat.",
+        "author": "Albert Einstein",
+        "tags": ["kreativität", "intelligenz"],
+        "translation": "Creativity is intelligence having fun."
+      },
+      {
+        "text": "Die Zukunft soll man nicht voraussehen wollen, sondern möglich machen.",
+        "author": "Antoine de Saint-Exupéry",
+        "tags": ["zukunft", "handeln"],
+        "translation": "As for the future, your task is not to foresee it, but to enable it."
+      },
+      {
+        "text": "Der beste Moment, eine neue Idee zu haben, ist, während man an einer alten arbeitet.",
+        "author": "Linus Pauling",
+        "tags": ["innovation", "ideen"],
+        "translation": "The best way to have a good idea is to have a lot of ideas."
+      },
+      {
+        "text": "Wer sich seiner Wurzeln erinnert, hat gute Chancen zu wachsen.",
+        "author": "Fred Ammon",
+        "tags": ["wachstum", "tradition"],
+        "translation": "Those who remember their roots have good chances to grow."
+      },
+      {
+        "text": "Die Kunst des Lebens besteht darin, zu lernen, im Regen zu tanzen, anstatt auf die Sonne zu warten.",
+        "author": "Unbekannt",
+        "tags": ["leben", "anpassung"],
+        "translation": "Life isn't about waiting for the storm to pass, it's about learning to dance in the rain."
+      },
+      {
+        "text": "Erfolg ist nicht final, Misserfolg ist nicht fatal. Was zählt, ist der Mut weiterzumachen.",
+        "author": "Winston Churchill",
+        "tags": ["erfolg", "mut"],
+        "translation": "Success is not final, failure is not fatal: it is the courage to continue that counts."
+      },
+      {
+        "text": "Der kürzeste Weg zwischen zwei Menschen ist ein Lächeln.",
+        "author": "Charles Chaplin",
+        "tags": ["menschen", "freundlichkeit"],
+        "translation": "The shortest distance between two people is a smile."
+      },
+      {
+        "text": "Wer einen Fehler macht und ihn nicht korrigiert, begeht einen zweiten.",
+        "author": "Konfuzius",
+        "tags": ["fehler", "lernen"],
+        "translation": "If you make a mistake and do not correct it, this is called a mistake."
+      },
+      {
+        "text": "Die Qualität deiner Gedanken bestimmt die Qualität deines Lebens.",
+        "author": "Marcus Aurelius",
+        "tags": ["gedanken", "leben"],
+        "translation": "The quality of your thoughts determines the quality of your life."
+      },
+      {
+        "text": "Ein Gramm Praxis wiegt mehr als eine Tonne Theorie.",
+        "author": "Deutsches Sprichwort",
+        "tags": ["praxis", "erfahrung"],
+        "translation": "An ounce of practice is worth more than a ton of theory."
+      },
+      {
+        "text": "Die Technologie von heute war die Magie von gestern.",
+        "author": "Christopher Stasheff",
+        "tags": ["technologie", "fortschritt"],
+        "translation": "Today's technology was yesterday's magic."
+      },
+      {
+        "text": "Der Fortschritt lebt vom Austausch des Wissens.",
+        "author": "Albert Einstein",
+        "tags": ["wissen", "fortschritt"],
+        "translation": "Progress lives from the exchange of knowledge."
+      },
+      {
+        "text": "Jede Reise beginnt mit dem ersten Schritt.",
+        "author": "Laozi",
+        "tags": ["anfang", "reise"],
+        "translation": "A journey of a thousand miles begins with a single step."
+      },
+      {
+        "text": "Die Einfachheit ist die höchste Form der Raffinesse.",
+        "author": "Leonardo da Vinci",
+        "tags": ["einfachheit", "design"],
+        "translation": "Simplicity is the ultimate sophistication."
+      },
+      {
+        "text": "Wenn du schnell gehen willst, geh alleine. Wenn du weit gehen willst, geh mit anderen.",
+        "author": "Afrikanisches Sprichwort",
+        "tags": ["gemeinschaft", "erfolg"],
+        "translation": "If you want to go fast, go alone. If you want to go far, go together."
+      },
+      {
+        "text": "Die beste Vorbereitung für morgen ist, heute dein Bestes zu geben.",
+        "author": "H. Jackson Brown Jr.",
+        "tags": ["vorbereitung", "leistung"],
+        "translation": "The best preparation for tomorrow is doing your best today."
+      },
+      {
+        "text": "Der Horizont ist keine Grenze.",
+        "author": "Unbekannt",
+        "tags": ["horizont", "möglichkeiten"],
+        "translation": "The horizon is not a border."
+      },
+      {
+        "text": "Wer aufhört zu lernen, wird alt, egal ob mit zwanzig oder achtzig.",
+        "author": "Henry Ford",
+        "tags": ["lernen", "alter"],
+        "translation": "Anyone who stops learning is old, whether at twenty or eighty."
+      },
+      {
+        "text": "Die größten Schwierigkeiten liegen da, wo wir sie suchen.",
+        "author": "Johann Wolfgang von Goethe",
+        "tags": ["probleme", "perspektive"],
+        "translation": "The greatest difficulties lie where we search for them."
+      },
+      {
+        "text": "Der Optimist sieht Gelegenheiten in jeder Gefahr, der Pessimist sieht Gefahren in jeder Gelegenheit.",
+        "author": "Winston Churchill",
+        "tags": ["optimismus", "perspektive"],
+        "translation": "The optimist sees opportunity in every danger, the pessimist sees danger in every opportunity."
+      },
+      {
+        "text": "Innovation ist die einzige Möglichkeit, den Wettbewerb zu schlagen.",
+        "author": "Robert Noyce",
+        "tags": ["innovation", "wettbewerb"],
+        "translation": "Innovation is the only way to beat the competition."
+      }
+    ]
+  }

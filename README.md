@@ -1,120 +1,272 @@
-# Raspberry Pi Slide-Show
+# Terminal Slide Show
 
-## Table of Contents
+A modern, full-featured digital signage solution built with React and Node.js that automatically synchronizes and displays media content from Google Drive. Perfect for information displays, digital signage, and automated presentations.
 
-1. [Introduction](#introduction)
-2. [Setting up Google Cloud Project](#setting-up-google-cloud-project)
-3. [Prerequisites and Packages Installation](#prerequisites-and-packages-installation)
-4. [Project Setup](#project-setup)
-5. [Meta-Data-Editor](#metadataeditor)
-6. [Allowed File Formats](#allowed-file-formats)
-7. [Allowed Date Formats for Google Drive](#allowed-date-formats-for-google-drive)
-8. [Auto-start Configuration](#auto-start-configuration)
+## Features
 
-## Introduction
+- 🖼️ Seamless display of images and videos from Google Drive
+- ⚡ Real-time updates via WebSocket connections
+- 📦 Intelligent caching system for optimal performance
+- 🔄 Automatic content synchronization with change detection
+- 📅 Advanced scheduling with vacation periods and daily time windows
+- ⌚ Configurable display times and operating days
+- 🎯 Date-based content targeting through filename parsing
+- 📱 Touch and swipe support for navigation
+- 🖥️ Full kiosk mode support
+- 🎨 Smooth transitions and animations
+- 🌅 Dynamic day/night mode transitions
+- 🌡️ Live weather updates and animations
+- 🚀 NASA Astronomy Picture of the Day integration
+- 💡 Power-saving mode with automatic service management
+- 📊 Health monitoring and automatic recovery
+- 🔒 Secure operation with minimal dependencies
 
-Welcome to the TerminalSlideShow repository. This project is a lightweight, non-GUI slideshow that fetches new files from Google Drive, allowing you to update the slideshow remotely. 
-This README provides instructions for setting up the project using Python, installing necessary requirements, configuring a Google Cloud project, and setting up auto-start functionality.
+## Real-Time Updates
 
+The application uses WebSocket connections to provide real-time updates:
+- Instant content updates when files change in Google Drive
+- Live schedule status synchronization
+- Immediate system health notifications
+- Automatic reconnection handling
+- Reduced server load compared to polling
 
-## Setting up Google Cloud Project
+## Caching System
 
-Follow these steps to set up the Google Cloud project and obtain necessary credentials:
+Multi-level caching strategy for optimal performance:
+- **Browser Cache**: 
+  - Media files cached with appropriate headers
+  - Conditional requests using ETags
+  - Cache invalidation on content updates
 
-1. Create a new project on [Google Cloud Console](https://console.cloud.google.com/).
-2. Navigate to "Service Accounts" on the left navbar and create a new service account with drive permissions.
-3. Add a key in JSON format for the service account.
-4. Use the email to grant permission to the target folder.
+- **Server-Side Cache**:
+  - Efficient media file storage
+  - Metadata caching for quick access
+  - Automatic cache cleanup
 
+## Prerequisites
 
-## Prerequisites and Packages Installation
-Ensure you have Python version ``3.9.2`` or higher installed.
+- Node.js (v18.0.0 or higher)
+- npm (v8.0.0 or higher)
+- A Google Cloud Platform account
+- For kiosk mode: Debian-based Linux system (e.g., Raspberry Pi OS)
+- WebSocket-capable browser
 
-#### Easy-Way-Install
-- Execute: the ``initialize.sh`` inside the projectfolder using ``cd path/to/this_repo``
+## Project Structure
 
-#### Update
-- To get newest repo version: ``python -m update.py --update``
-
-#### Manual-Way-Install:
-Execute the following commands:
-- install venv for python: ``sudo apt-get install python3-venv``
-- create a venv: ``python -m venv venv``
-- always use the venv: ``source path/to/venv/bin/activate``
-- Install requirements using: `pip install -r requirements.txt`
-
-```bash
-# Update package information
-sudo apt update
-
-# Upgrade installed packages
-sudo apt upgrade
-
-# Install required packages:
-sudo apt install fbi vlc jq
-sudo apt install libimage-exiftool-perl
-
-#for MetaDataEdtor on MAC:
-brew install exiftool
-# Download the executable for windows: https://exiftool.org/
-
-# Install recommended packages:
-sudo apt install dos2unix
+```
+terminal-slide-show/
+├── client/                 # Frontend React application
+│   ├── public/            # Static assets
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   │   ├── slideshow/      # Slideshow components
+│   │   │   └── dynamic_daily_view/  # Dynamic view components
+│   │   ├── hooks/        # Custom React hooks
+│   │   │   └── useWebSocket.js # WebSocket connection hook
+│   │   ├── utils/        # Utility functions
+│   │   └── styles/       # CSS stylesheets
+├── server/                # Backend application
+│   ├── src/
+│   │   ├── services/     # Core services
+│   │   │   ├── websocket/     # WebSocket server
+│   │   │   └── cache/         # Caching service
+│   │   └── utils/        # Utility functions
+│   └── data/             # Local data (quotes, facts)
+├── config/               # Configuration files
+│   ├── config.js        # Main configuration
+│   └── frontend.config.js # Frontend-specific config
+├── scripts/             # Shell scripts
+└── downloads/           # Local media storage
 ```
 
-## Project-Setup
-To start you have to set some variables inside the [config-file](app_config.json)
+## Setup Instructions
 
-#### Python Variables:
-- ``TARGETDIR`` -> folder where the content will be saved
-- ``USE_GDRIVE`` -> If you want to get the content from Google-Drive set it ``true``
-- ``GOOGLE_API_ACCESS`` -> Specifies the path to your ``service_account.json`` file
-- ``DRIVE_DIR_ID`` -> The ID of the Google-Drive folder with your content
+### 1. Installation
 
-#### Bash Variables:
-- ``ON_TIME`` and ``OFF_TIME`` -> Time when it should display ``(HH:MM) or (HH:MM:SS)`` (local time zone!)
-- ``DISPLAYTIME`` -> Time for Duration for all images (in seconds)
-- ``BLENDTIME`` -> Time for blending animation (in milliseconds)
-- ``PYENV`` -> Path to the venv if you are using one. Else let it empty
-
-## MetaDataEditor
-[App](MetaDataEditor/app.py)
-
-<img src="readme_data/MetaDataEditorPreview.PNG" width="400">
-
-- Allows to add custom Tags to the file using a GUI
-- `STARTDATE` -> Date when it will beginn displaying
-- `ENDDATE` -> Date when it will stop displaying
-
-**!!!Under DEV:!!!**
-- `DisplayTime` -> Time how long the single image will be displayed (in seconds)
-
-
-## Allowed File Formats
-
-- The script supports the following image formats: ``.jpg``, ``.jpeg``, ``.png``, ``bmp``, ``.gif(first frame)``.
-
-- The script supports the following video formats: ``.mp4``, ``.mkv``, ``.avi``, ``.ogg``, ``mov``, ``flv``.
-
-## Allowed Formats for Google Drive
-
-- The script supports the following date formats for filenames: ``day.month.year``, ``5.5.23``, ``05.05.2023``, ``15-06-2023``, ``20_07_2023``
-
-- You can also add a name before and after: ``FILENAME5.5.23stufff``
-
-- To set a time range use `@`: `5.5.23@08-12-23`
-
-## Auto-start Configuration
-
-To configure auto-start:
-
-- Open the rc.local file: `sudo nano /etc/rc.local`
-- Add `sudo reset` to an empty command line
-- Go to the crontabs: `crontab -e`
-- Add `chmod` to set the script as always executable and add the path to the script:
 ```bash
-@reboot sudo sleep 8 && cd /path/to/project && sudo chmod +x path/to/script.sh && path/to/script.sh >/dev/null 2>/dev/null
+# Clone the repository
+git clone https://github.com/asta-dhbw/Terminal-Slide-Show.git
+cd terminal-slide-show
 
-# recommended
-@reboot sudo sleep 8 && cd /path/to/project && dos2unix ./script.sh && sudo chmod +x ./script.sh && ./script.sh >/dev/null 2>/dev/null
+# Install dependencies
+npm install
+
+# Create necessary directories
+mkdir -p downloads logs cache
+
+# Create configuration files
+cp config/config.example.js config/config.js
+cp config/.env.example config/.env
 ```
+
+### 2. Google Drive Authentication
+You have two options for authenticating with Google Drive:
+#### Option A: Using API Key (Simpler, for personal use)
+1. Create a new project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable the Google Drive API
+3. Create API credentials:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "API Key"
+   - Copy the API key
+4. Add the API key to `config.js`:
+   ```javascript
+   google: {
+     useServiceAccount: false,
+     apiKey: 'YOUR_API_KEY',
+     folderId: 'YOUR_FOLDER_ID'
+   }
+   ```
+5. Make your Google Drive folder publicly accessible (with link)
+#### Option B: Using Service Account (More secure, recommended for production)
+1. Create a new project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable the Google Drive API
+3. Create a Service Account:
+   - Navigate to "IAM & Admin" > "Service Accounts"
+   - Click "Create Service Account"
+   - Grant the role "Drive File Viewer" or necessary permissions
+   - Create and download JSON key
+4. Place the downloaded JSON key in `config/service-account.json`
+5. Share your Google Drive folder with the service account email
+6. Configure `config.js`:
+   ```javascript
+   google: {
+     useServiceAccount: true,
+     serviceAccountPath: './config/service-account.json',
+     folderId: 'YOUR_FOLDER_ID'
+   }
+   ```
+
+### 3. Cache Configuration
+
+Configure caching behavior in `config.js`:
+
+```javascript
+cache: {
+  // Browser cache settings
+  browser: {
+    maxAge: 86400,        // Cache lifetime in seconds
+    revalidate: true,     // Enable revalidation
+    etags: true           // Enable ETag support
+  },
+  // Server cache settings
+  server: {
+    mediaCache: {
+      maxSize: '1GB',     // Maximum cache size
+      cleanupInterval: '1h' // Cache cleanup interval
+    },
+    metadataCache: {
+      ttl: 300,           // Time-to-live in seconds
+      checkPeriod: 600    // Cleanup check interval
+    }
+  }
+}
+```
+
+### 4. WebSocket Configuration
+
+Configure WebSocket behavior in `config.js`:
+
+```javascript
+websocket: {
+  // WebSocket server settings
+  server: {
+    port: 3001,
+    heartbeat: 30000,     // Heartbeat interval
+    reconnectTimeout: 5000 // Client reconnection timeout
+  },
+  // Client settings
+  client: {
+    reconnectAttempts: 5,
+    reconnectInterval: 1000,
+    messageTimeout: 5000
+  }
+}
+```
+
+## File Naming Convention
+Files in Google Drive should follow this naming pattern to enable scheduling:
+- Single date: `filename_DD-MM-YYYY.ext`
+- Date range: `filename_DD-MM-YYYY@DD-MM-YYYY.ext`
+- Short format: `filename_DD-MM@DD-MM.ext`
+- Custom duration: `filename_Xs.ext` (where X is duration in seconds)
+
+It is possible to also use just `YY` and use any of these separators: `-._`
+You can combine both date and duration patterns:
+Examples:
+```
+banner_01-01-2024@31-01-2024.jpg  # Show in January 2024
+notice_15-03.jpg                  # Show on March 15th (any year)
+event_01-06@15-06.jpg            # Show June 1-15 (any year)
+
+image_5s_25-12-2024.jpg    ✅ (works)
+image_10s_.jpg             ✅ (works)
+image5s_25-12-2024.jpg     ❌ (won't work - missing leading _)
+image_5s25-12-2024.jpg     ❌ (won't work - missing trailing _)
+```
+
+## Scheduling
+
+Configure display times in `config.js`:
+
+```javascript
+schedule: {
+  enabled: true,
+  onTime: '06:30',      // Display start time
+  offTime: '20:00',     // Display end time
+  days: [1, 2, 3, 4, 5], // Monday to Friday
+  vacationPeriods: [    // Optional vacation periods
+    { start: '24.06.2024', end: '24.07.2024' }
+  ]
+
+}
+```
+
+## WebSocket Events
+
+The application supports the following WebSocket events:
+
+```javascript
+// Client-side subscription
+ws.subscribe('media-update', (data) => {
+  // Handle media updates
+});
+
+ws.subscribe('schedule-update', (data) => {
+  // Handle schedule changes
+});
+
+ws.subscribe('system-health', (data) => {
+  // Handle system health updates
+});
+```
+
+## Cache Headers
+
+The application sets appropriate cache headers for different types of content:
+
+```javascript
+// Example cache headers for media files
+{
+  'Cache-Control': 'public, max-age=86400',
+  'ETag': true,
+  'Last-Modified': timestamp
+}
+
+// Example cache headers for dynamic content
+{
+  'Cache-Control': 'no-cache, must-revalidate',
+  'ETag': true
+}
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.

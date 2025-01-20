@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies first
+COPY package*.json ./
+RUN npm install
+
+# Copy entire project
+COPY . .
+
+# Create necessary directories and set permissions
+RUN mkdir -p downloads && chmod -R 777 downloads
+
+# Set host for accessibility
+ENV HOST=0.0.0.0
+
+EXPOSE 3000
+
+CMD ["node", "server/src/index.js"]
