@@ -4,7 +4,21 @@
  * @class
  */
 export class DateParser {
+  static parseDuration(filename) {
+    const durationMatch = filename.match(/_(\d+)s_/); 
+    if (durationMatch) {
+      return parseInt(durationMatch[1]) * 1000; // Convert seconds to milliseconds
+    }
+    return null;
+  }
+
   static parseFileName(filename) {
+    const duration = this.parseDuration(filename);
+    const dateInfo = this.parseDates(filename);
+    return { ...dateInfo, duration };
+  }
+
+  static parseDates(filename) {
     const patterns = [
       // Original patterns with full dates
       /(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})@(\d{1,2})[-._](\d{1,2})[-._](\d{2,4})/, // dd.mm.yyyy@dd.mm.yyyy

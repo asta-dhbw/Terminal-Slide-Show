@@ -54,9 +54,11 @@ const Slideshow = () => {
   useEffect(() => {
     if (paused || !media || loading || !isScheduleActive) return;
 
+    const duration = media.duration || frontendConfig.slideshow.defaultSlideDuration;
+
     autoContinueTimer.current = setTimeout(() => {
       handleNavigate('next');
-    }, frontendConfig.slideshow.defaultSlideDuration);
+    }, duration);
 
     return () => clearTimeout(autoContinueTimer.current);
   }, [paused, media, loading, isScheduleActive, handleNavigate]);

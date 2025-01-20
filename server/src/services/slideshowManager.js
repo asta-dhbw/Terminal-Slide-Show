@@ -94,11 +94,15 @@ export class SlideshowManager {
           const ext = path.extname(file).toLowerCase();
           return config.mediaTypes.imageTypes.includes(ext) || config.mediaTypes.videoTypes.includes(ext);
         })
-        .map(file => ({
-          name: file,
-          path: path.join(this.mediaPath, file),
-          dates: DateParser.parseFileName(file)
-        }))
+        .map(file => {
+          const parsedInfo = DateParser.parseFileName(file);
+          return {
+            name: file,
+            path: path.join(this.mediaPath, file),
+            dates: parsedInfo,
+            duration: parsedInfo.duration
+          };
+        })
         .filter(file => isValidFile(file.name));
 
       // Create new media list

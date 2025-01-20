@@ -23,8 +23,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/project-utils.sh" || {
 # -----------------------------------------------------------------------------
 readonly MODE_WEB="web"
 readonly MODE_TERMINAL="terminal"
-readonly WEB_PACKAGES="xorg firefox openbox x11-xserver-utils xdotool unclutter procps ncurses-bin xinit"
-readonly TERMINAL_PACKAGES="mpv socat inotify-tools nodejs jq npm curl ffmpeg"
+readonly WEB_PACKAGES="xserver-xorg-core xserver-xorg-video-fbdev xinit chromium chromium-common openbox x11-xserver-utils unclutter"
+readonly TERMINAL_PACKAGES="mpv nodejs"
 
 # -----------------------------------------------------------------------------
 # Check for root privileges
@@ -121,22 +121,43 @@ select_mode() {
 # -----------------------------------------------------------------------------
 install_packages() {
     local -r packages="$1"
-    local failed_packages=()
+    log_info "Installing minimal required packages..."
+    
+    # Update package list
+    sudo apt-get update
 
-    for pkg in $packages; do
-        if ! dpkg -l | awk '{print $2}' | grep -q "^$pkg$"; then
-            log_info "Installing $pkg..."
-            if ! sudo apt-get install -y "$pkg"; then
-                log_error "Failed to install package: $pkg"
-                failed_packages+=("$pkg")
-            fi
+    # Install with --no-install-recommends to minimize dependencies
+    sudo apt-get install -y --no-install-recommends $packages || {
+        log_error "Failed to install packages"
+        return 1
+    }
+
+    # Clean up to save space
+    sudo apt-get clean
+    sudo apt-get autoremove -y
+}
+
+optimize_system() {
+    log_info "Optimizing system for kiosk mode..."
+    
+    # Disable unnecessary services
+    local services=(
+        "bluetooth.service"
+        "cups.service"
+        "avahi-daemon.service"
+        "apt-daily.service"
+        "apt-daily-upgrade.service"
+    )
+
+    for service in "${services[@]}"; do
+        if systemctl is-enabled "$service" &>/dev/null; then
+            sudo systemctl disable "$service"
+            sudo systemctl stop "$service"
         fi
     done
 
-    if [ ${#failed_packages[@]} -ne 0 ]; then
-        log_error "Failed to install packages: ${failed_packages[*]}"
-        return 1
-    fi
+    # Reduce memory usage
+    echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 }
 
 # -----------------------------------------------------------------------------
@@ -297,6 +318,7 @@ main() {
     # Install required packages
     local packages="$([[ $SELECTED_MODE = $MODE_WEB ]] && echo "$WEB_PACKAGES" || echo "$TERMINAL_PACKAGES")"
     install_packages "$packages"
+    optimize_system
 
     # Create and configure kiosk user
     create_kiosk_user "$KIOSK_USERNAME" "$PASSWORD"
