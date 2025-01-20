@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Kiosk Mode Manager
-# Manages a fullscreen Firefox browser in kiosk mode with automatic recovery
+# Manages a fullscreen Chromium browser in kiosk mode with automatic recovery
 # Features X server management, Firefox profile configuration, and process monitoring
 #
 # Author: Muddyblack
@@ -83,7 +83,6 @@ main() {
     setup_signal_handlers  # Changed from setup_signal_traps
     clear
     init_project_logging "kiosk"
-    cleanup
 
     start_x_server || exit 1
     launch_browser || exit 1
